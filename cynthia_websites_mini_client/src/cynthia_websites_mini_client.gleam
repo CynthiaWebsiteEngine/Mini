@@ -300,7 +300,9 @@ fn add_each_menu(
             _ -> Error(Nil)
           }
         })
-        |> list.sort(fn(itema, itemb) { string.compare(itema.name, itemb.name) })
+        |> list.sort(fn(itema, itemb) {
+          utils.compare_so_natural(itema.name, itemb.name)
+        })
       dict.insert(gotten, current_menu, hits)
       |> add_each_menu(rest, _, items)
     }

@@ -1,6 +1,8 @@
 import gleam/float
 import gleam/http
 import gleam/http/request.{type Request}
+import gleam/javascript/array.{type Array}
+import gleam/order
 import gleam/string
 import gleam/time/timestamp
 import plinth/browser/window
@@ -56,3 +58,15 @@ pub fn now() -> Int {
     |> float.truncate
   now
 }
+
+pub fn compare_so_natural(a: String, b: String) -> order.Order {
+  case compares(a, b) {
+    "eq" -> order.Eq
+    "lt" -> order.Lt
+    "gt" -> order.Gt
+    _ -> panic as "compare_so_natural failed?? This should never happen"
+  }
+}
+
+@external(javascript, "./utils_ffi.ts", "compares")
+fn compares(a: String, b: String) -> String

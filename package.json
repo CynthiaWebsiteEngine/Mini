@@ -1,6 +1,6 @@
 {
 	"name": "@cynthiaweb/cynthiaweb-mini",
-	"version": "1.0.2-rc",
+	"version": "1.0.3-pre",
 	"license": "AGPL-3.0-only",
 	"module": "cynthia_websites_mini_server/build/dev/javascript/cynthia_websites_mini_server/cynthia_websites_mini_server.ts",
 	"bin": {
