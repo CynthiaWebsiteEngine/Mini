@@ -21,7 +21,7 @@ This project adheres to our [Code of Conduct](CODE_OF_CONDUCT.md). By participat
 2. Clone your fork:
 
    ```bash
-   git clone https://github.com/your-username/CynthiaWebsiteEngine-Mini.git
+   git clone https://github.com/your-username/Mini.git
    ```
 
 3. Set up your development environment:
