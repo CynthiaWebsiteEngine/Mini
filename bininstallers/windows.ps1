@@ -4,6 +4,10 @@ if ($Env:OS -ne "Windows_NT") {
     exit 1
 }
 
+# Available environment variables to alter the behavior of the script:
+# CYNTHIAWEB_MINI_INSTALL_DIR: Directory to install cynthiaweb-mini. Default is $HOME\bin\mini.
+# CYNTHIAWEB_MINI_RELEASE: Release version to install. Default is the latest release.
+
 # Define OS and architecture
 $det_os = "windows"
 $det_arch = if ([Environment]::Is64BitOperatingSystem) {
@@ -21,20 +25,32 @@ $det_arch = if ([Environment]::Is64BitOperatingSystem) {
 Write-Host "Detected OS: " -ForegroundColor Blue -NoNewline
 Write-Host "$det_os ($det_arch)"
 
-# Get latest release
-try {
-    $release = (Invoke-RestMethod "https://api.github.com/repos/CynthiaWebsiteEngine/Mini/releases/latest").tag_name.TrimStart('v')
-    if ([string]::IsNullOrWhiteSpace($release)) {
-        Write-Host "Failed to fetch release information from GitHub" -ForegroundColor Red
+# Get release version (from environment variable or latest)
+if ($Env:CYNTHIAWEB_MINI_RELEASE) {
+    $release = $Env:CYNTHIAWEB_MINI_RELEASE.TrimStart('v')
+    Write-Host "Using specified release: " -ForegroundColor Blue -NoNewline
+    Write-Host "v$release" -ForegroundColor Cyan
+} else {
+    try {
+        $release = (Invoke-RestMethod "https://api.github.com/repos/CynthiaWebsiteEngine/Mini/releases/latest").tag_name.TrimStart('v')
+        if ([string]::IsNullOrWhiteSpace($release)) {
+            Write-Host "Failed to fetch release information from GitHub" -ForegroundColor Red
+            exit 1
+        }
+    } catch {
+        Write-Host "Failed to fetch latest release information" -ForegroundColor Red
         exit 1
     }
-} catch {
-    Write-Host "Failed to fetch latest release information" -ForegroundColor Red
-    exit 1
 }
 
 $url = "https://github.com/CynthiaWebsiteEngine/Mini/releases/download/v${release}/cynthiaweb-mini-${det_os}-${det_arch}.exe"
-$installDir = "$HOME\bin\mini"
+
+# Set install directory (from environment variable or default)
+if ($Env:CYNTHIAWEB_MINI_INSTALL_DIR) {
+    $installDir = $Env:CYNTHIAWEB_MINI_INSTALL_DIR
+} else {
+    $installDir = "$HOME\bin\mini"
+}
 $exePath = "$installDir\cynthiaweb-mini.exe"
 
 Write-Host "Downloading " -ForegroundColor Blue -NoNewline
