@@ -9,7 +9,6 @@ We warmly welcome contributions to the CynthiaWebsiteEngine Mini project. This d
 3. [How to Contribute](#how-to-contribute)
 4. [Development Process](#development-process)
 5. [Submission Guidelines](#submission-guidelines)
-6. [Community](#community)
 
 ## Code of Conduct
 
@@ -111,17 +110,5 @@ Please refer to our [Theme Contribution Guide](https://cynthiawebsiteengine.gith
 - Feedback should be addressed timely
 - Changes may be requested before merging
 - Be patient and responsive during review
-
-## Community
-
-- Join our [Discord server](https://discord.gg/your-invite-link)
-- Follow our [Twitter](https://twitter.com/your-handle)
-- Subscribe to our [newsletter](https://your-newsletter-url.com)
-
-## Additional Resources
-
-- [Development Setup Guide](docs/development-setup.md)
-- [Testing Guide](docs/testing.md)
-- [Style Guide](docs/style-guide.md)
 
 Thank you for contributing to CynthiaWebsiteEngine Mini!
