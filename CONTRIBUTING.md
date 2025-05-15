@@ -70,7 +70,7 @@ This project adheres to our [Code of Conduct](CODE_OF_CONDUCT.md). By participat
 
 ### Contributing Themes
 
-Please refer to our [Theme Contribution Guide](docs/contributing/add-theme.md) for detailed instructions.
+Please refer to our [Theme Contribution Guide](https://cynthiawebsiteengine.github.io/Mini-docs/#/adding-themes) for detailed instructions.
 
 ## Development Process
 
