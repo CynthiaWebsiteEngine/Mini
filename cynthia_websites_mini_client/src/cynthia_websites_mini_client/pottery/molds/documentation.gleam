@@ -135,7 +135,7 @@ pub fn post_layout(
             ),
             html.div([attribute.class("text-sm")], [
               html.text(
-                "Section: "
+                "Category: "
                 <> {
                   variables
                   |> dict.get("category")
