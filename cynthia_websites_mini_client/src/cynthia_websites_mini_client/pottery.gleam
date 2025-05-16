@@ -57,7 +57,7 @@ pub fn render_content(
         |> dict.insert("date_published", date_published |> dynamic.from)
         |> dict.insert("date_modified", date_updated |> dynamic.from)
         |> dict.insert("category", category |> dynamic.from)
-        |> dict.insert("tags", tags |> string.join(", ") |> dynamic.from)
+        |> dict.insert("tags", tags |> dynamic.from)
       #(mold, parse_html(content.inner_plain, content.filename), variables)
     }
   }
