@@ -74,7 +74,7 @@ if [[ -z "$release" ]]; then
   exit 1
 fi
 
-url="https://github.com/CynthiaWebsiteEngine/Mini/releases/download/v${release//v/}/cynthiaweb-mini-${vis_os}-${det_arch}"
+url="https://github.com/CynthiaWebsiteEngine/Mini/releases/download/v${release#v}/cynthiaweb-mini-${vis_os}-${det_arch}"
 
 if [[ -n "$CYNTHIAWEB_MINI_INSTALL_DIR" ]]; then
   bin_dir="$CYNTHIAWEB_MINI_INSTALL_DIR"
