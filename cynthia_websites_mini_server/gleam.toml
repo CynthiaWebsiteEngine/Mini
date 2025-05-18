@@ -9,7 +9,7 @@ typescript_declarations = true
 [dependencies]
 gleam_stdlib = ">= 0.44.0 and < 2.0.0"
 gleamy_lights = ">= 2.3.0 and < 3.0.0"
-bungibindies = { git = "https://github.com/strawmelonjuice/bungibindies.git", ref = "main" }
+bungibindies = "1.1.5"
 plinth = ">= 0.5.6 and < 1.0.0"
 gleam_javascript = ">= 1.0.0 and < 2.0.0"
 gleam_community_colour = ">= 1.4.1 and < 2.0.0"
