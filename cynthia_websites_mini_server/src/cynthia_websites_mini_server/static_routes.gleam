@@ -43,7 +43,7 @@ pub fn index_html(gc: configtype.SharedCynthiaConfigGlobalOnly) {
 <body>
   <div id='viewable' class='bg-base-100 w-screen h-screen'>
   </div>
- " <> ui.footer <> "
+ " <> ui.footer(True) <> "
 </body>
 </html>
 "
