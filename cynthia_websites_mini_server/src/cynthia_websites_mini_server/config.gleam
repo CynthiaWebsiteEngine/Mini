@@ -168,6 +168,14 @@ fn cynthia_config_global_only_exploiter(o: dict.Dict(String, tom.Toml)) {
     }
     _ -> option.None
   }
+  let git_integration = case
+    tom.get(o, ["integrations", "git"]) |> result.map(tom.as_bool)
+  {
+    Ok(Ok(field)) -> {
+      field
+    }
+    _ -> True
+  }
   Ok(configtype.SharedCynthiaConfigGlobalOnly(
     global_theme:,
     global_theme_dark:,
@@ -176,6 +184,7 @@ fn cynthia_config_global_only_exploiter(o: dict.Dict(String, tom.Toml)) {
     global_site_description:,
     server_port:,
     server_host:,
+    git_integration:,
     comment_repo:,
   ))
 }
@@ -393,6 +402,12 @@ pub fn initcfg() {
   port = 8080
   # Host address for the web server
   host = \"localhost\"
+
+  [integrations]
+  # Enable git integration for the website
+  # This will allow Cynthia Mini to detect the git repository
+  # For example linking to the commit hash in the footer
+  git = true
 
   [posts]
   # Enable comments on posts using utteranc.es

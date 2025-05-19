@@ -33,6 +33,7 @@ pub fn test_model() -> mutable_reference.MutableReference(
       global_site_description: "Documentation for usage, or contribution to Cynthia Mini",
       server_port: Some(3000),
       server_host: Some("localhost"),
+      git_integration: True,
       comment_repo: Some("CynthiaWebsiteEngine/Mini-docs"),
     ),
   )

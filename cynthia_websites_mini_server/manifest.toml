@@ -41,6 +41,7 @@ packages = [
 [requirements]
 birdie = { version = ">= 1.2.7 and < 2.0.0" }
 bungibindies = { git = "https://github.com/strawmelonjuice/bungibindies.git", ref = "350be67" }
+bungibindies = { git = "https://github.com/strawmelonjuice/bungibindies.git", ref = "main" }
 cynthia_websites_mini_shared = { path = "../cynthia_websites_mini_shared" }
 gleam_community_colour = { version = ">= 1.4.1 and < 2.0.0" }
 gleam_fetch = { version = ">= 1.1.0 and < 2.0.0" }
