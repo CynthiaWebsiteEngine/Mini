@@ -9,4 +9,4 @@ gleam_stdlib = ">= 0.44.0 and < 2.0.0"
 plinth = ">= 0.5.6 and < 1.0.0"
 gleam_json = ">= 2.3.0 and < 3.0.0"
 simplifile = ">= 2.2.0 and < 3.0.0"
-bungibindies = "1.1.5"
+bungibindies = { git = "https://github.com/strawmelonjuice/bungibindies.git", ref = "350be67" }

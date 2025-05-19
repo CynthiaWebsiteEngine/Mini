@@ -1,4 +1,6 @@
+import bungibindies/bun/spawn
 import gleam/list
+import gleam/option.{type Option, None, Some}
 import gleam/string
 import plinth/node/process
 import simplifile
@@ -54,7 +56,7 @@ pub fn footer(can_hide: Bool, git_integration: Bool) {
 }
 
 fn helper_get_git_remote() -> Option(String) {
-  process.spawn
+  todo
 }
 
 /// The entire <body> of the 404 page.

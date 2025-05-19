@@ -13,6 +13,7 @@ pub type CompleteData {
     server_port: Option(Int),
     server_host: Option(String),
     comment_repo: Option(String),
+    git_integration: Bool,
     content: List(Content),
   )
 }
@@ -27,6 +28,7 @@ pub fn encode_complete_data_for_client(complete_data: CompleteData) -> json.Json
     server_port: _,
     server_host: _,
     comment_repo:,
+    git_integration:,
     content:,
   ) = complete_data
   json.object([
@@ -35,6 +37,7 @@ pub fn encode_complete_data_for_client(complete_data: CompleteData) -> json.Json
     #("global_colour", json.string(global_colour)),
     #("global_site_name", json.string(global_site_name)),
     #("global_site_description", json.string(global_site_description)),
+    #("git_integration", json.bool(git_integration)),
     #("comment_repo", case comment_repo {
       None -> json.null()
       Some(value) -> json.string(value)
@@ -48,6 +51,11 @@ pub fn complete_data_decoder() -> decode.Decoder(CompleteData) {
   use global_theme_dark <- decode.field("global_theme_dark", decode.string)
   use global_colour <- decode.field("global_colour", decode.string)
   use global_site_name <- decode.field("global_site_name", decode.string)
+  use git_integration <- decode.optional_field(
+    "git_integration",
+    default_shared_cynthia_config_global_only.git_integration,
+    decode.bool,
+  )
   use global_site_description <- decode.field(
     "global_site_description",
     decode.string,
@@ -79,6 +87,7 @@ pub fn complete_data_decoder() -> decode.Decoder(CompleteData) {
     server_port:,
     server_host:,
     comment_repo:,
+    git_integration:,
     content:,
   ))
 }
@@ -93,6 +102,7 @@ pub type SharedCynthiaConfigGlobalOnly {
     server_port: Option(Int),
     server_host: Option(String),
     comment_repo: Option(String),
+    git_integration: Bool,
   )
 }
 
@@ -105,6 +115,7 @@ pub const default_shared_cynthia_config_global_only: SharedCynthiaConfigGlobalOn
   server_port: None,
   server_host: None,
   comment_repo: None,
+  git_integration: True,
 )
 
 pub fn merge(
@@ -120,6 +131,7 @@ pub fn merge(
     server_port: orig.server_port,
     server_host: orig.server_host,
     comment_repo: orig.comment_repo,
+    git_integration: orig.git_integration,
     content:,
   )
 }
