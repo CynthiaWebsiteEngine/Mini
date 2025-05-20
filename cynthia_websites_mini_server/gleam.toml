@@ -8,14 +8,13 @@ typescript_declarations = true
 
 [dependencies]
 gleam_stdlib = ">= 0.44.0 and < 2.0.0"
-gleamy_lights = ">= 2.3.0 and < 3.0.0"
+gleamy_lights = ">= 2.3.1 and < 3.0.0"
 bungibindies = { git = "https://github.com/strawmelonjuice/bungibindies.git", ref = "main" }
-plinth = ">= 0.5.6 and < 1.0.0"
+plinth = { git = "https://github.com/strawmelonjuice/plinth.git", ref = "master" }
 gleam_javascript = ">= 1.0.0 and < 2.0.0"
-gleam_community_colour = ">= 1.4.1 and < 2.0.0"
 cynthia_websites_mini_shared = { path = "../cynthia_websites_mini_shared" }
 simplifile = ">= 2.2.0 and < 3.0.0"
-gleam_json = ">= 2.3.0 and < 3.0.0"
+gleam_json = ">= 3.0.0 and < 4.0.0"
 webls = ">= 1.5.1 and < 2.0.0"
 gleam_fetch = ">= 1.1.0 and < 2.0.0"
 gleam_http = ">= 3.7.2 and < 4.0.0"
