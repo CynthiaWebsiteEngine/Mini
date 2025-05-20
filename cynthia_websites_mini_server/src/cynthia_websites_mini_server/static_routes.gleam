@@ -1,15 +1,17 @@
 import bungibindies/bun/http/serve/response
-import bungibindies/bun/spawn
+import bungibindies/bun/spawn.{OptionsToSubprocess}
 import cynthia_websites_mini_server/mutable_model_type
 import cynthia_websites_mini_server/utils/files.{client_css, client_js}
 import cynthia_websites_mini_shared
 import cynthia_websites_mini_shared/configtype
 import cynthia_websites_mini_shared/ui
+import gleam/bool
 import gleam/dict
 import gleam/javascript/array
 import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/string
+import gleamy_lights/console
 import javascript/mutable_reference
 
 import plinth/node/process
@@ -97,11 +99,30 @@ pub fn footer(can_hide: Bool, git_integration: Bool) {
       |> list.append(
         case { simplifile.is_directory(process.cwd() <> "/.git/") } {
           Ok(True) -> {
+            console.log("[Git integration] git repository detected")
             [
               ", created from "
-              <> case { todo } {
-                Some(reponame) -> reponame
-                None -> "a git repo"
+              <> case
+                helper_get_git_remote_commit(),
+                {
+                  spawn.sync(OptionsToSubprocess(
+                    cmd: ["git", "rev-parse", "--short", "HEAD"],
+                    cwd: Some(process.cwd()),
+                    env: None,
+                    stderr: Some(spawn.Ignore),
+                    stdout: Some(spawn.Pipe),
+                  ))
+                  |> spawn.stdout()
+                }
+              {
+                Some(commit_url), Ok(commit_id) ->
+                  "<a href=\""
+                  <> commit_url
+                  <> "\"><code>"
+                  <> commit_id
+                  <> "</code></a>"
+                None, Ok(commit_id) -> "<code>" <> commit_id <> "</code>"
+                _, _ -> "a git repo"
               },
             ]
           }
@@ -111,7 +132,10 @@ pub fn footer(can_hide: Bool, git_integration: Bool) {
         },
       )
       |> string.concat
-    False -> ui.footer
+    False -> {
+      console.log("[Git integration] git repository not detected")
+      ui.footer
+    }
   }
   "<footer id='cynthiafooter' class='footer transition-all duration-[2s] ease-in-out footer-center bg-base-300 text-base-content p-1 h-fit fixed bottom-0'><aside><p>"
   <> f
@@ -139,6 +163,39 @@ pub fn footer(can_hide: Bool, git_integration: Bool) {
 }
 
 /// If succeeds, returns a html link to the current commit on the remote, by just removing the last part of the URL and adding "/commit/<commit_hash>".
-fn helper_get_git_remote() -> Option(String) {
-  todo
+fn helper_get_git_remote_commit() -> Option(String) {
+  let remote_cmd =
+    spawn.sync(OptionsToSubprocess(
+      cmd: ["git", "config", "--get", "remote.origin.url"],
+      cwd: Some(process.cwd()),
+      env: None,
+      stderr: Some(spawn.Ignore),
+      stdout: Some(spawn.Pipe),
+    ))
+    |> spawn.stdout()
+    |> option.from_result()
+    |> option.map(fn(str) {
+      case string.ends_with(str, ".git") {
+        True -> string.drop_end(str, 4)
+        False -> str
+      }
+    })
+  use remote <- option.then(remote_cmd)
+  // If remote does not start with http(s), we can't use it.
+  use <- bool.guard(
+    when: bool.negate(string.starts_with(remote, "http")),
+    return: None,
+  )
+  let commit_cmd =
+    spawn.sync(OptionsToSubprocess(
+      cmd: ["git", "rev-parse", "--verify", "HEAD"],
+      cwd: Some(process.cwd()),
+      env: None,
+      stderr: Some(spawn.Ignore),
+      stdout: Some(spawn.Pipe),
+    ))
+    |> spawn.stdout()
+    |> option.from_result()
+  use commit <- option.then(commit_cmd)
+  Some(remote <> "/commit/" <> commit)
 }
