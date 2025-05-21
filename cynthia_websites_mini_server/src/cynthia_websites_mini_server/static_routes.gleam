@@ -10,6 +10,7 @@ import gleam/dict
 import gleam/javascript/array
 import gleam/list
 import gleam/option.{type Option, None, Some}
+import gleam/result
 import gleam/string
 import gleamy_lights/console
 import javascript/mutable_reference
@@ -113,16 +114,17 @@ pub fn footer(can_hide: Bool, git_integration: Bool) {
                     stdout: Some(spawn.Pipe),
                   ))
                   |> spawn.stdout()
+                  |> result.map(string.to_option)
                 }
               {
-                Some(commit_url), Ok(commit_id) ->
+                Some(commit_url), Ok(Some(commit_id)) ->
                   "<a href=\""
                   <> commit_url
                   <> "\"><code>"
                   <> commit_id
                   <> "</code></a>"
-                None, Ok(commit_id) -> "<code>" <> commit_id <> "</code>"
-                _, _ -> "a git repo"
+                None, Ok(Some(commit_id)) -> "<code>" <> commit_id <> "</code>"
+                _, _ -> "a git repo."
               },
             ]
           }
@@ -137,7 +139,7 @@ pub fn footer(can_hide: Bool, git_integration: Bool) {
       ui.footer
     }
   }
-  "<footer id='cynthiafooter' class='footer transition-all duration-[2s] ease-in-out footer-center bg-base-300 text-base-content p-1 h-fit fixed bottom-0'><aside><p>"
+  "<footer id='cynthiafooter' class='footer transition-all duration-[2s] ease-in-out footer-center bg-base-300 dark:bg-slate-800 text-base-content dark:text-base-200 p-1 h-fit fixed bottom-0'><aside><p>"
   <> f
   <> "</p></aside></footer>"
   <> case can_hide {
