@@ -114,15 +114,16 @@ pub fn footer(can_hide: Bool, git_integration: Bool) {
                     stdout: Some(spawn.Pipe),
                   ))
                   |> spawn.stdout()
+                  |> result.map(string.trim)
                   |> result.map(string.to_option)
                 }
               {
                 Some(commit_url), Ok(Some(commit_id)) ->
                   "commit <a href=\""
                   <> commit_url
-                  <> "\"><code>."
+                  <> "\" class=\"dark:text-sky-600 text-sky-800 underline\"><code>"
                   <> commit_id
-                  <> "</code></a>"
+                  <> "</code></a>."
                 None, Ok(Some(commit_id)) ->
                   " commit id <code>" <> commit_id <> "</code>."
                 _, _ -> "a git repo."
@@ -176,6 +177,7 @@ fn helper_get_git_remote_commit() -> Option(String) {
       stdout: Some(spawn.Pipe),
     ))
     |> spawn.stdout()
+    |> result.map(string.trim)
     |> option.from_result()
     |> option.map(fn(str) {
       case string.ends_with(str, ".git") {
@@ -198,6 +200,7 @@ fn helper_get_git_remote_commit() -> Option(String) {
       stdout: Some(spawn.Pipe),
     ))
     |> spawn.stdout()
+    |> result.map(string.trim)
     |> option.from_result()
   use commit <- option.then(commit_cmd)
   Some(remote <> "/commit/" <> commit)
