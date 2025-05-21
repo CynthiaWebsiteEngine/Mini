@@ -118,12 +118,13 @@ pub fn footer(can_hide: Bool, git_integration: Bool) {
                 }
               {
                 Some(commit_url), Ok(Some(commit_id)) ->
-                  "<a href=\""
+                  "commit <a href=\""
                   <> commit_url
-                  <> "\"><code>"
+                  <> "\"><code>."
                   <> commit_id
                   <> "</code></a>"
-                None, Ok(Some(commit_id)) -> "<code>" <> commit_id <> "</code>"
+                None, Ok(Some(commit_id)) ->
+                  " commit id <code>" <> commit_id <> "</code>."
                 _, _ -> "a git repo."
               },
             ]

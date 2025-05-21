@@ -1,7 +1,3 @@
-import gleam/list
-import gleam/option.{type Option, None, Some}
-import gleam/string
-
 pub const footer = "Made into this website with <a class='dark:text-sky-600 text-sky-800 underline' target='_blank' href='https://github.com/CynthiaWebsiteEngine/Mini'>Cynthia Mini</a>"
 
 /// The entire <body> of the 404 page.
