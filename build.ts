@@ -356,6 +356,15 @@ h1, h2, h3, h4, h5, h6, .text-lg, .text-xl, .text-2xl, .text-3xl, .text-4xl, .te
 body, p, a, button, .text-sm, .text-base {
   font-family: 'Quicksand', sans-serif;
 }
+@layer base {
+  ul ul {
+    list-style-type: revert;
+  }
+  li {
+    padding-left: 30px;
+  }
+}
+
 `;
   const config = {
     presets: [tailwindconfig],
