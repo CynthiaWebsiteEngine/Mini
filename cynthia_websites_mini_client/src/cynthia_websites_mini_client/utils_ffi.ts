@@ -12,3 +12,7 @@ export function compares(a: string, b: string): string {
     return "eq";
   }
 }
+
+export function trims(str: string) {
+  return str.trim();
+}
