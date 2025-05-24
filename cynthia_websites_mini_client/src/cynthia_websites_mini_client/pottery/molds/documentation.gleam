@@ -17,10 +17,12 @@ import gleam/list
 import gleam/option.{None}
 import gleam/result
 import gleam/string
+import houdini
 import lustre/attribute
 import lustre/element.{type Element}
 import lustre/element/html
 import lustre/event
+import odysseus
 
 /// Page layout handler for the Documentation theme
 ///
@@ -51,7 +53,14 @@ pub fn page_layout(
       html.div([attribute.class("mb-5")], [
         html.h1(
           [attribute.class("text-2xl font-semibold text-base-content mb-3")],
-          [html.text(title)],
+          [
+            element.unsafe_raw_html(
+              "span",
+              "span",
+              [],
+              houdini.escape(utils.js_trim(odysseus.unescape(title))),
+            ),
+          ],
         ),
         element.unsafe_raw_html(
           "div",
@@ -251,6 +260,14 @@ fn documentation_common(
                     ],
                     [html.span([attribute.class("i-tabler-menu h-5 w-5")], [])],
                   ),
+                ]),
+                html.div([attribute.class("h-full lg:flex-1")], [
+                  html.img([
+                    attribute.src(
+                      utils.phone_home_url() <> "assets/site_icon.png",
+                    ),
+                    attribute.class("h-full max-w-full max-h-full "),
+                  ]),
                 ]),
                 html.div([attribute.class("flex items-center gap-3")], [
                   html.div([attribute.class("relative hidden sm:block")], [
@@ -472,16 +489,12 @@ pub fn menu_1(from model: model_type.Model) -> List(Element(messages.Msg)) {
     Ok(menu_items) -> {
       list.map(menu_items, fn(item) {
         // Convert item to tuple, this is not the best approach, but it works as well as refactoring for custom type here.
-        let item = {
-          let model_type.MenuItem(name:, to:) = item
-          #(name, to)
-        }
-        let item = case item.1 {
-          "" -> #(item.0, "/")
+        let item = case item.to {
+          "" -> model_type.MenuItem(item.name, "/")
           _ -> item
         }
-
-        let is_active = hash == item.1
+        let model_type.MenuItem(name:, to:) = item
+        let is_active = hash == to
 
         html.li([], [
           html.a(
@@ -492,7 +505,7 @@ pub fn menu_1(from model: model_type.Model) -> List(Element(messages.Msg)) {
                 False ->
                   "flex items-center px-3 py-2 rounded-md hover:bg-base-300/50 text-base-content/80 hover:text-base-content"
               }),
-              attribute.href(utils.phone_home_url() <> "#" <> item.1),
+              attribute.href(utils.phone_home_url() <> "#" <> to),
               event.on_click(messages.UserOnDocumentationLayoutToggleSidebar),
             ],
             [
@@ -510,7 +523,7 @@ pub fn menu_1(from model: model_type.Model) -> List(Element(messages.Msg)) {
                   ],
                   [],
                 ),
-                html.text(item.0),
+                element.unsafe_raw_html("span", "span", [], name),
               ]),
             ],
           ),
