@@ -27,6 +27,7 @@ packages = [
   { name = "justin", version = "1.0.1", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "justin", source = "hex", outer_checksum = "7FA0C6DB78640C6DC5FBFD59BF3456009F3F8B485BF6825E97E1EB44E9A1E2CD" },
   { name = "lustre", version = "5.0.2", build_tools = ["gleam"], requirements = ["gleam_erlang", "gleam_json", "gleam_otp", "gleam_stdlib", "houdini"], otp_app = "lustre", source = "hex", outer_checksum = "ED46F0CA5BA61067DDC2CEDEA9906AC99E88F49918EFDC58283A531F0A14F042" },
   { name = "modem", version = "2.0.2", build_tools = ["gleam"], requirements = ["gleam_stdlib", "lustre"], otp_app = "modem", source = "hex", outer_checksum = "EF6B6B187E9D6425DFADA3A1AC212C01C4F34913A135DA2FF9B963EEF324C1F7" },
+  { name = "odysseus", version = "1.0.0", build_tools = ["gleam"], requirements = [], otp_app = "odysseus", source = "hex", outer_checksum = "6A97DA1075BDDEA8B60F47B1DFFAD49309FA27E73843F13A0AF32EA7087BA11C" },
   { name = "plinth", version = "0.5.9", build_tools = ["gleam"], requirements = ["conversation", "gleam_javascript", "gleam_json", "gleam_stdlib"], otp_app = "plinth", source = "hex", outer_checksum = "9684C5D768F99B34537B48B100509389C45D2E7C045426E93ACB250993611724" },
   { name = "rank", version = "1.0.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "rank", source = "hex", outer_checksum = "5660E361F0E49CBB714CC57CC4C89C63415D8986F05B2DA0C719D5642FAD91C9" },
   { name = "rsvp", version = "1.0.3", build_tools = ["gleam"], requirements = ["gleam_erlang", "gleam_fetch", "gleam_http", "gleam_httpc", "gleam_javascript", "gleam_json", "gleam_stdlib", "lustre"], source = "git", repo = "https://github.com/strawmelonjuice/rsvp.git", commit = "c7e5463089f0a312a6fe7910903fbbc76b4333c0" },
@@ -46,7 +47,9 @@ gleam_json = { version = "2.3.0" }
 gleam_stdlib = { version = " 0.59.0" }
 gleam_time = { version = ">= 1.2.0 and < 2.0.0" }
 gleeunit = { version = ">= 1.0.0 and < 2.0.0" }
+houdini = { version = ">= 1.1.0 and < 2.0.0" }
 lustre = { version = "5.0.2" }
 modem = { version = "2.0.2" }
+odysseus = { version = ">= 1.0.0 and < 2.0.0" }
 plinth = { version = "0.5.9" }
 rsvp = { git = "https://github.com/strawmelonjuice/rsvp.git", ref = "chore/bump-gleam-javascript" }
