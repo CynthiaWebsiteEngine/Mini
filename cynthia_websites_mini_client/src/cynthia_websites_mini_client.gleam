@@ -20,8 +20,10 @@ import gleam/order
 import gleam/result
 import gleam/string
 import gleam/uri.{type Uri}
+import houdini
 import lustre
 import lustre/effect.{type Effect}
+import odysseus
 import plinth/browser/window
 import plinth/javascript/console
 import plinth/javascript/global
@@ -301,7 +303,9 @@ fn add_each_menu(
           }
         })
         |> list.sort(fn(itema, itemb) {
-          utils.compare_so_natural(itema.name, itemb.name)
+          let a = houdini.escape(utils.js_trim(odysseus.unescape(itema.name)))
+          let b = houdini.escape(utils.js_trim(odysseus.unescape(itemb.name)))
+          utils.compare_so_natural(a, b)
         })
       dict.insert(gotten, current_menu, hits)
       |> add_each_menu(rest, _, items)
