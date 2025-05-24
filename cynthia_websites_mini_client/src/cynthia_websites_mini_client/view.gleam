@@ -3,13 +3,16 @@ import cynthia_websites_mini_client/messages.{type Msg}
 import cynthia_websites_mini_client/model_type.{type Model}
 import cynthia_websites_mini_client/pageloader/postlistloader
 import cynthia_websites_mini_client/pottery
+import cynthia_websites_mini_client/utils
 import cynthia_websites_mini_shared/contenttypes
 import gleam/list
 import gleam/option.{None, Some}
 import gleam/result
+import houdini
 import lustre/attribute
 import lustre/element.{type Element}
 import lustre/element/html
+import odysseus
 
 pub fn main(model: Model) -> Element(Msg) {
   case model.complete_data {
@@ -112,7 +115,10 @@ pub fn main(model: Model) -> Element(Msg) {
         }
         _ -> content
       }
-      let assert Ok(_) = dom.push_title(content.title)
+      let assert Ok(_) =
+        dom.push_title(
+          houdini.escape(utils.js_trim(odysseus.unescape(content.title))),
+        )
       pottery.render_content(model, content)
     }
   }
