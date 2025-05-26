@@ -3,6 +3,7 @@ import cynthia_websites_mini_server/utils/files
 import cynthia_websites_mini_server/utils/prompts
 import cynthia_websites_mini_shared/configtype
 import cynthia_websites_mini_shared/contenttypes
+import gleam/bool
 import gleam/dict
 import gleam/dynamic/decode
 import gleam/fetch
@@ -176,6 +177,51 @@ fn cynthia_config_global_only_exploiter(o: dict.Dict(String, tom.Toml)) {
     }
     _ -> True
   }
+  let other_vars =
+    case result.map(tom.get(o, ["variables"]), tom.as_table) {
+      Ok(Ok(d)) ->
+        dict.map_values(d, fn(key, unasserted_value) {
+          let somewhat_asserted_value = case unasserted_value {
+            tom.Bool(z) -> [bool.to_string(z), "boolean"]
+            tom.Date(date) -> [
+              date.year |> int.to_string,
+              date.month |> int.to_string,
+              date.day |> int.to_string,
+              "date",
+            ]
+            tom.DateTime(tom.DateTimeValue(date, time, offset)) -> {
+              case offset {
+                tom.Local -> [
+                  date.year |> int.to_string,
+                  date.month |> int.to_string,
+                  date.day |> int.to_string,
+                  time.hour |> int.to_string,
+                  time.minute |> int.to_string,
+                  time.second |> int.to_string,
+                  time.millisecond |> int.to_string,
+                  "datetime",
+                ]
+                _ -> ["unsupported"]
+              }
+            }
+            tom.Float(a) -> [float.to_string(a), "float"]
+            tom.Int(b) -> [int.to_string(b), "integer"]
+            tom.String(guitar) -> [guitar, "string"]
+            tom.Time(time) -> [
+              time.hour |> int.to_string,
+              time.minute |> int.to_string,
+              time.second |> int.to_string,
+              time.millisecond |> int.to_string,
+              "time",
+            ]
+            _ -> ["unsupported"]
+          }
+          somewhat_asserted_value
+        })
+      _ -> dict.new()
+    }
+    |> option.Some
+
   Ok(configtype.SharedCynthiaConfigGlobalOnly(
     global_theme:,
     global_theme_dark:,
@@ -186,6 +232,7 @@ fn cynthia_config_global_only_exploiter(o: dict.Dict(String, tom.Toml)) {
     server_host:,
     git_integration:,
     comment_repo:,
+    other_vars:,
   ))
 }
 
@@ -247,7 +294,7 @@ fn get_inner_and_meta(
 
   use inner_plain <- promise.try_await({
     // This case also check if the permalink starts with "!", in which case it is a content list.
-    // Content lists will be generated on the client side, and their pre-given content 
+    // Content lists will be generated on the client side, and their pre-given content
     // will be discarded, so loading it in from anywhere would be a waste of resources.
     case string.starts_with(permalink, "!"), possibly_extern {
       True, _ -> promise.resolve(Ok(""))

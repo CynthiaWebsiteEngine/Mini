@@ -1,4 +1,5 @@
 import cynthia_websites_mini_shared/contenttypes.{type Content}
+import gleam/dict.{type Dict}
 import gleam/dynamic/decode
 import gleam/json
 import gleam/option.{type Option, None, Some}
@@ -14,6 +15,7 @@ pub type CompleteData {
     server_host: Option(String),
     comment_repo: Option(String),
     git_integration: Bool,
+    other_vars: Dict(String, List(String)),
     content: List(Content),
   )
 }
@@ -29,6 +31,7 @@ pub fn encode_complete_data_for_client(complete_data: CompleteData) -> json.Json
     server_host: _,
     comment_repo:,
     git_integration:,
+    other_vars:,
     content:,
   ) = complete_data
   json.object([
@@ -78,6 +81,9 @@ pub fn complete_data_decoder() -> decode.Decoder(CompleteData) {
     "content",
     decode.list(contenttypes.content_decoder()),
   )
+
+  let other_vars = todo
+
   decode.success(CompleteData(
     global_theme:,
     global_theme_dark:,
@@ -88,6 +94,7 @@ pub fn complete_data_decoder() -> decode.Decoder(CompleteData) {
     server_host:,
     comment_repo:,
     git_integration:,
+    other_vars:,
     content:,
   ))
 }
@@ -103,6 +110,7 @@ pub type SharedCynthiaConfigGlobalOnly {
     server_host: Option(String),
     comment_repo: Option(String),
     git_integration: Bool,
+    other_vars: Option(dict.Dict(String, List(String))),
   )
 }
 
@@ -116,12 +124,14 @@ pub const default_shared_cynthia_config_global_only: SharedCynthiaConfigGlobalOn
   server_host: None,
   comment_repo: None,
   git_integration: True,
+  other_vars: None,
 )
 
 pub fn merge(
   orig: SharedCynthiaConfigGlobalOnly,
   content: List(Content),
 ) -> CompleteData {
+  let assert Some(other_vars) = orig.other_vars
   CompleteData(
     global_theme: orig.global_theme,
     global_theme_dark: orig.global_theme_dark,
@@ -132,6 +142,7 @@ pub fn merge(
     server_host: orig.server_host,
     comment_repo: orig.comment_repo,
     git_integration: orig.git_integration,
+    other_vars:,
     content:,
   )
 }

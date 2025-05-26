@@ -3,6 +3,7 @@ import cynthia_websites_mini_server/mutable_model_type
 import cynthia_websites_mini_shared/configtype.{SharedCynthiaConfigGlobalOnly}
 import cynthia_websites_mini_shared/timestamps
 import gleam/bool
+import gleam/dict
 import gleam/int
 import gleam/list
 import gleam/option.{Some}
@@ -35,6 +36,7 @@ pub fn test_model() -> mutable_reference.MutableReference(
       server_host: Some("localhost"),
       git_integration: True,
       comment_repo: Some("CynthiaWebsiteEngine/Mini-docs"),
+      other_vars: Some(dict.new()),
     ),
   )
   |> mutable_reference.new()
