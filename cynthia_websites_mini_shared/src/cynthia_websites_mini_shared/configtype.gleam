@@ -45,6 +45,12 @@ pub fn encode_complete_data_for_client(complete_data: CompleteData) -> json.Json
       None -> json.null()
       Some(value) -> json.string(value)
     }),
+    #(
+      "configurable_variables",
+      json.array(other_vars, fn(item) -> json.Json {
+        json.object([#(item.0, json.array(item.1, json.string))])
+      }),
+    ),
     #("content", json.array(content, contenttypes.encode_content)),
   ])
 }
@@ -82,7 +88,7 @@ pub fn complete_data_decoder() -> decode.Decoder(CompleteData) {
     decode.list(contenttypes.content_decoder()),
   )
 
-  let other_vars = todo
+  let other_vars = todo as "Custom variable decoding not yet implemented"
 
   decode.success(CompleteData(
     global_theme:,
