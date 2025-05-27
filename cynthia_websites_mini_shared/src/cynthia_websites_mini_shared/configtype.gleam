@@ -15,7 +15,7 @@ pub type CompleteData {
     server_host: Option(String),
     comment_repo: Option(String),
     git_integration: Bool,
-    other_vars: Dict(String, List(String)),
+    other_vars: List(#(String, List(String))),
     content: List(Content),
   )
 }
@@ -110,7 +110,7 @@ pub type SharedCynthiaConfigGlobalOnly {
     server_host: Option(String),
     comment_repo: Option(String),
     git_integration: Bool,
-    other_vars: Option(dict.Dict(String, List(String))),
+    other_vars: List(#(String, List(String))),
   )
 }
 
@@ -124,14 +124,13 @@ pub const default_shared_cynthia_config_global_only: SharedCynthiaConfigGlobalOn
   server_host: None,
   comment_repo: None,
   git_integration: True,
-  other_vars: None,
+  other_vars: [],
 )
 
 pub fn merge(
   orig: SharedCynthiaConfigGlobalOnly,
   content: List(Content),
 ) -> CompleteData {
-  let assert Some(other_vars) = orig.other_vars
   CompleteData(
     global_theme: orig.global_theme,
     global_theme_dark: orig.global_theme_dark,
@@ -142,7 +141,7 @@ pub fn merge(
     server_host: orig.server_host,
     comment_repo: orig.comment_repo,
     git_integration: orig.git_integration,
-    other_vars:,
+    other_vars: orig.other_vars,
     content:,
   )
 }

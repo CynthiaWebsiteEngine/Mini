@@ -2,6 +2,7 @@ import bungibindies/bun
 import cynthia_websites_mini_server/utils/files
 import cynthia_websites_mini_server/utils/prompts
 import cynthia_websites_mini_shared/configtype
+import cynthia_websites_mini_shared/configurable_variables
 import cynthia_websites_mini_shared/contenttypes
 import gleam/bool
 import gleam/dict
@@ -177,50 +178,98 @@ fn cynthia_config_global_only_exploiter(o: dict.Dict(String, tom.Toml)) {
     }
     _ -> True
   }
-  let other_vars =
-    case result.map(tom.get(o, ["variables"]), tom.as_table) {
-      Ok(Ok(d)) ->
-        dict.map_values(d, fn(key, unasserted_value) {
-          let somewhat_asserted_value = case unasserted_value {
-            tom.Bool(z) -> [bool.to_string(z), "boolean"]
-            tom.Date(date) -> [
-              date.year |> int.to_string,
-              date.month |> int.to_string,
-              date.day |> int.to_string,
-              "date",
-            ]
-            tom.DateTime(tom.DateTimeValue(date, time, offset)) -> {
-              case offset {
-                tom.Local -> [
-                  date.year |> int.to_string,
-                  date.month |> int.to_string,
-                  date.day |> int.to_string,
-                  time.hour |> int.to_string,
-                  time.minute |> int.to_string,
-                  time.second |> int.to_string,
-                  time.millisecond |> int.to_string,
-                  "datetime",
-                ]
-                _ -> ["unsupported"]
-              }
+  let other_vars = case result.map(tom.get(o, ["variables"]), tom.as_table) {
+    Ok(Ok(d)) ->
+      dict.map_values(d, fn(key, unasserted_value) {
+        let somewhat_asserted_value = case unasserted_value {
+          tom.Bool(z) -> [bool.to_string(z), configurable_variables.var_boolean]
+          tom.Date(date) -> [
+            date.year |> int.to_string,
+            date.month |> int.to_string,
+            date.day |> int.to_string,
+            configurable_variables.var_date,
+          ]
+          tom.DateTime(tom.DateTimeValue(date, time, offset)) -> {
+            case offset {
+              tom.Local -> [
+                int.to_string(date.year),
+                int.to_string(date.month),
+                int.to_string(date.day),
+                int.to_string(time.hour),
+                int.to_string(time.minute),
+                int.to_string(time.second),
+                int.to_string(time.millisecond),
+                configurable_variables.var_datetime,
+              ]
+              _ -> [configurable_variables.var_unsupported]
             }
-            tom.Float(a) -> [float.to_string(a), "float"]
-            tom.Int(b) -> [int.to_string(b), "integer"]
-            tom.String(guitar) -> [guitar, "string"]
-            tom.Time(time) -> [
-              time.hour |> int.to_string,
-              time.minute |> int.to_string,
-              time.second |> int.to_string,
-              time.millisecond |> int.to_string,
-              "time",
-            ]
-            _ -> ["unsupported"]
           }
-          somewhat_asserted_value
-        })
-      _ -> dict.new()
+          tom.Float(a) -> [float.to_string(a), configurable_variables.var_float]
+          tom.Int(b) -> [int.to_string(b), configurable_variables.var_int]
+          tom.String(guitar) -> [guitar, configurable_variables.var_string]
+          tom.Time(time) -> [
+            int.to_string(time.hour),
+            int.to_string(time.minute),
+            int.to_string(time.second),
+            int.to_string(time.millisecond),
+            configurable_variables.var_time,
+          ]
+          _ -> [configurable_variables.var_unsupported]
+        }
+        let assert Ok(conclusion) = somewhat_asserted_value |> list.last()
+          as "This must be a value, since we just actively set it above."
+        case conclusion == configurable_variables.var_unsupported {
+          True ->
+            Error(FieldError(
+              "variables->" <> key <> " does not contain a supported value.",
+            ))
+          False -> {
+            {
+              {
+                configurable_variables.typecontrolled
+                |> list.key_find(key)
+                |> result.unwrap(conclusion)
+              }
+              == conclusion
+            }
+            |> bool.guard(Ok(somewhat_asserted_value), fn() {
+              Error(FieldError(
+                "variables->"
+                <> key
+                <> " does not contain the expected value. --> Expected: "
+                <> configurable_variables.typecontrolled
+                |> list.key_find(key)
+                |> result.unwrap(conclusion)
+                <> ", got: "
+                <> conclusion,
+              ))
+            })
+          }
+        }
+      })
+      |> dict.to_list()
+    _ -> []
+  }
+  // A kind of manual result.all()
+  let other_vars = case
+    list.find_map(other_vars, fn(le) {
+      case le.1 {
+        Error(err) -> Ok(err)
+        _ -> Error(Nil)
+      }
+    })
+  {
+    Ok(pq) -> Error(pq)
+    Error(Nil) -> {
+      other_vars
+      |> list.map(fn(it) {
+        let assert Ok(b) = it.1
+        #(it.0, b)
+      })
+      |> Ok
     }
-    |> option.Some
+  }
+  use other_vars <- result.try(other_vars)
 
   Ok(configtype.SharedCynthiaConfigGlobalOnly(
     global_theme:,
