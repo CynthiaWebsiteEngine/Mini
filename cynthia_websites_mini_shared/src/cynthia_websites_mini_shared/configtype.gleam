@@ -2,6 +2,7 @@ import cynthia_websites_mini_shared/contenttypes.{type Content}
 import gleam/dict.{type Dict}
 import gleam/dynamic/decode
 import gleam/json
+import gleam/list
 import gleam/option.{type Option, None, Some}
 
 pub type CompleteData {
@@ -87,8 +88,12 @@ pub fn complete_data_decoder() -> decode.Decoder(CompleteData) {
     "content",
     decode.list(contenttypes.content_decoder()),
   )
+  use other_vars <- decode.field("configurable_variables", {
+    decode.list(decode.dict(decode.string, decode.list(decode.string)))
+    |> decode.map(list.fold(_, dict.new(), dict.merge))
+  })
 
-  let other_vars = todo as "Custom variable decoding not yet implemented"
+  let other_vars = dict.to_list(other_vars)
 
   decode.success(CompleteData(
     global_theme:,
