@@ -53,13 +53,12 @@ pub fn main() {
     <> premixed.text_bright_orange(process.cwd())
     <> "!",
   )
-
+  use m <- promise.await(mutable_model_type.new())
   case process.argv() |> array.to_list() |> list.drop(2) {
     ["dynamic", ..] | ["host", ..] ->
-      dynamic_site_server(mutable_model_type.new(), 60_000) |> promise.resolve
-    ["preview", ..] ->
-      dynamic_site_server(mutable_model_type.new(), 20) |> promise.resolve
-    ["pregenerate", ..] | ["static"] -> static_site_server()
+      dynamic_site_server(m, 60_000) |> promise.resolve
+    ["preview", ..] -> dynamic_site_server(m, 20) |> promise.resolve
+    ["pregenerate", ..] | ["static"] -> static_site_server(m)
     ["init", ..] | ["initialise", ..] -> {
       config.initcfg()
       |> promise.resolve
@@ -228,7 +227,8 @@ fn dynamic_site_server(mutmodel: mutable_model_type.MutableModel, lease: Int) {
   Nil
 }
 
-fn static_site_server() {
+fn static_site_server(mutmodel: mutable_model_type.MutableModel) {
+  let data = mutmodel |> mutable_reference.get()
   console.info("Cynthia Mini is in pregeneration mode!")
 
   {
@@ -305,7 +305,7 @@ fn static_site_server() {
   case
     simplifile.write(
       to: outdir <> "/index.html",
-      contents: static_routes.index_html(config.capture_config()),
+      contents: static_routes.index_html(data.config),
     )
   {
     Ok(..) -> Nil
