@@ -1,5 +1,7 @@
 import cynthia_websites_mini_shared/configtype
 import gleam/dict.{type Dict}
+import gleam/dynamic
+import gleam/dynamic/decode
 import gleam/option.{type Option}
 import plinth/javascript/storage
 
@@ -21,7 +23,7 @@ pub type Model {
     status: Result(Nil, String),
     /// Other variables
     /// This stores for example the current search term
-    other: Dict(String, String),
+    other: Dict(String, dynamic.Dynamic),
     /// Session storage
     sessionstore: storage.Storage,
   )
@@ -34,4 +36,18 @@ pub type MenuItem {
     /// The path to the link
     to: String,
   )
+}
+
+/// Configurable variable value type 'Time', can be decoded with `time_decoder` in this same module.
+pub type Time {
+  Time(hours: Int, minutes: Int, seconds: Int, milis: Int)
+}
+
+/// Decodes the configurable variable value type 'Time'
+pub fn time_decoder() -> decode.Decoder(Time) {
+  use hours <- decode.field("hours", decode.int)
+  use minutes <- decode.field("minutes", decode.int)
+  use seconds <- decode.field("seconds", decode.int)
+  use milis <- decode.field("milis", decode.int)
+  decode.success(Time(hours:, minutes:, seconds:, milis:))
 }

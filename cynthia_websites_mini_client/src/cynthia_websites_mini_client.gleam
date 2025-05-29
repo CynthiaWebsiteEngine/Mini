@@ -1,5 +1,3 @@
-// I copied from the examples again to use as boilerplate... See https://github.com/lustre-labs/lustre/blob/main/examples/03-effects/01-http-requests/src/app.gleam for reference until nothing is recognisable.
-
 // IMPORTS ---------------------------------------------------------------------
 
 import cynthia_websites_mini_client/dom
@@ -11,8 +9,13 @@ import cynthia_websites_mini_client/pottery
 import cynthia_websites_mini_client/utils
 import cynthia_websites_mini_client/view
 import cynthia_websites_mini_shared/configtype
+import cynthia_websites_mini_shared/configurable_variables
 import cynthia_websites_mini_shared/contenttypes
+import gleam/bit_array
+import gleam/bool
 import gleam/dict
+import gleam/dynamic
+import gleam/float
 import gleam/int
 import gleam/list
 import gleam/option.{None, Some}
@@ -23,13 +26,12 @@ import gleam/uri.{type Uri}
 import houdini
 import lustre
 import lustre/effect.{type Effect}
+import modem
 import odysseus
 import plinth/browser/window
 import plinth/javascript/console
 import plinth/javascript/global
 import plinth/javascript/storage
-
-import modem
 import rsvp
 
 // MAIN ------------------------------------------------------------------------
@@ -173,7 +175,7 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
       let status = model.status
       let other =
         model.other
-        |> dict.insert("search_term", search_term)
+        |> dict.insert("search_term", dynamic.from(search_term))
       dom.set_hash(path)
       let sessionstore = model.sessionstore
       #(
@@ -211,12 +213,21 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
           }
           let computed_menus = compute_menus(new.content, model)
           let complete_data = Some(new)
-          let status = Ok(Nil)
+          case convert_configurable(new.other_vars) {
+            Ok(dict_of_configurables) -> {
+              // I thought this was already done, but I see what is going on here, still gonna commit. This _should_ be a dynamic, not a fucken string.
+              let other = dict.merge(model.other, dict_of_configurables)
+              let status = Ok(Nil)
 
-          #(
-            Model(..model, complete_data:, computed_menus:, status:),
-            effect.none(),
-          )
+              #(
+                Model(..model, complete_data:, computed_menus:, status:, other:),
+                effect.none(),
+              )
+            }
+            Error(mess) -> {
+              #(Model(..model, status: Error(mess)), effect.none())
+            }
+          }
         }
       }
     }
@@ -229,7 +240,11 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
         }
         Error(..) -> {
           // is closed, so open it
-          dict.insert(model.other, "github-layout menu open", "")
+          dict.insert(
+            model.other,
+            "github-layout menu open",
+            dynamic.from(None),
+          )
         }
       }
       #(Model(..model, other:), effect.none())
@@ -242,7 +257,7 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
         }
         Error(..) -> {
           // is closed, so open it
-          dict.insert(model.other, "cindy menu  1 open", "")
+          dict.insert(model.other, "cindy menu  1 open", dynamic.from(None))
         }
       }
       #(Model(..model, other:), effect.none())
@@ -255,7 +270,11 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
         }
         Error(..) -> {
           // is closed, so open it
-          dict.insert(model.other, "documentation-sidebar-open", "")
+          dict.insert(
+            model.other,
+            "documentation-sidebar-open",
+            dynamic.from(None),
+          )
         }
       }
       #(Model(..model, other:), effect.none())
@@ -263,7 +282,205 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
   }
 }
 
-// Helper function to compute menus --------------------------------------------------------
+/// -----------------------------------------------------------------------------------------
+/// Helper function to convert configurable variables into `Result(Dict(String,Dynamic))`'s,
+/// allowing usage in `model.other`
+/// -----------------------------------------------------------------------------------------
+fn convert_configurable(from: List(#(String, List(String)))) {
+  let defined = configurable_variables.typecontrolled
+  let res =
+    result.all(
+      list.map(from, fn(item) {
+        let #(keyname, probable_value): #(String, List(String)) = item
+        use found_type <- result.try(
+          list.last(probable_value)
+          |> result.replace_error(
+            "Invalid value at "
+            <> keyname
+            <> ", something might have gone wrong encoding this value at the server side.",
+          ),
+        )
+        let defined_type = case list.key_find(defined, keyname) {
+          Ok(m) -> m
+          Error(_) -> found_type
+        }
+        // Check if a convertible is found
+        let might_rewrite_the_story: Result(#(String, List(String)), String) = case
+          bool.or(
+            bool.and(
+              bool.or(
+                defined_type == configurable_variables.var_bitstring,
+                defined_type == configurable_variables.var_string,
+              ),
+              bool.or(
+                defined_type == configurable_variables.var_bitstring,
+                defined_type == configurable_variables.var_string,
+              ),
+            ),
+            bool.and(
+              bool.or(
+                defined_type == configurable_variables.var_int,
+                defined_type == configurable_variables.var_float,
+              ),
+              bool.or(
+                defined_type == configurable_variables.var_int,
+                defined_type == configurable_variables.var_float,
+              ),
+            ),
+          ),
+          found_type,
+          defined_type,
+          probable_value
+        {
+          False, _, _, _ -> {
+            // Type is not found to be convertible, return as-is
+            Ok(#(found_type, probable_value))
+          }
+          _, "integer", "float", [intstr, ..] -> {
+            use in <- result.try(result.replace_error(
+              int.parse(intstr),
+              "Could not parse number in " <> keyname,
+            ))
+            let flstr = in |> int.to_float |> float.to_string
+            Ok(#("float", [flstr, "float"]))
+          }
+          _, "float", "integer", [flstr, ..] -> {
+            // This is a convertible something, and the conversion required is from float to integer, we can just do that.
+            use fl <- result.try(result.replace_error(
+              float.parse(flstr),
+              "Could not parse number in " <> keyname,
+            ))
+            let in = int.to_string(float.truncate(fl))
+            Ok(#("integer", [in, "integer"]))
+          }
+          _, "string", "bits", [text, ..] -> {
+            // This is a convertible something, and the conversion required is from string to bitstring, we can just do that.
+            Ok(
+              #(configurable_variables.var_bitstring, [
+                bit_array.base64_encode(bit_array.from_string(text), True),
+                configurable_variables.var_bitstring,
+              ]),
+            )
+          }
+
+          _, "bits", "string", [bits64base, ..] -> {
+            // This is a convertible something, and the conversion required is from bitstring to string, we can do that if the bitstring is correct.
+            use bits <- result.try(result.replace_error(
+              bit_array.base64_decode(bits64base),
+              "Failed to decode base64 to bitstring for " <> keyname,
+            ))
+            use str <- result.try(result.replace_error(
+              bit_array.to_string(bits),
+              "Failed to convert bitstring to string for " <> keyname,
+            ))
+            Ok(
+              #(configurable_variables.var_string, [
+                str,
+                configurable_variables.var_string,
+              ]),
+            )
+          }
+          // For the other kinds, we don't know how to convert, so again, return as-is
+          // We won't realistically reach here.
+          _, _, _, _ -> Ok(#(found_type, probable_value))
+        }
+        use might_rewrite_the_story <- result.try(might_rewrite_the_story)
+        // and this is why it _might_ rewrite the story
+        let #(found_type, probable_value) = might_rewrite_the_story
+        use <- bool.guard(
+          found_type == defined_type,
+          Error(
+            "Expected a "
+            <> defined_type
+            <> " at "
+            <> keyname
+            <> " but found a "
+            <> found_type
+            <> " instead!",
+          ),
+        )
+
+        // Rename keynames
+        let keyname = "config_" <> keyname
+
+        case found_type, probable_value {
+          "integer", [num, ..] -> {
+            use integer <- result.try(result.replace_error(
+              int.parse(num),
+              "Could not parse number in " <> keyname,
+            ))
+
+            Ok(#(keyname, dynamic.from(integer)))
+          }
+
+          "float", [num, ..] -> {
+            use number <- result.try(result.replace_error(
+              float.parse(num),
+              "Could not parse number in " <> keyname,
+            ))
+
+            Ok(#(keyname, dynamic.from(number)))
+          }
+
+          "boolean", [wether, ..] -> {
+            let b = case wether {
+              "True" -> Ok(True)
+              "False" -> Ok(False)
+              _ -> Error("Could not parse boolean value in " <> keyname)
+            }
+            use b <- result.try(b)
+            Ok(#(keyname, dynamic.from(b)))
+          }
+
+          "bits", [base64, ..] -> {
+            use bits <- result.try(result.replace_error(
+              bit_array.base64_decode(base64),
+              "Could not decode base64 in " <> keyname,
+            ))
+            Ok(#(keyname, dynamic.from(bits)))
+          }
+
+          "text", [text, ..] -> {
+            // Strings or base64 strings are easiest, since they're verbatim
+            Ok(#(keyname, dynamic.from(text)))
+          }
+
+          "datetime", values -> {
+            todo
+          }
+
+          "date", values -> {
+            todo
+          }
+
+          "time", values -> {
+            use new_values <- result.try(result.replace_error(
+              result.all(list.map(values, int.parse)),
+              "Could not parse times in " <> keyname,
+            ))
+            case new_values {
+              [hours, minutes, seconds, milis] -> {
+                let c =
+                  dynamic.from(model_type.Time(
+                    hours:,
+                    minutes:,
+                    seconds:,
+                    milis:,
+                  ))
+                Ok(#(keyname, c))
+              }
+              _ -> Error("Could not parse times in " <> keyname)
+            }
+          }
+          _, _ -> Error("Could not decode configurable variable " <> keyname)
+        }
+      }),
+    )
+  use res <- result.try(res)
+  Ok(dict.from_list(res))
+}
+
+/// Helper function to compute menus --------------------------------------------------------
 fn compute_menus(content: List(contenttypes.Content), model: Model) {
   let menu_s_available =
     content
