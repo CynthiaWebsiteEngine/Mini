@@ -206,18 +206,21 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
           #(Model(..model, status: Error(error_message)), effect.none())
         }
         Ok(new) -> {
+          console.log("Succesfully decoded new data, parsing into model...")
           case new.comment_repo {
             Some(..) ->
               global.set_interval(300, pottery.comment_box_forced_styles)
             None -> global.set_timeout(30_000, fn() { Nil })
           }
           let computed_menus = compute_menus(new.content, model)
-          let complete_data = Some(new)
           case convert_configurable(new.other_vars) {
             Ok(dict_of_configurables) -> {
+              console.log("Succesfully unjsonified configurable variables.")
               // I thought this was already done, but I see what is going on here, still gonna commit. This _should_ be a dynamic, not a fucken string.
               let other = dict.merge(model.other, dict_of_configurables)
               let status = Ok(Nil)
+              let complete_data =
+                Some(configtype.CompleteData(..new, other_vars: []))
 
               #(
                 Model(..model, complete_data:, computed_menus:, status:, other:),
@@ -225,6 +228,7 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
               )
             }
             Error(mess) -> {
+              console.error("Going into error mode: " <> mess)
               #(Model(..model, status: Error(mess)), effect.none())
             }
           }
@@ -384,11 +388,12 @@ fn convert_configurable(from: List(#(String, List(String)))) {
           // We won't realistically reach here.
           _, _, _, _ -> Ok(#(found_type, probable_value))
         }
+
         use might_rewrite_the_story <- result.try(might_rewrite_the_story)
         // and this is why it _might_ rewrite the story
         let #(found_type, probable_value) = might_rewrite_the_story
         use <- bool.guard(
-          found_type == defined_type,
+          { found_type != defined_type },
           Error(
             "Expected a "
             <> defined_type
