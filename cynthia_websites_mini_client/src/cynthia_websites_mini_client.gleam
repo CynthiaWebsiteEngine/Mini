@@ -502,11 +502,11 @@ fn compute_menus(content: List(contenttypes.Content), model: Model) {
 
 // This is actually where the real magic happens
 fn add_each_menu(
-  rest: List(Int),
+  next: List(Int),
   gotten: dict.Dict(Int, List(model_type.MenuItem)),
   items: List(contenttypes.Content),
 ) -> dict.Dict(Int, List(model_type.MenuItem)) {
-  case rest {
+  case next {
     [] -> gotten
     [current_menu, ..rest] -> {
       let hits: List(model_type.MenuItem) =
