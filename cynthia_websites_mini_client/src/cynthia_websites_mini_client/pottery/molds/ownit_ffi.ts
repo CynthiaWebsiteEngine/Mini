@@ -26,12 +26,12 @@ export function context_into_template_run(
 }
 
 interface context {
-  content: string;
+  body: string;
 }
 
 function turn_gleam_record_into_js_object(record: any): context {
   console.log(record);
   return {
-    content: "",
+    body: record.content,
   };
 }

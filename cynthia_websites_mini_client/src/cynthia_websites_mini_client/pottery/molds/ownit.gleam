@@ -1,9 +1,19 @@
-//// Ownit layout
+//// # Ownit layout
 ////
 //// Custom layout for Cynthia Mini.
 //// Allows to create own templates in Handlebars.
 //// 
 //// Ownit is a unique layout in the sense that, it does not contain a layout, it's merely a wrap around Handlebars to allow own templates to be used in Cynthia Mini.
+//// 
+//// ## Writing templates for ownit
+//// 
+//// Writing templates for ownit can be done in the [Handlebars](https://handlebarsjs.com/) language. 
+//// Your template should be stored under `[variables] -> ownit_template` as a `"string"` or as a `{ path = "filename.hbs" }` or `{ url = "some-site.com/name.hbs" }` url.
+//// 
+//// ### Available context variables:
+//// 
+//// - `body`: Contains the content body, for example the text from your blog post.
+//// etc: More to come!
 
 import cynthia_websites_mini_client/messages
 import cynthia_websites_mini_client/model_type
