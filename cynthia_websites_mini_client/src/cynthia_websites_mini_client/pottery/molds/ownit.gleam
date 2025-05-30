@@ -2,22 +2,16 @@
 ////
 //// Custom layout for Cynthia Mini.
 //// Allows to create own templates in Handlebars.
+//// 
+//// Ownit is a unique layout in the sense that, it does not contain a layout, it's merely a wrap around Handlebars to allow own templates to be used in Cynthia Mini.
 
-// Common imports for layouts
 import cynthia_websites_mini_client/messages
 import cynthia_websites_mini_client/model_type
-import cynthia_websites_mini_client/utils
+import cynthia_websites_mini_client/pottery/oven
 import gleam/dict.{type Dict}
-import gleam/dynamic
 import gleam/dynamic/decode.{type Dynamic}
-import gleam/list
-import gleam/option
 import gleam/result
-import gleam/string
-import lustre/attribute
 import lustre/element.{type Element}
-import lustre/element/html
-import lustre/event
 
 pub fn main(
   from content: Element(messages.Msg),
@@ -25,27 +19,55 @@ pub fn main(
   store model: model_type.Model,
   is_post is_post: bool,
 ) {
-  case dict.get(model.others, "config_ownit_template") {
+  case get_template(model) {
     Ok(template) -> {
-      case decode.run(template, decode.string) {
-        Ok(template_string) -> {
-          // Handle successful decoding
-          todo
+      case
+        {
+          OwnitCtx(content: content |> element.to_string())
+          |> context_into_template_run(template, _)
         }
-        Error(error) -> {
-          error_page(
-            "An error occurred while decoding the Handles template: " <> error,
+      {
+        Ok(html_) -> element.unsafe_raw_html("div", "div", [], html_)
+        Error(_) ->
+          oven.error(
+            "Could not parse context into the Handlebars template from the configurated variable at 'ownit_template'.",
+            recoverable: True,
           )
-        }
       }
     }
-    Error(_) ->
-      error_page(
-        "An error occurred while loading the Handles template from your configuration at 'ownit_template'",
-      )
+    Error(error_message) -> {
+      oven.error(error_message, recoverable: False)
+    }
   }
 }
 
-pub fn error_page(error_message: String) {
-  todo
+fn get_template(model: model_type.Model) {
+  use template_string_dynamic <- result.try(result.replace_error(
+    dict.get(model.other, "config_ownit_template"),
+    "An error occurred while loading the Handlebars template from the configurated variable at 'ownit_template'.",
+  ))
+  use template_string <- result.try(result.replace_error(
+    decode.run(template_string_dynamic, decode.string),
+    "An error occurred while trying to decode the Handlebars template from the configurated variable at 'ownit_template'.",
+  ))
+  compile_template_string(template_string)
+  |> result.replace_error(
+    "Could not compile the Handlebars template from the configurated variable at 'ownit_template'.",
+  )
 }
+
+/// Context sent into Handlebars template, obviously needs to be generated first. Is translated into an Ecmascript object by FFI.
+type OwnitCtx {
+  OwnitCtx(content: String)
+}
+
+@external(javascript, "./ownit_ffi", "compile_template_string")
+fn compile_template_string(in: String) -> Result(CompiledTemplate, Nil)
+
+type CompiledTemplate
+
+@external(javascript, "./ownit_ffi", "context_into_template_run")
+fn context_into_template_run(
+  template: CompiledTemplate,
+  context: OwnitCtx,
+) -> Result(String, Nil)

@@ -130,9 +130,7 @@ fn fetch_all(
   let url = utils.phone_home_url() <> "site.json"
   let decoder = configtype.complete_data_decoder()
   let handler = rsvp.expect_json(decoder, handle_response)
-
-  // When we call `rsvp.get` that doesn't immediately make the request. Instead,
-  // it returns an effect that we give to the runtime to handle for us.
+  console.log("Fetching site.json...")
   rsvp.get(url, handler)
 }
 
@@ -221,14 +219,13 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
               let status = Ok(Nil)
               let complete_data =
                 Some(configtype.CompleteData(..new, other_vars: []))
-
+              console.log("Updated model.")
               #(
                 Model(..model, complete_data:, computed_menus:, status:, other:),
                 effect.none(),
               )
             }
             Error(mess) -> {
-              console.error("Going into error mode: " <> mess)
               #(Model(..model, status: Error(mess)), effect.none())
             }
           }
@@ -406,13 +403,14 @@ fn convert_configurable(from: List(#(String, List(String)))) {
         )
 
         // Rename keynames
+        let or_keyname = keyname
         let keyname = "config_" <> keyname
 
         case found_type, probable_value {
           "integer", [num, ..] -> {
             use integer <- result.try(result.replace_error(
               int.parse(num),
-              "Could not parse number in " <> keyname,
+              "Could not parse number in " <> or_keyname,
             ))
 
             Ok(#(keyname, dynamic.from(integer)))
@@ -421,7 +419,7 @@ fn convert_configurable(from: List(#(String, List(String)))) {
           "float", [num, ..] -> {
             use number <- result.try(result.replace_error(
               float.parse(num),
-              "Could not parse number in " <> keyname,
+              "Could not parse number in " <> or_keyname,
             ))
 
             Ok(#(keyname, dynamic.from(number)))
@@ -431,7 +429,7 @@ fn convert_configurable(from: List(#(String, List(String)))) {
             let b = case wether {
               "True" -> Ok(True)
               "False" -> Ok(False)
-              _ -> Error("Could not parse boolean value in " <> keyname)
+              _ -> Error("Could not parse boolean value in " <> or_keyname)
             }
             use b <- result.try(b)
             Ok(#(keyname, dynamic.from(b)))
@@ -440,12 +438,12 @@ fn convert_configurable(from: List(#(String, List(String)))) {
           "bits", [base64, ..] -> {
             use bits <- result.try(result.replace_error(
               bit_array.base64_decode(base64),
-              "Could not decode base64 in " <> keyname,
+              "Could not decode base64 in " <> or_keyname,
             ))
             Ok(#(keyname, dynamic.from(bits)))
           }
 
-          "text", [text, ..] -> {
+          "string", [text, ..] -> {
             // Strings or base64 strings are easiest, since they're verbatim
             Ok(#(keyname, dynamic.from(text)))
           }
@@ -461,7 +459,7 @@ fn convert_configurable(from: List(#(String, List(String)))) {
           "time", values -> {
             use new_values <- result.try(result.replace_error(
               result.all(list.map(values, int.parse)),
-              "Could not parse times in " <> keyname,
+              "Could not parse times in " <> or_keyname,
             ))
             case new_values {
               [hours, minutes, seconds, milis] -> {
@@ -474,10 +472,11 @@ fn convert_configurable(from: List(#(String, List(String)))) {
                   ))
                 Ok(#(keyname, c))
               }
-              _ -> Error("Could not parse times in " <> keyname)
+              _ -> Error("Could not parse times in " <> or_keyname)
             }
           }
-          _, _ -> Error("Could not decode configurable variable " <> keyname)
+          _, _ ->
+            Error("Could not decode configurable variable '" <> or_keyname)
         }
       }),
     )

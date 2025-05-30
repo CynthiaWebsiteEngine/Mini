@@ -2,9 +2,17 @@
   {
     "name": "autumn",
     "prevalence": "light",
-    "fonts": ["Fira Sans", "Ubuntu", "Noto Sans"],
+    "fonts": [
+      "Fira Sans",
+      "Ubuntu",
+      "Noto Sans"
+    ],
     "font-size": 15,
-    "fonts-mono": ["Fira Mono", "Ubuntu Mono", "Noto Mono"],
+    "fonts-mono": [
+      "Fira Mono",
+      "Ubuntu Mono",
+      "Noto Mono"
+    ],
     "font-size-mono": 14,
     "daisyUI": "autumn",
     "layout": "cindy"
@@ -12,9 +20,17 @@
   {
     "name": "autumn-dual",
     "prevalence": "light",
-    "fonts": ["Fira Sans", "Ubuntu", "Noto Sans"],
+    "fonts": [
+      "Fira Sans",
+      "Ubuntu",
+      "Noto Sans"
+    ],
     "font-size": 15,
-    "fonts-mono": ["Fira Mono", "Ubuntu Mono", "Noto Mono"],
+    "fonts-mono": [
+      "Fira Mono",
+      "Ubuntu Mono",
+      "Noto Mono"
+    ],
     "font-size-mono": 14,
     "daisyUI": "autumn",
     "layout": "cindy-dual"
@@ -22,9 +38,17 @@
   {
     "name": "autumn-landing",
     "prevalence": "light",
-    "fonts": ["Fira Sans", "Ubuntu", "Noto Sans"],
+    "fonts": [
+      "Fira Sans",
+      "Ubuntu",
+      "Noto Sans"
+    ],
     "font-size": 16,
-    "fonts-mono": ["Fira Mono", "Ubuntu Mono", "Noto Mono"],
+    "fonts-mono": [
+      "Fira Mono",
+      "Ubuntu Mono",
+      "Noto Mono"
+    ],
     "font-size-mono": 14,
     "daisyUI": "autumn",
     "layout": "cindy-landing"
@@ -32,9 +56,17 @@
   {
     "name": "minimalist-light",
     "prevalence": "light",
-    "fonts": ["Inter", "system-ui", "sans-serif"],
+    "fonts": [
+      "Inter",
+      "system-ui",
+      "sans-serif"
+    ],
     "font-size": 16,
-    "fonts-mono": ["JetBrains Mono", "Fira Code", "monospace"],
+    "fonts-mono": [
+      "JetBrains Mono",
+      "Fira Code",
+      "monospace"
+    ],
     "font-size-mono": 14,
     "daisyUI": {
       "minimalist-light": {
@@ -56,9 +88,17 @@
   {
     "name": "night",
     "prevalence": "dark",
-    "fonts": ["Fira Sans", "Ubuntu", "Noto Sans"],
+    "fonts": [
+      "Fira Sans",
+      "Ubuntu",
+      "Noto Sans"
+    ],
     "font-size": 15,
-    "fonts-mono": ["Fira Mono", "Ubuntu Mono", "Noto Mono"],
+    "fonts-mono": [
+      "Fira Mono",
+      "Ubuntu Mono",
+      "Noto Mono"
+    ],
     "font-size-mono": 14,
     "daisyUI": "night",
     "layout": "cindy"
@@ -66,9 +106,17 @@
   {
     "name": "night-dual",
     "prevalence": "dark",
-    "fonts": ["Fira Sans", "Ubuntu", "Noto Sans"],
+    "fonts": [
+      "Fira Sans",
+      "Ubuntu",
+      "Noto Sans"
+    ],
     "font-size": 15,
-    "fonts-mono": ["Fira Mono", "Ubuntu Mono", "Noto Mono"],
+    "fonts-mono": [
+      "Fira Mono",
+      "Ubuntu Mono",
+      "Noto Mono"
+    ],
     "font-size-mono": 14,
     "daisyUI": "night",
     "layout": "cindy-dual"
@@ -76,9 +124,17 @@
   {
     "name": "night-landing",
     "prevalence": "dark",
-    "fonts": ["Fira Sans", "Ubuntu", "Noto Sans"],
+    "fonts": [
+      "Fira Sans",
+      "Ubuntu",
+      "Noto Sans"
+    ],
     "font-size": 16,
-    "fonts-mono": ["Fira Mono", "Ubuntu Mono", "Noto Mono"],
+    "fonts-mono": [
+      "Fira Mono",
+      "Ubuntu Mono",
+      "Noto Mono"
+    ],
     "font-size-mono": 14,
     "daisyUI": "night",
     "layout": "cindy-landing"
@@ -86,9 +142,17 @@
   {
     "name": "minimalist-dark",
     "prevalence": "dark",
-    "fonts": ["Inter", "system-ui", "sans-serif"],
+    "fonts": [
+      "Inter",
+      "system-ui",
+      "sans-serif"
+    ],
     "font-size": 16,
-    "fonts-mono": ["JetBrains Mono", "Fira Code", "monospace"],
+    "fonts-mono": [
+      "JetBrains Mono",
+      "Fira Code",
+      "monospace"
+    ],
     "font-size-mono": 14,
     "daisyUI": {
       "minimalist-dark": {
@@ -110,9 +174,17 @@
   {
     "name": "coffee",
     "prevalence": "dark",
-    "fonts": ["Fira Sans", "Ubuntu", "Noto Sans"],
+    "fonts": [
+      "Fira Sans",
+      "Ubuntu",
+      "Noto Sans"
+    ],
     "font-size": 15,
-    "fonts-mono": ["Fira Mono", "Ubuntu Mono", "Noto Mono"],
+    "fonts-mono": [
+      "Fira Mono",
+      "Ubuntu Mono",
+      "Noto Mono"
+    ],
     "font-size-mono": 14,
     "daisyUI": "coffee",
     "layout": "cindy"
@@ -120,9 +192,17 @@
   {
     "name": "coffee-dual",
     "prevalence": "dark",
-    "fonts": ["Fira Sans", "Ubuntu", "Noto Sans"],
+    "fonts": [
+      "Fira Sans",
+      "Ubuntu",
+      "Noto Sans"
+    ],
     "font-size": 15,
-    "fonts-mono": ["Fira Mono", "Ubuntu Mono", "Noto Mono"],
+    "fonts-mono": [
+      "Fira Mono",
+      "Ubuntu Mono",
+      "Noto Mono"
+    ],
     "font-size-mono": 14,
     "daisyUI": "coffee",
     "layout": "cindy-dual"
@@ -130,9 +210,17 @@
   {
     "name": "oceanic",
     "prevalence": "dark",
-    "fonts": ["Poppins", "Open Sans", "Roboto"],
+    "fonts": [
+      "Poppins",
+      "Open Sans",
+      "Roboto"
+    ],
     "font-size": 16,
-    "fonts-mono": ["Fira Code", "JetBrains Mono", "Consolas"],
+    "fonts-mono": [
+      "Fira Code",
+      "JetBrains Mono",
+      "Consolas"
+    ],
     "font-size-mono": 14,
     "daisyUI": {
       "oceanic": {
@@ -162,7 +250,12 @@
       "Helvetica"
     ],
     "font-size": 14,
-    "fonts-mono": ["IBM Plex Mono", "Consolas", "Liberation Mono", "Menlo"],
+    "fonts-mono": [
+      "IBM Plex Mono",
+      "Consolas",
+      "Liberation Mono",
+      "Menlo"
+    ],
     "font-size-mono": 12,
     "daisyUI": {
       "github-light": {
@@ -192,7 +285,12 @@
       "Helvetica"
     ],
     "font-size": 14,
-    "fonts-mono": ["IBM Plex Mono", "Consolas", "Liberation Mono", "Menlo"],
+    "fonts-mono": [
+      "IBM Plex Mono",
+      "Consolas",
+      "Liberation Mono",
+      "Menlo"
+    ],
     "font-size-mono": 12,
     "daisyUI": {
       "github-dark": {
@@ -214,9 +312,18 @@
   {
     "name": "documentation-light",
     "prevalence": "light",
-    "fonts": ["Inter", "system-ui", "sans-serif"],
+    "fonts": [
+      "Inter",
+      "system-ui",
+      "sans-serif"
+    ],
     "font-size": 16,
-    "fonts-mono": ["IBM Plex Mono", "Consolas", "Liberation Mono", "Menlo"],
+    "fonts-mono": [
+      "IBM Plex Mono",
+      "Consolas",
+      "Liberation Mono",
+      "Menlo"
+    ],
     "font-size-mono": 14,
     "daisyUI": {
       "documentation-light": {
@@ -238,9 +345,18 @@
   {
     "name": "documentation-dark",
     "prevalence": "dark",
-    "fonts": ["Inter", "system-ui", "sans-serif"],
+    "fonts": [
+      "Inter",
+      "system-ui",
+      "sans-serif"
+    ],
     "font-size": 16,
-    "fonts-mono": ["IBM Plex Mono", "Consolas", "Liberation Mono", "Menlo"],
+    "fonts-mono": [
+      "IBM Plex Mono",
+      "Consolas",
+      "Liberation Mono",
+      "Menlo"
+    ],
     "font-size-mono": 14,
     "daisyUI": {
       "documentation-dark": {
@@ -262,9 +378,18 @@
   {
     "name": "documentation-pastel-purple",
     "prevalence": "light",
-    "fonts": ["Inter", "system-ui", "sans-serif"],
+    "fonts": [
+      "Inter",
+      "system-ui",
+      "sans-serif"
+    ],
     "font-size": 16,
-    "fonts-mono": ["IBM Plex Mono", "Consolas", "Liberation Mono", "Menlo"],
+    "fonts-mono": [
+      "IBM Plex Mono",
+      "Consolas",
+      "Liberation Mono",
+      "Menlo"
+    ],
     "font-size-mono": 14,
     "daisyUI": {
       "documentation-pastel-purple": {
@@ -286,9 +411,18 @@
   {
     "name": "documentation-sepia",
     "prevalence": "light",
-    "fonts": ["Merriweather", "Georgia", "serif"],
+    "fonts": [
+      "Merriweather",
+      "Georgia",
+      "serif"
+    ],
     "font-size": 16,
-    "fonts-mono": ["IBM Plex Mono", "Consolas", "Liberation Mono", "Menlo"],
+    "fonts-mono": [
+      "IBM Plex Mono",
+      "Consolas",
+      "Liberation Mono",
+      "Menlo"
+    ],
     "font-size-mono": 14,
     "daisyUI": {
       "documentation-sepia": {
@@ -310,9 +444,18 @@
   {
     "name": "documentation-ayu",
     "prevalence": "dark",
-    "fonts": ["Inter", "system-ui", "sans-serif"],
+    "fonts": [
+      "Inter",
+      "system-ui",
+      "sans-serif"
+    ],
     "font-size": 16,
-    "fonts-mono": ["IBM Plex Mono", "Consolas", "Liberation Mono", "Menlo"],
+    "fonts-mono": [
+      "IBM Plex Mono",
+      "Consolas",
+      "Liberation Mono",
+      "Menlo"
+    ],
     "font-size-mono": 14,
     "daisyUI": {
       "documentation-ayu": {
@@ -334,9 +477,18 @@
   {
     "name": "documentation-coal",
     "prevalence": "dark",
-    "fonts": ["Inter", "system-ui", "sans-serif"],
+    "fonts": [
+      "Inter",
+      "system-ui",
+      "sans-serif"
+    ],
     "font-size": 16,
-    "fonts-mono": ["IBM Plex Mono", "Consolas", "Liberation Mono", "Menlo"],
+    "fonts-mono": [
+      "IBM Plex Mono",
+      "Consolas",
+      "Liberation Mono",
+      "Menlo"
+    ],
     "font-size-mono": 14,
     "daisyUI": {
       "documentation-coal": {
@@ -358,9 +510,16 @@
   {
     "name": "pastel-green",
     "prevalence": "light",
-    "fonts": ["Quicksand", "system-ui", "sans-serif"],
+    "fonts": [
+      "Quicksand",
+      "system-ui",
+      "sans-serif"
+    ],
     "font-size": 16,
-    "fonts-mono": ["JetBrains Mono", "monospace"],
+    "fonts-mono": [
+      "JetBrains Mono",
+      "monospace"
+    ],
     "font-size-mono": 14,
     "daisyUI": {
       "pastel-green": {
@@ -382,9 +541,16 @@
   {
     "name": "pastel-pink",
     "prevalence": "light",
-    "fonts": ["Quicksand", "system-ui", "sans-serif"],
+    "fonts": [
+      "Quicksand",
+      "system-ui",
+      "sans-serif"
+    ],
     "font-size": 16,
-    "fonts-mono": ["JetBrains Mono", "monospace"],
+    "fonts-mono": [
+      "JetBrains Mono",
+      "monospace"
+    ],
     "font-size-mono": 14,
     "daisyUI": {
       "pastel-pink": {
@@ -406,9 +572,16 @@
   {
     "name": "pastel-purple",
     "prevalence": "light",
-    "fonts": ["Quicksand", "system-ui", "sans-serif"],
+    "fonts": [
+      "Quicksand",
+      "system-ui",
+      "sans-serif"
+    ],
     "font-size": 16,
-    "fonts-mono": ["JetBrains Mono", "monospace"],
+    "fonts-mono": [
+      "JetBrains Mono",
+      "monospace"
+    ],
     "font-size-mono": 14,
     "daisyUI": {
       "pastel-purple": {
@@ -430,9 +603,16 @@
   {
     "name": "pastel-yellow",
     "prevalence": "light",
-    "fonts": ["Quicksand", "system-ui", "sans-serif"],
+    "fonts": [
+      "Quicksand",
+      "system-ui",
+      "sans-serif"
+    ],
     "font-size": 16,
-    "fonts-mono": ["JetBrains Mono", "monospace"],
+    "fonts-mono": [
+      "JetBrains Mono",
+      "monospace"
+    ],
     "font-size-mono": 14,
     "daisyUI": {
       "pastel-yellow": {
@@ -454,9 +634,16 @@
   {
     "name": "pastel-blue",
     "prevalence": "light",
-    "fonts": ["Quicksand", "system-ui", "sans-serif"],
+    "fonts": [
+      "Quicksand",
+      "system-ui",
+      "sans-serif"
+    ],
     "font-size": 16,
-    "fonts-mono": ["JetBrains Mono", "monospace"],
+    "fonts-mono": [
+      "JetBrains Mono",
+      "monospace"
+    ],
     "font-size-mono": 14,
     "daisyUI": {
       "pastel-blue": {
@@ -478,9 +665,17 @@
   {
     "name": "frutiger-blue",
     "prevalence": "light",
-    "fonts": ["Segoe UI", "Open Sans", "system-ui"],
+    "fonts": [
+      "Segoe UI",
+      "Open Sans",
+      "system-ui"
+    ],
     "font-size": 16,
-    "fonts-mono": ["Consolas", "Monaco", "monospace"],
+    "fonts-mono": [
+      "Consolas",
+      "Monaco",
+      "monospace"
+    ],
     "font-size-mono": 14,
     "daisyUI": {
       "frutiger-blue": {
@@ -502,9 +697,17 @@
   {
     "name": "frutiger-purple",
     "prevalence": "light",
-    "fonts": ["Segoe UI", "Open Sans", "system-ui"],
+    "fonts": [
+      "Segoe UI",
+      "Open Sans",
+      "system-ui"
+    ],
     "font-size": 16,
-    "fonts-mono": ["Consolas", "Monaco", "monospace"],
+    "fonts-mono": [
+      "Consolas",
+      "Monaco",
+      "monospace"
+    ],
     "font-size-mono": 14,
     "daisyUI": {
       "frutiger-purple": {
@@ -526,9 +729,17 @@
   {
     "name": "frutiger-green",
     "prevalence": "light",
-    "fonts": ["Segoe UI", "Open Sans", "system-ui"],
+    "fonts": [
+      "Segoe UI",
+      "Open Sans",
+      "system-ui"
+    ],
     "font-size": 16,
-    "fonts-mono": ["Consolas", "Monaco", "monospace"],
+    "fonts-mono": [
+      "Consolas",
+      "Monaco",
+      "monospace"
+    ],
     "font-size-mono": 14,
     "daisyUI": {
       "frutiger-green": {
@@ -550,9 +761,17 @@
   {
     "name": "sepia",
     "prevalence": "light",
-    "fonts": ["Merriweather", "Georgia", "serif"],
+    "fonts": [
+      "Merriweather",
+      "Georgia",
+      "serif"
+    ],
     "font-size": 16,
-    "fonts-mono": ["Fira Code", "Monaco", "monospace"],
+    "fonts-mono": [
+      "Fira Code",
+      "Monaco",
+      "monospace"
+    ],
     "font-size-mono": 14,
     "daisyUI": {
       "sepia": {
@@ -570,5 +789,19 @@
       }
     },
     "layout": "sepia"
+  },
+  {
+    "name": "ownit",
+    "prevalence": "light",
+    "fonts": [],
+    "font-size": 16,
+    "fonts-mono": [
+      "Fira Code",
+      "Monaco",
+      "monospace"
+    ],
+    "font-size-mono": 14,
+    "daisyUI": "autumn",
+    "layout": "ownit"
   }
 ]

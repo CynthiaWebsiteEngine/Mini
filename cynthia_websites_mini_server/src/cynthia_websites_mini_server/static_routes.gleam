@@ -149,7 +149,6 @@ pub fn footer(can_hide: Bool, git_integration: Bool) {
       "
     <script defer>
 	window.setTimeout(function () {
-		console.log('now scroll.');
 		window.addEventListener('scroll',
 			function () {
 				const classname = 'max-h-[5px]';
