@@ -12,6 +12,7 @@ import cynthia_websites_mini_client/pottery/molds/cindy_simple
 import cynthia_websites_mini_client/pottery/molds/documentation
 import cynthia_websites_mini_client/pottery/molds/frutiger
 import cynthia_websites_mini_client/pottery/molds/github_layout
+import cynthia_websites_mini_client/pottery/molds/handles_layout
 import cynthia_websites_mini_client/pottery/molds/minimalist
 import cynthia_websites_mini_client/pottery/molds/oceanic_layout
 import cynthia_websites_mini_client/pottery/molds/pastels
@@ -180,6 +181,19 @@ pub fn into(
         ) -> Element(messages.Msg) {
           frutiger.post_layout(from: content, with: metadata, store: model)
         }
+      }
+    }
+    "ownit" -> {
+      // Ownit does not split between pages and posts, it is a single layout, split in the template.
+      fn(content: Element(messages.Msg), metadata: Dict(String, Dynamic)) -> Element(
+        messages.Msg,
+      ) {
+        ownit.main(
+          from: content,
+          with: metadata,
+          store: model,
+          is_post: is_post,
+        )
       }
     }
     other -> {
