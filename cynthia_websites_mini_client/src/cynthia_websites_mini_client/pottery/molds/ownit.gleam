@@ -19,7 +19,11 @@ import cynthia_websites_mini_client/messages
 import cynthia_websites_mini_client/model_type
 import cynthia_websites_mini_client/pottery/oven
 import gleam/dict.{type Dict}
+import gleam/dynamic
 import gleam/dynamic/decode.{type Dynamic}
+import gleam/javascript/array.{type Array}
+import gleam/list
+import gleam/option.{None}
 import gleam/result
 import lustre/element.{type Element}
 
@@ -27,13 +31,126 @@ pub fn main(
   from content: Element(messages.Msg),
   with variables: Dict(String, Dynamic),
   store model: model_type.Model,
-  is_post is_post: bool,
+  is_post is_post: Bool,
 ) {
+  echo variables
+  let #(
+    title,
+    description,
+    site_name,
+    category,
+    date_modified,
+    date_published,
+    tags,
+  ): #(String, String, String, String, String, String, Array(String)) = case
+    is_post
+  {
+    True -> {
+      let assert Ok(title) =
+        dict.get(variables, "title")
+        |> result.unwrap(dynamic.from(None))
+        |> decode.run(decode.string)
+      let assert Ok(description) =
+        dict.get(variables, "description_html")
+        |> result.unwrap(dynamic.from(None))
+        |> decode.run(decode.string)
+      let assert Ok(site_name) =
+        dict.get(variables, "global_site_name")
+        |> result.unwrap(dynamic.from(None))
+        |> decode.run(decode.string)
+      let assert Ok(category) =
+        dict.get(variables, "category")
+        |> result.unwrap(dynamic.from(None))
+        |> decode.run(decode.string)
+      let assert Ok(date_modified) =
+        dict.get(variables, "date_modified")
+        |> result.unwrap(dynamic.from(None))
+        |> decode.run(decode.string)
+      let assert Ok(date_published) =
+        dict.get(variables, "date_published")
+        |> result.unwrap(dynamic.from(None))
+        |> decode.run(decode.string)
+      let assert Ok(tags) =
+        dict.get(variables, "tags")
+        |> result.unwrap(dynamic.from([]))
+        |> decode.run(decode.list(decode.string))
+      let tags = tags |> array.from_list
+      #(
+        title,
+        description,
+        site_name,
+        category,
+        date_modified,
+        date_published,
+        tags,
+      )
+    }
+    False -> {
+      let assert Ok(title) =
+        dict.get(variables, "title")
+        |> result.unwrap(dynamic.from(None))
+        |> decode.run(decode.string)
+      let assert Ok(description) =
+        dict.get(variables, "description_html")
+        |> result.unwrap(dynamic.from(None))
+        |> decode.run(decode.string)
+      let assert Ok(site_name) =
+        dict.get(variables, "global_site_name")
+        |> result.unwrap(dynamic.from(None))
+        |> decode.run(decode.string)
+      let category = ""
+      let date_modified = ""
+      let date_published = ""
+      let tags = [] |> array.from_list
+      #(
+        title,
+        description,
+        site_name,
+        category,
+        date_modified,
+        date_published,
+        tags,
+      )
+    }
+  }
+
+  let menu_1_items = {
+    dict.get(model.computed_menus, 1)
+    |> result.unwrap([])
+    |> list.map(fn(item) { [item.name, item.to] |> array.from_list })
+    |> array.from_list
+  }
+  let menu_2_items = {
+    dict.get(model.computed_menus, 2)
+    |> result.unwrap([])
+    |> list.map(fn(item) { [item.name, item.to] |> array.from_list })
+    |> array.from_list
+  }
+  let menu_3_items = {
+    dict.get(model.computed_menus, 3)
+    |> result.unwrap([])
+    |> list.map(fn(item) { [item.name, item.to] |> array.from_list })
+    |> array.from_list
+  }
+
   case get_template(model) {
     Ok(template) -> {
       case
         {
-          OwnitCtx(content: content |> element.to_string())
+          OwnitCtx(
+            content: content |> element.to_string(),
+            is_post:,
+            title:,
+            description:,
+            site_name:,
+            category:,
+            date_modified:,
+            date_published:,
+            tags:,
+            menu_1_items:,
+            menu_2_items:,
+            menu_3_items:,
+          )
           |> context_into_template_run(template, _)
         }
       {
@@ -68,7 +185,32 @@ fn get_template(model: model_type.Model) {
 
 /// Context sent into Handlebars template, obviously needs to be generated first. Is translated into an Ecmascript object by FFI.
 type OwnitCtx {
-  OwnitCtx(content: String)
+  OwnitCtx(
+    /// JS: string
+    content: String,
+    /// JS: boolean
+    is_post: Bool,
+    /// JS: string
+    title: String,
+    /// JS: string
+    description: String,
+    /// JS: string
+    site_name: String,
+    /// JS: string
+    category: String,
+    /// JS: string
+    date_modified: String,
+    /// JS: string
+    date_published: String,
+    /// JS: string[]
+    tags: Array(String),
+    /// JS: [string, string][]
+    menu_1_items: Array(Array(String)),
+    /// JS: [string, string][]
+    menu_2_items: Array(Array(String)),
+    /// JS: [string, string][]
+    menu_3_items: Array(Array(String)),
+  )
 }
 
 @external(javascript, "./ownit_ffi", "compile_template_string")

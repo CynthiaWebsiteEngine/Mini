@@ -28,8 +28,6 @@ import tom
 /// # Config.load()
 /// Loads the configuration from the `cynthia-mini.toml` file and the content from the `content` directory.
 /// Then saves the configuration to the database.
-/// If an override environment variable or call param is provided, it will use that database file instead, and load from
-/// there. It will not need any files to exist in the filesystem (except for the SQLite file) in that case.
 pub fn load() -> Promise(configtype.CompleteData) {
   use global_config <- promise.await(capture_config())
   use content_list <- promise.await(content_getter())
@@ -309,7 +307,7 @@ fn cynthia_config_global_only_exploiter(
                   }
                   |> promise.resolve()
                 }
-                _ | [] ->
+                _ ->
                   [configurable_variables.var_unsupported]
                   |> promise.resolve()
               }
@@ -674,6 +672,61 @@ pub fn initcfg() {
   # This will allow Cynthia Mini to detect the git repository
   # For example linking to the commit hash in the footer
   git = true
+ 
+  [variables]
+  # You can define your own variables here, which can be used in templates.
+
+  ## ownit_template
+  ## 
+  ## Use this to define your own template for the 'ownit' layout.
+  ##
+  ## The template will be used for the 'ownit' layout, which is used for pages and posts.
+  ## You can use the following variables in the template:
+  ##  - body: string (The main HTML content)
+  ##  - is_post: boolean (True if the current item is a post, false if it's a page)
+  ##  - title: string (The title of the page or post)
+  ##  - description: string (The description of the page or post)
+  ##  - site_name: string (The global site name)
+  ##  - category: string (The category of the post, empty for pages)
+  ##  - date_modified: string (The last modification date of the post, empty for pages)
+  ##  - date_published: string (The publication date of the post, empty for pages)
+  ##  - tags: string[] (An array of tags for the post, empty for pages)
+  ##  - menu_1_items: [string, string][] (Array of menu items for menu 1, e.g., [[\"Home\", \"/\"], [\"About\", \"/about\"]])
+  ##  - menu_2_items: [string, string][] (Array of menu items for menu 2)
+  ##  - menu_3_items: [string, string][] (Array of menu items for menu 3)
+  ownit_template = \"\"\"
+ <div class=\"p-4\">
+  <h1 class=\"text-3xl font-bold mb-4\">{{ title }}</h1>
+  <nav class=\"mb-4\">
+    <p class=\"font-semibold\">Menu:</p>
+    <ul class=\"menu bg-base-200 w-56 rounded-box\">
+      {{#each menu_1_items}}
+        <li><a href=\"{{this.[1]}}\">{{this.[0]}}</a></li>
+      {{/each}}
+    </ul>
+  </nav>
+  {{#if is_post}}
+  <p class=\"text-sm text-gray-600 mb-2\">
+    Published: {{ date_published }}
+    {{#if category }} | Category: <span class=\"badge badge-outline\">{{ category }}</span>{{/if}}
+  </p>
+  {{/if}}
+  <div class=\"divider\"></div>
+    <div class=\"prose max-w-none my-4\">
+      {{{ body }}}
+    </div>
+    {{#if is_post}}
+      {{#if tags}}
+      <div class=\"divider\"></div>
+      <p class=\"text-sm text-gray-600 mt-2\">Tags:
+        {{#each tags}}
+          <span class=\"badge badge-secondary badge-outline mr-1\">{{this}}</span>
+        {{/each}}
+      </p>
+      {{/if}}
+    {{/if}}
+    </div>  
+  \"\"\"
 
   [posts]
   # Enable comments on posts using utteranc.es
@@ -728,7 +781,7 @@ This page will only show up if you have a layout with two or more menus availabl
       ),
       ext_item(
         to: "themes.md",
-        from: "https://raw.githubusercontent.com/CynthiaWebsiteEngine/Mini-docs/refs/heads/main/content/3.%20customisation/3.2-themes.md",
+        from: "https://raw.githubusercontent.com/CynthiaWebsiteEngine/Mini-docs/refs/heads/main/content/3.%20Customisation/3.2-themes.md",
         with: contenttypes.Content(
           filename: "themes.md",
           title: "Themes",
