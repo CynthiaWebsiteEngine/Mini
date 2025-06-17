@@ -44,17 +44,17 @@ interface context {
 
 function turn_gleam_record_into_js_object(record: any): context {
   return {
-  body: record.content,
-  is_post: record.is_post,
-  title: record.title,
-  description: record.description,
-  site_name: record.site_name,
-  category: record.category,
-  date_modified: record.date_modified,
-  date_published: record.date_published,
-  tags: record.tags,
-  menu_1_items: record.menu_1_items || [],
-  menu_2_items: record.menu_2_items || [],
-  menu_3_items: record.menu_3_items || [],
-};
+    body: record.content,
+    is_post: record.is_post,
+    title: record.title,
+    description: record.description,
+    site_name: record.site_name,
+    category: record.category,
+    date_modified: record.date_modified,
+    date_published: record.date_published,
+    tags: record.tags,
+    menu_1_items: record.menu_1_items || [],
+    menu_2_items: record.menu_2_items || [],
+    menu_3_items: record.menu_3_items || [],
+  };
 }
