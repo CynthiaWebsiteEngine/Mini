@@ -1,6 +1,6 @@
 name = "cynthia_websites_mini_shared"
 target = "javascript"
-version = "1.1.6"
+version = "1.1.7-rc"
 
 
 [javascript]
