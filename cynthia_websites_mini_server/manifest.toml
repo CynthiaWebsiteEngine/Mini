@@ -68,7 +68,7 @@ gleam_http = { version = "3.7.2" }
 gleam_javascript = { version = "1.0.0" }
 gleam_json = { version = "2.3.0" }
 gleam_regexp = { version = "1.1.1" }
-gleam_stdlib = { version = " 0.59.0" }
+gleam_stdlib = { version = "0.59.0" }
 gleam_yielder = { version = "1.1.0" }
 gleamy_lights = { version = "2.3.0" }
 gleeunit = { version = ">= 1.0.0 and < 2.0.0" }
