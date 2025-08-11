@@ -50,7 +50,7 @@ pub fn index_html(gc: configtype.SharedCynthiaConfigGlobalOnly) {
 <style>" <> client_css() <> "</style>
 </head>
 <body class='h-full w-full'>
-  <div id='viewable' class='bg-base-100 w-screen h-screen'>
+  <div id='viewable' class='bg-base-100 w-full h-full min-h-screen will-change-transform'>
   </div>
  " <> footer(True, gc.git_integration) <> "
 </body>
@@ -141,7 +141,7 @@ pub fn footer(can_hide: Bool, git_integration: Bool) {
       ui.footer
     }
   }
-  "<footer id='cynthiafooter' class='footer transition-all duration-[2s] ease-in-out footer-center bg-base-300 dark:bg-slate-800 p-1 sticky bottom-0 h-[50px] z-10'><div><p class='text-base-content dark:text-base-200'>"
+  "<footer id='cynthiafooter' class='footer transition-transform duration-150 will-change-transform footer-center bg-base-300 dark:bg-slate-800 p-1 sticky bottom-0 h-[50px] z-10'><div><p class='text-base-content'>"
   <> f
   <> "</p></div></footer>"
   <> case can_hide {
@@ -149,25 +149,50 @@ pub fn footer(can_hide: Bool, git_integration: Bool) {
       "
     <script defer>
 	window.setTimeout(function () {
-		let lastScrollY = window.scrollY;
-		window.addEventListener('scroll',
-			function () {
-				const footer = document.querySelector('#cynthiafooter');
-				if (window.scrollY > lastScrollY) {
-					footer.style.transform = 'translateY(40px)';
-					footer.style.opacity = '0.2';
-				} else {
-					footer.style.transform = '';
-					footer.style.opacity = '';
-				}
-				lastScrollY = window.scrollY;
-				footer.addEventListener('click', function () {
-					footer.style.transform = '';
-					footer.style.opacity = '';
+		let lastScrollTop = 0;
+		let ticking = false;
+		
+		function handleScroll(event) {
+			if (!ticking) {
+				requestAnimationFrame(function() {
+					const footer = document.querySelector('#cynthiafooter');
+					let scrollingDown;
+					
+					if (event.type === 'wheel') {
+						// For wheel events, use deltaY
+						scrollingDown = event.deltaY > 0;
+					} else {
+						// For scroll events, check the target's scroll position
+						const target = event.target === document ? document.documentElement : event.target;
+						const currentScroll = target.scrollTop;
+						scrollingDown = currentScroll > (target.lastScrollTop || 0);
+						target.lastScrollTop = currentScroll;
+					}
+					
+					if (scrollingDown) {
+						// Scrolling down
+						footer.style.transform = 'translate3d(0, 40px, 0)';
+						footer.style.opacity = '0.2';
+					} else {
+						// Scrolling up
+						footer.style.transform = 'translate3d(0, 0, 0)';
+						footer.style.opacity = '1';
+					}
+					
+					ticking = false;
 				});
-			},
-			{ passive: true }
-		);
+				ticking = true;
+			}
+		}
+
+		// Listen at the document level for all scroll events
+		document.addEventListener('scroll', handleScroll, { capture: true, passive: true });
+		document.addEventListener('wheel', handleScroll, { capture: true, passive: true });
+		
+		document.querySelector('#cynthiafooter').addEventListener('click', function () {
+			this.style.transform = 'translate3d(0, 0, 0)';
+			this.style.opacity = '1';
+		});
 	}, 4000);
        </script>"
     False -> ""
