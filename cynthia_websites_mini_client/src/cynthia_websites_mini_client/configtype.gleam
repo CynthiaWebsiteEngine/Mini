@@ -169,7 +169,7 @@ pub const default_shared_cynthia_config_global_only: SharedCynthiaConfigGlobalOn
   comment_repo: None,
   git_integration: True,
   crawlable_context: False,
-  sitemap: Some("example.com"),
+  sitemap: Some("https://example.com"),
   other_vars: [],
 )
 
