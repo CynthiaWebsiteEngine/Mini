@@ -3,9 +3,9 @@ import bungibindies/bun/bunfile.{type BunFile}
 import bungibindies/bun/http/serve/request.{type Request}
 import bungibindies/bun/http/serve/response
 import cynthia_websites_mini_client/configtype
+import cynthia_websites_mini_client/shared/jsonld
 import cynthia_websites_mini_client/shared/sitemap
 import cynthia_websites_mini_server/config
-import cynthia_websites_mini_server/jsonld
 import cynthia_websites_mini_server/mutable_model_type
 import cynthia_websites_mini_server/ssrs
 import gleam/dict

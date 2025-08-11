@@ -3,9 +3,9 @@ import bungibindies/bun
 import bungibindies/bun/http/serve.{ServeOptions}
 import cynthia_websites_mini_client
 import cynthia_websites_mini_client/configtype
+import cynthia_websites_mini_client/shared/jsonld
 import cynthia_websites_mini_client/shared/sitemap
 import cynthia_websites_mini_server/config
-import cynthia_websites_mini_server/jsonld
 import cynthia_websites_mini_server/mutable_model_type
 import cynthia_websites_mini_server/ssrs
 import cynthia_websites_mini_server/utils/files
