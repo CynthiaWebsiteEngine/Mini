@@ -170,7 +170,7 @@ if (noPush) {
     console.log("Skipping push to remote repository as --no-push flag is set.");
 }
 else if (!noCommit) {
-    const pushResult = Bun.spawnSync(["git", "push", "origin", mainBranch, `v${newVersion}`], {
+    const pushResult = Bun.spawnSync(["git", "push", "origin", `v${newVersion}`], {
         cwd: config_root,
     });
     if (pushResult.exitCode !== 0) {
