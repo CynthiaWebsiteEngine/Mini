@@ -1,7 +1,7 @@
 name = "cynthia_websites_mini_client"
 target = "javascript"
 gleam = ">= 1.9.0"
-version = "1.1.7-test"
+version = "1.1.7-rc.2"
 
 [javascript]
 typescript_declarations = true
