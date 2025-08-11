@@ -320,7 +320,7 @@ fn frutiger_common(
           html.div(
             [
               attribute.class(
-                "absolute inset-0 opacity-20 mix-blend-overlay [animation:shimmer_20s_linear_infinite]",
+                "absolute inset-0 opacity-20 mix-blend-overlay [animation:shimmer_8s_ease-in-out_infinite] will-change-transform",
               ),
               attribute.style(
                 "background",
@@ -334,7 +334,7 @@ fn frutiger_common(
       html.header(
         [
           attribute.class(
-            "bg-base-content/5 backdrop-blur-xl shadow-lg sticky top-0 z-10 border-b border-primary/20 after:absolute after:inset-0 after:bg-gradient-to-r after:from-primary/20 after:via-secondary/20 after:to-accent/20 after:animate-shimmer pointer-events-none",
+            "bg-base-content/5 bg-opacity-90 sticky top-0 z-10 border-b border-primary/20 after:absolute after:inset-0 after:bg-gradient-to-r after:from-primary/20 after:via-secondary/20 after:to-accent/20 pointer-events-none will-change-transform",
           ),
         ],
         [
@@ -419,7 +419,7 @@ fn frutiger_common(
                 html.div(
                   [
                     attribute.class(
-                      "absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-primary/20 via-secondary/10 to-transparent [animation:rotate_45s_linear_infinite]",
+                      "absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-primary/20 to-transparent [animation:rotate_15s_ease-in-out_infinite] will-change-transform",
                     ),
                   ],
                   [],
