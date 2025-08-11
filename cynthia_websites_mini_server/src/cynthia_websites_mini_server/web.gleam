@@ -92,14 +92,14 @@ pub fn handle_request(
       |> promise.resolve
     }
     "/sitemap.xml" -> {
-      console.log(
-        premixed.text_ok_green("[ 200 ]\t")
-        <> "(GET)\t"
-        <> premixed.text_lightblue("/sitemap.xml"),
-      )
       let model = mutable_reference.get(mutable_model)
       case model.cached_sitemap {
         Some(sitemap_xml) -> {
+          console.log(
+            premixed.text_ok_green("[ 200 ]\t")
+            <> "(GET)\t"
+            <> premixed.text_lightblue("/sitemap.xml"),
+          )
           response.set_body(response.new(), sitemap_xml)
           |> response.set_headers(
             [#("Content-Type", "application/xml; charset=utf-8")]
@@ -111,14 +111,35 @@ pub fn handle_request(
         None -> {
           use res <- promise.await(generate_jsons(mutable_model))
           let #(_, _, res_sitemap) = res
+          let model = mutable_reference.get(mutable_model)
 
-          response.set_body(response.new(), res_sitemap)
-          |> response.set_headers(
-            [#("Content-Type", "application/xml; charset=utf-8")]
-            |> array.from_list(),
-          )
-          |> response.set_status(200)
-          |> promise.resolve()
+          case model.cached_sitemap {
+            Some(sitemap_xml) -> {
+              console.log(
+                premixed.text_ok_green("[ 200 ]\t")
+                <> "(GET)\t"
+                <> premixed.text_lightblue("/sitemap.xml"),
+              )
+              response.set_body(response.new(), sitemap_xml)
+              |> response.set_headers(
+                [#("Content-Type", "application/xml; charset=utf-8")]
+                |> array.from_list(),
+              )
+              |> response.set_status(200)
+              |> promise.resolve()
+            }
+            None -> {
+              console.error(
+                premixed.text_error_red("[ 404 ] ")
+                <> "(GET)\t"
+                <> premixed.text_lightblue("/sitemap.xml"),
+              )
+              dynastatic
+              |> dict.get("/404")
+              |> result.unwrap(response.new())
+              |> promise.resolve()
+            }
+          }
         }
       }
     }
