@@ -109,8 +109,7 @@ pub fn handle_request(
           |> promise.resolve()
         }
         None -> {
-          use res <- promise.await(generate_jsons(mutable_model))
-          let #(_, _, res_sitemap) = res
+          use _ <- promise.await(generate_jsons(mutable_model))
           let model = mutable_reference.get(mutable_model)
 
           case model.cached_sitemap {
