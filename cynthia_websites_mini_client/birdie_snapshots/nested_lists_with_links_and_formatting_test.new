@@ -1,0 +1,32 @@
+---
+version: 1.3.1
+title: nested_lists_with_links_and_formatting_test
+---
+<section>
+  <ul class="list-disc leading-tight">
+    <li>
+      <p class="whitespace-nowrap">
+        Parent 1
+- Child with 
+        <a class="text-info underline" href="https://child.example">
+          link
+        </a>
+        
+- Child with *
+        <strong class="font-bold">
+          bold
+        </strong>
+        * and 
+        <em class="italic">
+          italic
+        </em>
+      </p>
+    </li>
+    <li>
+      <p class="whitespace-nowrap">
+        Parent 2
+      </p>
+    </li>
+  </ul>
+<div xmlns="div" class="djot-processed-content"><ol class="list-decimal mb-4"><li><p class="mb-2">Ordered child with <a class="text-info underline" href="https://another.example">another</a></p></li><li><p class="mb-2">Second ordered child</p></li></ol></div>
+</section>

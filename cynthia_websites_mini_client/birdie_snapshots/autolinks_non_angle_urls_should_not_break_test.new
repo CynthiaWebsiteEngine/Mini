@@ -1,0 +1,9 @@
+---
+version: 1.3.1
+title: autolinks_non_angle_urls_should_not_break_test
+---
+<section>
+  <p class="mb-2">
+    Visit https://no-brackets.example/path and http://another.example/query?x=1.
+  </p>
+</section>

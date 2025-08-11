@@ -1,0 +1,21 @@
+---
+version: 1.3.1
+title: autolinks_angle_brackets_multiple_test
+---
+<section>
+  <p class="mb-2">
+    See 
+    <a class="text-info underline" href="https://example.com">
+      https://example.com
+    </a>
+    , 
+    <a class="text-info underline" href="http://foo.bar/baz">
+      http://foo.bar/baz
+    </a>
+    , and 
+    <a class="text-info underline" href="https://sub.domain.tld/path?x=1&amp;y=2">
+      https://sub.domain.tld/path?x=1&amp;y=2
+    </a>
+     in one line.
+  </p>
+</section>
