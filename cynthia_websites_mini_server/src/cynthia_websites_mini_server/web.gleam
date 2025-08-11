@@ -3,6 +3,7 @@ import bungibindies/bun/bunfile.{type BunFile}
 import bungibindies/bun/http/serve/request.{type Request}
 import bungibindies/bun/http/serve/response
 import cynthia_websites_mini_client/configtype
+import cynthia_websites_mini_client/shared/sitemap
 import cynthia_websites_mini_server/config
 import cynthia_websites_mini_server/jsonld
 import cynthia_websites_mini_server/mutable_model_type
@@ -90,6 +91,37 @@ pub fn handle_request(
       |> response.set_status(200)
       |> promise.resolve
     }
+    "/sitemap.xml" -> {
+      console.log(
+        premixed.text_ok_green("[ 200 ]\t")
+        <> "(GET)\t"
+        <> premixed.text_lightblue("/sitemap.xml"),
+      )
+      let model = mutable_reference.get(mutable_model)
+      case model.cached_sitemap {
+        Some(sitemap_xml) -> {
+          response.set_body(response.new(), sitemap_xml)
+          |> response.set_headers(
+            [#("Content-Type", "application/xml; charset=utf-8")]
+            |> array.from_list(),
+          )
+          |> response.set_status(200)
+          |> promise.resolve()
+        }
+        None -> {
+          use res <- promise.await(generate_jsons(mutable_model))
+          let #(_, _, res_sitemap) = res
+
+          response.set_body(response.new(), res_sitemap)
+          |> response.set_headers(
+            [#("Content-Type", "application/xml; charset=utf-8")]
+            |> array.from_list(),
+          )
+          |> response.set_status(200)
+          |> promise.resolve()
+        }
+      }
+    }
     "/assets/" <> f -> {
       let filepath = process.cwd() <> "/assets/" <> f
       case simplifile.is_file(filepath) {
@@ -145,19 +177,21 @@ pub fn answer_bunrequest_with_file(file: BunFile) -> Promise(response.Response)
 
 fn generate_jsons(
   mutable_model: mutable_model_type.MutableModel,
-) -> Promise(#(String, String)) {
+) -> Promise(#(String, String, String)) {
   use complete_data <- promise.await(config.load())
   let complete_data_json =
     complete_data |> configtype.encode_complete_data_for_client
   let res_string = complete_data_json |> json.to_string
   let res_jsonld = jsonld.generate_jsonld(complete_data)
-  // Add both JSON representations to the model cache
+  let opt_sitemap = sitemap.generate_sitemap(complete_data)
+  // Add all representations to the model cache
   mutable_reference.update(mutable_model, fn(model) {
     mutable_model_type.MutableModelContent(
       ..model,
       cached_response: Some({ res_string }),
       cached_jsonld: Some({ res_jsonld }),
+      cached_sitemap: opt_sitemap,
     )
   })
-  #(res_string, res_jsonld) |> promise.resolve
+  #(res_string, res_jsonld, option.unwrap(opt_sitemap, "")) |> promise.resolve
 }

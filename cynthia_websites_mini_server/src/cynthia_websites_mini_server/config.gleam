@@ -207,12 +207,16 @@ fn cynthia_config_global_only_exploiter(
     _ -> True
   }
   let sitemap = case
-    tom.get(o, ["integrations", "sitemap"]) |> result.map(tom.as_bool)
+    tom.get(o, ["integrations", "sitemap"]) |> result.map(tom.as_string)
   {
     Ok(Ok(field)) -> {
-      field
+      case field {
+        "" -> None
+        "false" -> None
+        _ -> Some(field)
+      }
     }
-    _ -> True
+    _ -> None
   }
   let crawlable_context = case
     tom.get(o, ["integrations", "crawlable_context"]) |> result.map(tom.as_bool)
@@ -806,7 +810,11 @@ pub fn initcfg() {
 
   # Enable sitemap generation
   # This will generate a sitemap.xml file in the root of the website
-  sitemap = true
+  # 
+  # You will need to enter the base URL of your website in the sitemap variable below.
+  # If your homepage is at \"https://example.com/#/\", then the sitemap variable should be set to \"https://example.com\".
+  # If you do not want to use a sitemap, set this to \"false\", or leave it empty (\"\"), you can also remove the sitemap variable altogether.
+  sitemap = \"\"
 
   # Enable crawlable context (JSON-LD injection)
   # This will allow search engines to crawl the website, and makes it
