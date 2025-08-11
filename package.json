@@ -3,7 +3,7 @@
   "version": "1.1.7-rc.2",
   "license": "AGPL-3.0-only",
   "repository": {
-    "url": "https://github.com/CynthiaWebsiteEngine/Mini"
+    "url": "git+https://github.com/CynthiaWebsiteEngine/Mini.git"
   },
   "module": "cynthia_websites_mini_server/build/dev/javascript/cynthia_websites_mini_server/cynthia_websites_mini_server.ts",
   "bin": {
