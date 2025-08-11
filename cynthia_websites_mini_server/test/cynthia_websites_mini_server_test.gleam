@@ -153,10 +153,10 @@ pub fn timestamp_parse_timezone_offset_variants_test() {
 fn test_model_unwrap() {
   let ref = test_model()
   // mutable_reference module likely exposes read() or similar.
-// In the absence of a direct helper shown in the snippets, we treat
-// the reference as a value usable in place. If a read() is required
-// by this codebase, replace the next line with:
-// let model = mutable_reference.read(ref)
+  // In the absence of a direct helper shown in the snippets, we treat
+  // the reference as a value usable in place. If a read() is required
+  // by this codebase, replace the next line with:
+  // let model = mutable_reference.read(ref)
   ref
 }
 
@@ -178,18 +178,20 @@ pub fn model_config_defaults_test() {
   // within the giant cached_response blob by converting to string and searching.
   // Retrieve the cached_response string via a helper function if available. Otherwise,
   // the presence of these markers indicates the model payload hasn't drifted.
-  let cached =
-    case model {
-      m -> m // treat as value if the reference is transparent in tests
-    }
+  let cached = case model {
+    m -> m
+    // treat as value if the reference is transparent in tests
+  }
 
   // Validate sentinel strings from config exist within cached_response
   // This avoids tight coupling to the exact record destructuring across modules.
   let site_name_marker = "\"global_site_name\":\"Cynthia Mini Documentation\""
-  let site_desc_marker = "\"global_site_description\":\"Documentation for usage, or contribution to Cynthia Mini\""
+  let site_desc_marker =
+    "\"global_site_description\":\"Documentation for usage, or contribution to Cynthia Mini\""
   let theme_light_marker = "\"global_theme\":\"documentation-light\""
   let theme_dark_marker = "\"global_theme_dark\":\"documentation-dark\""
-  let comment_repo_marker = "\"comment_repo\":\"CynthiaWebsiteEngine/Mini-docs\""
+  let comment_repo_marker =
+    "\"comment_repo\":\"CynthiaWebsiteEngine/Mini-docs\""
 
   // We'll stringify the model to search for markers if direct accessors are not visible in this test scope.
   let text = string.inspect(cached)
@@ -207,7 +209,9 @@ pub fn model_cached_response_has_expected_content_test() {
   let text = string.inspect(model)
   // Check for specific content items and permalinks
   text |> string.contains("\"permalink\":\"/\"") |> should.be_true()
-  text |> string.contains("\"permalink\":\"/getting-started\"") |> should.be_true()
+  text
+  |> string.contains("\"permalink\":\"/getting-started\"")
+  |> should.be_true()
   text |> string.contains("\"permalink\":\"/example-post\"") |> should.be_true()
 
   // Spot check some of the layouts/themes introduced in the content blob

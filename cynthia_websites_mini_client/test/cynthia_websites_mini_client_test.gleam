@@ -154,7 +154,9 @@ pub fn ordered_list_with_mixed_content_and_strong_emphasis_test() {
   |> djotparse.entry_to_conversion()
   |> html.section([], _)
   |> element.to_readable_string
-  |> birdie.snap(title: "ordered_list_with_mixed_content_and_strong_emphasis_test")
+  |> birdie.snap(
+    title: "ordered_list_with_mixed_content_and_strong_emphasis_test",
+  )
 }
 
 pub fn inline_code_and_code_block_should_not_autolink_test() {
