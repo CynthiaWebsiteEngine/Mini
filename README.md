@@ -7,7 +7,7 @@ Create entire sites out of just a few djot/markdown/html/plaintext files and the
 
 - 🚀 Simple setup and configuration
 - 🎨 Wide collection of pre-made themes
-- 📝 Djot and HTML support (MarkDown support with Pandoc) 
+- 📝 Djot and HTML support (MarkDown support with Pandoc)
 - 🔧 Static site generation capabilities
 - 🔌 Extensible plugin architecture based on the Cynthia v3 plugin system (coming in v2)
 
