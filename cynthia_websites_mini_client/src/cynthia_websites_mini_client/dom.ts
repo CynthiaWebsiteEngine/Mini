@@ -18,7 +18,7 @@ export function set_hash(hash: string) {
 }
 export function set_to_404(body: string) {
   document.body.dataset["404"] = "true";
-  document.body.classList.value = "bg-base-100 w-[100VW] h-[100VH]";
+  document.body.classList.value = "bg-base-100 w-full h-full min-h-screen";
   document.body.innerHTML = body;
   document.title = "404 - Page Not Found";
 }
@@ -46,7 +46,7 @@ export function apply_styles_to_comment_box() {
 
 export function destroy_comment_box() {
   // Destroy the comment box
-  const comment_boxes = document.querySelectorAll("div.utterances");
+  const comment_boxes = Array.from(document.querySelectorAll("div.utterances"));
   for (const comment_box of comment_boxes) {
     if (comment_box) {
       // Remove the comment box from the DOM, but keep the element itself not to conflict with the next comment box
@@ -54,7 +54,6 @@ export function destroy_comment_box() {
       comment_box.innerHTML = "";
       comment_box.removeAttribute("class");
       comment_box.removeAttribute("style");
-      console.log(x);
     }
   }
 }
