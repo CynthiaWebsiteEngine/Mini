@@ -210,7 +210,7 @@ fn cynthia_config_global_only_exploiter(
     tom.get(o, ["integrations", "sitemap"]) |> result.map(tom.as_string)
   {
     Ok(Ok(field)) -> {
-      case field {
+      case string.lowercase(field) {
         "" -> None
         "false" -> None
         _ -> Some(field)
