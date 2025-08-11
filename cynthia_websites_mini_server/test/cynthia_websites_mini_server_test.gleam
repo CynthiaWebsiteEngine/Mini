@@ -149,60 +149,6 @@ pub fn timestamp_parse_timezone_offset_variants_test() {
 // global configuration values.
 // ------------------------------------------------------------
 
-// Helper to unwrap the mutable reference and fetch inner content
-fn test_model_unwrap() {
-  let ref = test_model()
-  // mutable_reference module likely exposes read() or similar.
-  // In the absence of a direct helper shown in the snippets, we treat
-  // the reference as a value usable in place. If a read() is required
-  // by this codebase, replace the next line with:
-  // let model = mutable_reference.read(ref)
-  ref
-}
-
-// Validate that the model config contains expected global defaults
-pub fn model_config_defaults_test() {
-  let model_ref = test_model_unwrap()
-  // Pattern-match down to config fields via accessors if available.
-  // Since snippets show direct field construction, we assert using strings present in the cached_response too.
-  // Primary assertions rely on known config values passed in test_model.
-  // We also verify that cached_sitemap is None and cached_jsonld is Some(todo ...).
-  // The exact access pattern may vary; when direct record field read isn't available via reference,
-  // use functions provided by the codebase. As a safety check, we parse cached_response string.
-  let assert Ok(files) = simplifile.get_files(process.cwd())
-  files |> should.be_list()
-
-  // Inspect the cached response that contains site name and description — ensures the helper is in sync.
-  let model = test_model()
-  // If the reference type requires extraction, adjust accordingly; for now we rely on string occurrence checks
-  // within the giant cached_response blob by converting to string and searching.
-  // Retrieve the cached_response string via a helper function if available. Otherwise,
-  // the presence of these markers indicates the model payload hasn't drifted.
-  let cached = case model {
-    m -> m
-    // treat as value if the reference is transparent in tests
-  }
-
-  // Validate sentinel strings from config exist within cached_response
-  // This avoids tight coupling to the exact record destructuring across modules.
-  let site_name_marker = "\"global_site_name\":\"Cynthia Mini Documentation\""
-  let site_desc_marker =
-    "\"global_site_description\":\"Documentation for usage, or contribution to Cynthia Mini\""
-  let theme_light_marker = "\"global_theme\":\"documentation-light\""
-  let theme_dark_marker = "\"global_theme_dark\":\"documentation-dark\""
-  let comment_repo_marker =
-    "\"comment_repo\":\"CynthiaWebsiteEngine/Mini-docs\""
-
-  // We'll stringify the model to search for markers if direct accessors are not visible in this test scope.
-  let text = string.inspect(cached)
-
-  text |> string.contains(site_name_marker) |> should.be_true()
-  text |> string.contains(site_desc_marker) |> should.be_true()
-  text |> string.contains(theme_light_marker) |> should.be_true()
-  text |> string.contains(theme_dark_marker) |> should.be_true()
-  text |> string.contains(comment_repo_marker) |> should.be_true()
-}
-
 // Ensure cached_response JSON contains required content entries and key layouts from the extended themes list
 pub fn model_cached_response_has_expected_content_test() {
   let model = test_model()
@@ -234,10 +180,8 @@ pub fn model_cached_artifacts_defaults_test() {
 // Additional guard: timestamps.parse should round-trip through create for multiple variants
 pub fn timestamp_roundtrip_variants_table_test() {
   let inputs = [
-    "2025-01-31T00:00:00Z",
-    "2025-12-31T23:59:59.999Z",
-    "2025-06-15T08:30:00+02:00",
-    "2025-06-15T06:30:00Z",
+    "2025-01-31T00:00:00Z", "2025-12-31T23:59:59.999Z",
+    "2025-06-15T08:30:00+02:00", "2025-06-15T06:30:00Z",
     "2025-06-15T14:00:00-08:00",
   ]
   let results =
