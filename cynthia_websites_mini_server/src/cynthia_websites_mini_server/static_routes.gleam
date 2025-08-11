@@ -49,7 +49,7 @@ pub fn index_html(gc: configtype.SharedCynthiaConfigGlobalOnly) {
 </script>
 <style>" <> client_css() <> "</style>
 </head>
-<body>
+<body class='h-full w-full'>
   <div id='viewable' class='bg-base-100 w-screen h-screen'>
   </div>
  " <> footer(True, gc.git_integration) <> "
@@ -141,9 +141,9 @@ pub fn footer(can_hide: Bool, git_integration: Bool) {
       ui.footer
     }
   }
-  "<footer id='cynthiafooter' class='footer transition-all duration-[2s] ease-in-out footer-center bg-base-300 dark:bg-slate-800 text-base-content dark:text-base-200 p-1 h-fit fixed bottom-0 max-h-1/8'><aside><p>"
+  "<footer id='cynthiafooter' class='footer transition-all duration-[2s] ease-in-out footer-center bg-base-300 dark:bg-slate-800 text-base-content dark:text-base-200 p-1 h-fit fixed bottom-0 max-h-1/8'><div><p>"
   <> f
-  <> "</p></aside></footer>"
+  <> "</p></div></footer>"
   <> case can_hide {
     True ->
       "
