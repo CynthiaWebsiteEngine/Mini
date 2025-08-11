@@ -1,3 +1,5 @@
+import { Error, Ok } from "../../prelude";
+
 export function get_color_scheme() {
   // Media queries the preferred color colorscheme
 
@@ -55,5 +57,15 @@ export function destroy_comment_box() {
       comment_box.removeAttribute("class");
       comment_box.removeAttribute("style");
     }
+  }
+}
+
+export function jsonify_string(str: string) {
+  // Convert a string to a JSON object
+  try {
+    return new Ok(JSON.stringify(str));
+  } catch (e) {
+    console.error("Failed to parse JSON string:", e);
+    return new Error(null);
   }
 }

@@ -18,15 +18,16 @@ import javascript/mutable_reference
 import plinth/node/process
 import simplifile
 
-pub fn static_routes(mutable_model: mutable_model_type.MutableModel) {
+pub fn ssrs(mutable_model: mutable_model_type.MutableModel) {
   let model = mutable_model |> mutable_reference.get()
   dict.new()
-  |> dict.insert("/index.html", main(model.config))
+  |> dict.insert("/index.html", main(model))
   |> dict.insert("/404", notfound())
   |> Some
 }
 
-pub fn index_html(gc: configtype.SharedCynthiaConfigGlobalOnly) {
+pub fn index_html(model: mutable_model_type.MutableModelContent) {
+  let gc: configtype.SharedCynthiaConfigGlobalOnly = model.config
   "<!DOCTYPE html>
 <html lang='en'>
 <!--
@@ -40,6 +41,11 @@ pub fn index_html(gc: configtype.SharedCynthiaConfigGlobalOnly) {
 <meta property='og:site_name' content='" <> gc.global_site_name <> "'/>
 <meta property='og:description' content='" <> gc.global_site_description <> "'/>
 <meta name='theme-color' content='" <> gc.global_colour <> "' />
+" <> case model.cached_jsonld {
+    Some(jsonld) ->
+      "<script type=\"application/ld+json\">\n" <> jsonld <> "\n</script>"
+    None -> " <!--\n\nNo JSON-LD structured data available for this site\n\n-->"
+  } <> "
 <link rel='shortcut icon' href='./assets/site_icon.png' type='image/x-icon'/>
 <meta charset='utf-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
@@ -58,9 +64,9 @@ pub fn index_html(gc: configtype.SharedCynthiaConfigGlobalOnly) {
 "
 }
 
-fn main(gc: configtype.SharedCynthiaConfigGlobalOnly) {
+fn main(model: mutable_model_type.MutableModelContent) {
   response.new()
-  |> response.set_body(index_html(gc))
+  |> response.set_body(index_html(model))
   |> response.set_headers(
     [#("Content-Type", "text/html; charset=utf-8")]
     |> array.from_list(),

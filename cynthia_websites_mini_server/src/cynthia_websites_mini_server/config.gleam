@@ -206,6 +206,26 @@ fn cynthia_config_global_only_exploiter(
     }
     _ -> True
   }
+  let sitemap = case
+    tom.get(o, ["integrations", "sitemap"]) |> result.map(tom.as_string)
+  {
+    Ok(Ok(field)) -> {
+      case string.lowercase(field) {
+        "" -> None
+        "false" -> None
+        _ -> Some(field)
+      }
+    }
+    _ -> None
+  }
+  let crawlable_context = case
+    tom.get(o, ["integrations", "crawlable_context"]) |> result.map(tom.as_bool)
+  {
+    Ok(Ok(field)) -> {
+      field
+    }
+    _ -> False
+  }
   let other_vars = case result.map(tom.get(o, ["variables"]), tom.as_table) {
     Ok(Ok(d)) ->
       {
@@ -477,6 +497,8 @@ fn cynthia_config_global_only_exploiter(
     server_port:,
     server_host:,
     git_integration:,
+    crawlable_context:,
+    sitemap:,
     comment_repo:,
     other_vars:,
   ))
@@ -785,6 +807,19 @@ pub fn initcfg() {
   # This will allow Cynthia Mini to detect the git repository
   # For example linking to the commit hash in the footer
   git = true
+
+  # Enable sitemap generation
+  # This will generate a sitemap.xml file in the root of the website
+  # 
+  # You will need to enter the base URL of your website in the sitemap variable below.
+  # If your homepage is at \"https://example.com/#/\", then the sitemap variable should be set to \"https://example.com\".
+  # If you do not want to use a sitemap, set this to \"false\", or leave it empty (\"\"), you can also remove the sitemap variable altogether.
+  sitemap = \"\"
+
+  # Enable crawlable context (JSON-LD injection)
+  # This will allow search engines to crawl the website, and makes it
+  # possible for the website to be indexed by search engine and LLMs.
+  crawlable_context = false
 
   [variables]
   # You can define your own variables here, which can be used in templates.

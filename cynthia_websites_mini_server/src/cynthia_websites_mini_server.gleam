@@ -3,9 +3,11 @@ import bungibindies/bun
 import bungibindies/bun/http/serve.{ServeOptions}
 import cynthia_websites_mini_client
 import cynthia_websites_mini_client/configtype
+import cynthia_websites_mini_client/shared/jsonld
+import cynthia_websites_mini_client/shared/sitemap
 import cynthia_websites_mini_server/config
 import cynthia_websites_mini_server/mutable_model_type
-import cynthia_websites_mini_server/static_routes
+import cynthia_websites_mini_server/ssrs
 import cynthia_websites_mini_server/utils/files
 import cynthia_websites_mini_server/web
 import gleam/bool
@@ -183,7 +185,7 @@ fn dynamic_site_server(mutmodel: mutable_model_type.MutableModel, lease: Int) {
       development: Some(True),
       hostname: conf.server_host,
       port: conf.server_port,
-      static_served: static_routes.static_routes(mutmodel),
+      static_served: ssrs.ssrs(mutmodel),
       handler: web.handle_request(_, mutmodel),
       id: None,
       reuse_port: None,
@@ -228,7 +230,6 @@ fn dynamic_site_server(mutmodel: mutable_model_type.MutableModel, lease: Int) {
 }
 
 fn static_site_server(mutmodel: mutable_model_type.MutableModel) {
-  let data = mutmodel |> mutable_reference.get()
   console.info("Cynthia Mini is in pregeneration mode!")
 
   {
@@ -276,9 +277,23 @@ fn static_site_server(mutmodel: mutable_model_type.MutableModel) {
 
   use complete_data <- promise.await(config.load())
 
+  // Generate JSON representations
   let complete_data_json =
     complete_data |> configtype.encode_complete_data_for_client
   let res_string = complete_data_json |> json.to_string
+  let res_jsonld = jsonld.generate_jsonld(complete_data)
+  let opt_sitemap = sitemap.generate_sitemap(complete_data)
+
+  // Update the model with all representations
+  mutable_reference.update(mutmodel, fn(model) {
+    mutable_model_type.MutableModelContent(
+      ..model,
+      cached_response: Some({ res_string }),
+      cached_jsonld: Some({ res_jsonld }),
+      cached_sitemap: opt_sitemap,
+    )
+  })
+
   let outdir = process.cwd() <> "/out"
   case simplifile.create_directory_all(outdir) {
     Ok(..) -> Nil
@@ -305,7 +320,7 @@ fn static_site_server(mutmodel: mutable_model_type.MutableModel) {
   case
     simplifile.write(
       to: outdir <> "/index.html",
-      contents: static_routes.index_html(data.config),
+      contents: ssrs.index_html(mutable_reference.get(mutmodel)),
     )
   {
     Ok(..) -> Nil
@@ -354,6 +369,25 @@ fn static_site_server(mutmodel: mutable_model_type.MutableModel) {
       panic as "We should not reach here"
     }
   }
+  case opt_sitemap {
+    None -> Nil
+    Some(res_sitemap) -> {
+      case
+        simplifile.write(to: outdir <> "/sitemap.xml", contents: res_sitemap)
+      {
+        Ok(..) -> Nil
+        Error(e) -> {
+          console.error(
+            "A problem occurred while creating the ´sitemap.xml´ file: "
+            <> premixed.text_error_red(string.inspect(e)),
+          )
+          process.exit(1)
+          panic as "We should not reach here"
+        }
+      }
+    }
+  }
+
   console.info(
     premixed.text_ok_green("Site pregeneration complete!")
     <> " Serve files from "

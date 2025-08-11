@@ -16,6 +16,8 @@ pub type CompleteData {
     server_host: Option(String),
     comment_repo: Option(String),
     git_integration: Bool,
+    crawlable_context: Bool,
+    sitemap: Option(String),
     other_vars: List(#(String, List(String))),
     content: List(Content),
   )
@@ -34,6 +36,8 @@ pub fn encode_complete_data_for_client(complete_data: CompleteData) -> json.Json
     git_integration:,
     other_vars:,
     content:,
+    crawlable_context:,
+    sitemap:,
   ) = complete_data
   json.object([
     #("global_theme", json.string(global_theme)),
@@ -42,6 +46,11 @@ pub fn encode_complete_data_for_client(complete_data: CompleteData) -> json.Json
     #("global_site_name", json.string(global_site_name)),
     #("global_site_description", json.string(global_site_description)),
     #("git_integration", json.bool(git_integration)),
+    #("crawlable_context", json.bool(crawlable_context)),
+    #("sitemap", case sitemap {
+      None -> json.null()
+      Some(value) -> json.string(value)
+    }),
     #("comment_repo", case comment_repo {
       None -> json.null()
       Some(value) -> json.string(value)
@@ -93,6 +102,17 @@ pub fn complete_data_decoder() -> decode.Decoder(CompleteData) {
     |> decode.map(list.fold(_, dict.new(), dict.merge))
   })
 
+  use crawlable_context <- decode.optional_field(
+    "crawlable_context",
+    default_shared_cynthia_config_global_only.crawlable_context,
+    decode.bool,
+  )
+  use sitemap <- decode.optional_field(
+    "sitemap",
+    default_shared_cynthia_config_global_only.sitemap,
+    decode.optional(decode.string),
+  )
+
   let other_vars = dict.to_list(other_vars)
 
   decode.success(CompleteData(
@@ -105,6 +125,8 @@ pub fn complete_data_decoder() -> decode.Decoder(CompleteData) {
     server_host:,
     comment_repo:,
     git_integration:,
+    crawlable_context:,
+    sitemap:,
     other_vars:,
     content:,
   ))
@@ -120,7 +142,18 @@ pub type SharedCynthiaConfigGlobalOnly {
     server_port: Option(Int),
     server_host: Option(String),
     comment_repo: Option(String),
+    /// [True]
+    /// Wether or not to enable git integration for the site.
     git_integration: Bool,
+    /// [False]
+    /// Wether or not to insert json-ld+context into the HTML
+    /// to make the site crawlable by search engines or readable by LLMs.
+    crawlable_context: Bool,
+    /// [True]
+    /// Wether or not to create a sitemap.xml file for the site.
+    /// This is useful for search engines to index the site.
+    /// This is separate from the crawlable_context setting, as no content needs to be rendered or served for the sitemap.xml file.
+    sitemap: Option(String),
     other_vars: List(#(String, List(String))),
   )
 }
@@ -135,6 +168,8 @@ pub const default_shared_cynthia_config_global_only: SharedCynthiaConfigGlobalOn
   server_host: None,
   comment_repo: None,
   git_integration: True,
+  crawlable_context: False,
+  sitemap: Some("https://example.com"),
   other_vars: [],
 )
 
@@ -152,6 +187,8 @@ pub fn merge(
     server_host: orig.server_host,
     comment_repo: orig.comment_repo,
     git_integration: orig.git_integration,
+    crawlable_context: orig.crawlable_context,
+    sitemap: orig.sitemap,
     other_vars: orig.other_vars,
     content:,
   )

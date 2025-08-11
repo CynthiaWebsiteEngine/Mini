@@ -1,13 +1,13 @@
 # CynthiaWebsiteEngine-mini
 
 A lightweight website engine emphasising simplicity and ease of use. Optimised for small to medium-sized websites requiring both static and dynamic capabilities.
-Create entire sites out of just a few markdown/html/plaintext files and their json metadata!
+Create entire sites out of just a few djot/markdown/html/plaintext files and their json metadata!
 
 ## Key Features
 
 - 🚀 Simple setup and configuration
 - 🎨 Wide collection of pre-made themes
-- 📝 Markdown and HTML support
+- 📝 Djot and HTML support (MarkDown support with Pandoc)
 - 🔧 Static site generation capabilities
 - 🔌 Extensible plugin architecture based on the Cynthia v3 plugin system (coming in v2)
 
@@ -59,20 +59,20 @@ For detailed information about configuration, theming, and deployment, check out
 
 ```directory
 ./content/
-    index.md
-    index.md.meta.json
+    index.dj
+    index.dj.meta.json
     about.md
     about.md.meta.json
     projects/
         project1.html
         project1.html.meta.json
-        project2.md
-        project2.md.meta.json
+        project2.dj
+        project2.dj.meta.json
     articles/
-        article1.md
-        article1.md.meta.json
-        article2.md
-        article2.md.meta.json
+        article1.dj
+        article1.dj.meta.json
+        article2.dj
+        article2.dj.meta.json
 ./cynthia-mini.toml
 ```
 

@@ -37,3 +37,8 @@ pub fn set_hash(hash: String) -> Nil
 /// Get innerhtml of an element
 @external(javascript, "./dom.ts", "get_inner_html")
 pub fn get_inner_html(element: element.Element) -> String
+
+/// jsonify_string
+/// Convert a string to a JSON safe string
+@external(javascript, "./dom.ts", "jsonify_string")
+pub fn jsonify_string(str: String) -> Result(String, Nil)
