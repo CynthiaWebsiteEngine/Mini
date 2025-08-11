@@ -50,7 +50,7 @@ pub fn index_html(gc: configtype.SharedCynthiaConfigGlobalOnly) {
 <style>" <> client_css() <> "</style>
 </head>
 <body class='h-full w-full'>
-  <div id='viewable' class='bg-base-100 w-screen h-screen'>
+  <div id='viewable' class='bg-base-100 w-full h-full min-h-screen will-change-transform'>
   </div>
  " <> footer(True, gc.git_integration) <> "
 </body>
@@ -81,7 +81,7 @@ fn notfound() {
   </script>
   <style>" <> client_css() <> "</style>
   </head>
-  <body data-404='true' class='bg-base-100 w-[100VW] h-[100VH]'>
+  <body data-404='true' class='bg-base-100 w-full h-full min-h-screen'>
     " <> ui.notfoundbody() <> "
     </body>
       </html>
@@ -141,7 +141,7 @@ pub fn footer(can_hide: Bool, git_integration: Bool) {
       ui.footer
     }
   }
-  "<footer id='cynthiafooter' class='footer transition-all duration-[2s] ease-in-out footer-center bg-base-300 dark:bg-slate-800 text-base-content dark:text-base-200 p-1 h-fit fixed bottom-0 max-h-[50px]'><div><p>"
+  "<footer id='cynthiafooter' class='footer transition-transform duration-150 will-change-transform footer-center bg-base-300 dark:bg-slate-800 p-1 sticky bottom-0 h-[50px] z-10'><div><p class='text-base-content'>"
   <> f
   <> "</p></div></footer>"
   <> case can_hide {
@@ -149,16 +149,50 @@ pub fn footer(can_hide: Bool, git_integration: Bool) {
       "
     <script defer>
 	window.setTimeout(function () {
-		window.addEventListener('scroll',
-			function () {
-				const classname = 'max-h-[5px]';
-				document.querySelector('#cynthiafooter').style.height = '5px';
-				document.querySelector('#cynthiafooter').addEventListener('click', function () {
-					document.querySelector('#cynthiafooter').style.height = '';
+		let lastScrollTop = 0;
+		let ticking = false;
+		
+		function handleScroll(event) {
+			if (!ticking) {
+				requestAnimationFrame(function() {
+					const footer = document.querySelector('#cynthiafooter');
+					let scrollingDown;
+					
+					if (event.type === 'wheel') {
+						// For wheel events, use deltaY
+						scrollingDown = event.deltaY > 0;
+					} else {
+						// For scroll events, check the target's scroll position
+						const target = event.target === document ? document.documentElement : event.target;
+						const currentScroll = target.scrollTop;
+						scrollingDown = currentScroll > (target.lastScrollTop || 0);
+						target.lastScrollTop = currentScroll;
+					}
+					
+					if (scrollingDown) {
+						// Scrolling down
+						footer.style.transform = 'translate3d(0, 40px, 0)';
+						footer.style.opacity = '0.2';
+					} else {
+						// Scrolling up
+						footer.style.transform = 'translate3d(0, 0, 0)';
+						footer.style.opacity = '1';
+					}
+					
+					ticking = false;
 				});
-			},
-			true,
-		);
+				ticking = true;
+			}
+		}
+
+		// Listen at the document level for all scroll events
+		document.addEventListener('scroll', handleScroll, { capture: true, passive: true });
+		document.addEventListener('wheel', handleScroll, { capture: true, passive: true });
+		
+		document.querySelector('#cynthiafooter').addEventListener('click', function () {
+			this.style.transform = 'translate3d(0, 0, 0)';
+			this.style.opacity = '1';
+		});
 	}, 4000);
        </script>"
     False -> ""
