@@ -1,10 +1,11 @@
 import cynthia_websites_mini_client/configtype.{type CompleteData}
 import cynthia_websites_mini_client/contenttypes
+import cynthia_websites_mini_client/pottery
 import gleam/list
 import gleam/option
 import gleam/string
 import lustre/attribute.{attribute}
-import lustre/element.{element}
+import lustre/element.{type Element, element}
 
 pub fn generate_sitemap(data: CompleteData) -> option.Option(String) {
   use base_url: String <- option.then(
@@ -23,7 +24,7 @@ pub fn generate_sitemap(data: CompleteData) -> option.Option(String) {
   let post_entries =
     data.content
     |> list.map(fn(post) {
-      // We'll get both lastmod date and url for each post
+      // We'll get the url, dates, title and description for each post
       let url = base_url <> post.permalink
       let lastmod = case post.data {
         contenttypes.PostData(
@@ -41,15 +42,15 @@ pub fn generate_sitemap(data: CompleteData) -> option.Option(String) {
         contenttypes.PageData(..) -> ""
         // Pages don't have dates yet
       }
-      #(url, lastmod)
+      #(url, lastmod, post.title, post.description)
     })
 
-  // Add homepage with default values since it doesn't have dates
+  // Add homepage with default values 
   let all_entries =
-    [#(base_url, ""), ..post_entries]
+    [#(base_url, "", "Homepage", "The main page of the site"), ..post_entries]
     |> list.map(fn(entry) {
       // If the entry is the homepage, make it / instead of the base URL
-      let #(url, lastmod) = entry
+      let #(url, lastmod, title, desc) = entry
       let url = case url {
         "" -> {
           // If the URL is empty, we assume it's the homepage
@@ -57,20 +58,29 @@ pub fn generate_sitemap(data: CompleteData) -> option.Option(String) {
         }
         _ -> url
       }
-      #(url, lastmod)
+      #(url, lastmod, title, desc)
     })
 
   // Create the XML using lustre
   let urlset =
     element(
       "urlset",
-      [attribute("xmlns", "http://www.sitemaps.org/schemas/sitemap/0.9")],
+      [
+        attribute("xmlns", "http://www.sitemaps.org/schemas/sitemap/0.9"),
+        // Add extension for titles and descriptions
+        attribute(
+          "xmlns:news",
+          "http://www.google.com/schemas/sitemap-news/0.9",
+        ),
+      ],
       list.map(all_entries, fn(entry) {
-        let #(url, lastmod) = entry
+        let #(url, lastmod, title, desc) = entry
         let mut_elements = [
           element("loc", [], [element.text(url)]),
           element("changefreq", [], [element.text("weekly")]),
           element("priority", [], [element.text("1.0")]),
+          cdata_into_lustre("title", element.text(title)),
+          cdata_into_lustre("description", pottery.parse_html(desc, "descr.dj")),
         ]
         // Only add lastmod if we have a date
         let elements = case lastmod {
@@ -83,4 +93,19 @@ pub fn generate_sitemap(data: CompleteData) -> option.Option(String) {
 
   // Convert the XML tree to a string
   option.Some(element.to_readable_string(urlset))
+}
+
+fn cdata_into_lustre(
+  element_tag: String,
+  inner: Element(a),
+) -> element.Element(a) {
+  // Create a CDATA section in Lustre
+  // as a string :
+  // <![CDATA[ ... ]]>
+  element.unsafe_raw_html(
+    "",
+    element_tag,
+    [],
+    "<![CDATA[" <> element.to_string(inner) <> "]]>",
+  )
 }
