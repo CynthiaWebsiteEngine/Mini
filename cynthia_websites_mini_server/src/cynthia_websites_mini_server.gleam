@@ -5,7 +5,7 @@ import cynthia_websites_mini_client
 import cynthia_websites_mini_client/configtype
 import cynthia_websites_mini_server/config
 import cynthia_websites_mini_server/mutable_model_type
-import cynthia_websites_mini_server/static_routes
+import cynthia_websites_mini_server/ssrs
 import cynthia_websites_mini_server/utils/files
 import cynthia_websites_mini_server/web
 import gleam/bool
@@ -183,7 +183,7 @@ fn dynamic_site_server(mutmodel: mutable_model_type.MutableModel, lease: Int) {
       development: Some(True),
       hostname: conf.server_host,
       port: conf.server_port,
-      static_served: static_routes.static_routes(mutmodel),
+      static_served: ssrs.ssrs(mutmodel),
       handler: web.handle_request(_, mutmodel),
       id: None,
       reuse_port: None,
@@ -305,7 +305,7 @@ fn static_site_server(mutmodel: mutable_model_type.MutableModel) {
   case
     simplifile.write(
       to: outdir <> "/index.html",
-      contents: static_routes.index_html(data.config),
+      contents: ssrs.index_html(data.config),
     )
   {
     Ok(..) -> Nil

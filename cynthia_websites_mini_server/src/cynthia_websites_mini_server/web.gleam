@@ -5,7 +5,7 @@ import bungibindies/bun/http/serve/response
 import cynthia_websites_mini_client/configtype
 import cynthia_websites_mini_server/config
 import cynthia_websites_mini_server/mutable_model_type
-import cynthia_websites_mini_server/static_routes
+import cynthia_websites_mini_server/ssrs
 import gleam/dict
 import gleam/javascript/array
 import gleam/javascript/promise.{type Promise}
@@ -26,7 +26,7 @@ pub fn handle_request(
   let assert Ok(req_uri) = req |> request.url() |> uri.parse()
     as "Request URI should be valid"
   let path = req_uri.path
-  let assert Some(dynastatic) = static_routes.static_routes(mutable_model)
+  let assert Some(dynastatic) = ssrs.ssrs(mutable_model)
     as "Static routes should always be valid."
   case path {
     "/" -> {

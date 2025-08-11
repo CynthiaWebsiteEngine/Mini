@@ -18,7 +18,7 @@ import javascript/mutable_reference
 import plinth/node/process
 import simplifile
 
-pub fn static_routes(mutable_model: mutable_model_type.MutableModel) {
+pub fn ssrs(mutable_model: mutable_model_type.MutableModel) {
   let model = mutable_model |> mutable_reference.get()
   dict.new()
   |> dict.insert("/index.html", main(model.config))
