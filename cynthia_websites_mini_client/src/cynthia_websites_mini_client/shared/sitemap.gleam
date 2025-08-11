@@ -61,14 +61,7 @@ pub fn generate_sitemap(data: CompleteData) -> option.Option(String) {
   let urlset =
     element(
       "urlset",
-      [
-        attribute("xmlns", "http://www.sitemaps.org/schemas/sitemap/0.9"),
-        // Add extension for titles and descriptions
-        attribute(
-          "xmlns:news",
-          "http://www.google.com/schemas/sitemap-news/0.9",
-        ),
-      ],
+      [attribute("xmlns", "http://www.sitemaps.org/schemas/sitemap/0.9")],
       list.map(all_entries, fn(entry) {
         let #(url, lastmod, _title, _desc) = entry
         let mut_elements = [
