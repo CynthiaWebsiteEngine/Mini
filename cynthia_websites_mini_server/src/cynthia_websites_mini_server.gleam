@@ -4,6 +4,7 @@ import bungibindies/bun/http/serve.{ServeOptions}
 import cynthia_websites_mini_client
 import cynthia_websites_mini_client/configtype
 import cynthia_websites_mini_server/config
+import cynthia_websites_mini_server/jsonld
 import cynthia_websites_mini_server/mutable_model_type
 import cynthia_websites_mini_server/ssrs
 import cynthia_websites_mini_server/utils/files
@@ -228,7 +229,6 @@ fn dynamic_site_server(mutmodel: mutable_model_type.MutableModel, lease: Int) {
 }
 
 fn static_site_server(mutmodel: mutable_model_type.MutableModel) {
-  let data = mutmodel |> mutable_reference.get()
   console.info("Cynthia Mini is in pregeneration mode!")
 
   {
@@ -276,9 +276,20 @@ fn static_site_server(mutmodel: mutable_model_type.MutableModel) {
 
   use complete_data <- promise.await(config.load())
 
+  // Generate both JSON representations
   let complete_data_json =
     complete_data |> configtype.encode_complete_data_for_client
   let res_string = complete_data_json |> json.to_string
+
+  // Update the model with both JSON representations
+  mutable_reference.update(mutmodel, fn(model) {
+    mutable_model_type.MutableModelContent(
+      ..model,
+      cached_response: Some({ res_string }),
+      cached_jsonld: Some({ jsonld.generate_jsonld(complete_data) }),
+    )
+  })
+
   let outdir = process.cwd() <> "/out"
   case simplifile.create_directory_all(outdir) {
     Ok(..) -> Nil
@@ -305,7 +316,7 @@ fn static_site_server(mutmodel: mutable_model_type.MutableModel) {
   case
     simplifile.write(
       to: outdir <> "/index.html",
-      contents: ssrs.index_html(data.config),
+      contents: ssrs.index_html(mutable_reference.get(mutmodel)),
     )
   {
     Ok(..) -> Nil

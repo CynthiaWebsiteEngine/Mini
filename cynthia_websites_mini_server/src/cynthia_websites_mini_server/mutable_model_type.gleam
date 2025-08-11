@@ -10,7 +10,9 @@ pub type MutableModel =
 pub fn new() -> promise.Promise(MutableModel) {
   use a <- promise.await(config_module.capture_config())
   mutable_reference.new(
-    MutableModelContent(cached_response: None, config: { a }),
+    MutableModelContent(cached_response: None, cached_jsonld: None, config: {
+      a
+    }),
   )
   |> promise.resolve()
 }
@@ -18,6 +20,7 @@ pub fn new() -> promise.Promise(MutableModel) {
 pub type MutableModelContent {
   MutableModelContent(
     cached_response: Option(String),
+    cached_jsonld: Option(String),
     config: configtype.SharedCynthiaConfigGlobalOnly,
   )
 }

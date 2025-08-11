@@ -4,6 +4,7 @@ import bungibindies/bun/http/serve/request.{type Request}
 import bungibindies/bun/http/serve/response
 import cynthia_websites_mini_client/configtype
 import cynthia_websites_mini_server/config
+import cynthia_websites_mini_server/jsonld
 import cynthia_websites_mini_server/mutable_model_type
 import cynthia_websites_mini_server/ssrs
 import gleam/dict
@@ -26,8 +27,18 @@ pub fn handle_request(
   let assert Ok(req_uri) = req |> request.url() |> uri.parse()
     as "Request URI should be valid"
   let path = req_uri.path
+
+  // Ensure JSONs are generated if needed
+  use _ <- promise.await(
+    case mutable_reference.get(mutable_model).cached_jsonld {
+      Some(_) -> promise.resolve(Nil)
+      // Cache hit, no need to generate
+      None -> generate_jsons(mutable_model) |> promise.map(fn(_) { Nil })
+    },
+  )
+
   let assert Some(dynastatic) = ssrs.ssrs(mutable_model)
-    as "Static routes should always be valid."
+    as "These routes should always be valid."
   case path {
     "/" -> {
       console.log(
@@ -63,20 +74,11 @@ pub fn handle_request(
         None -> {
           // If there is no cached response, load the complete data from the config file
           // and encode it as JSON
-          use complete_data <- promise.await(config.load())
-          let complete_data_json =
-            complete_data |> configtype.encode_complete_data_for_client
-          let res_string = complete_data_json |> json.to_string
-          // And add it to the model as cache for future requests
-          mutable_reference.update(mutable_model, fn(model) {
-            mutable_model_type.MutableModelContent(
-              ..model,
-              cached_response: Some({ res_string }),
-            )
-          })
-          // Now return the response string so that it can be used in the response body
+          use res <- promise.map(generate_jsons(mutable_model))
+          let res_string: String = res.0
+
+          // Now return the response string promise so that it can be used in the response body
           res_string
-          |> promise.resolve
         }
       }
       use body <- promise.await(re)
@@ -140,3 +142,22 @@ pub fn get_request_body_as_text(req: Request) -> Promise(String)
 
 @external(javascript, "./request_ffi.ts", "answer_bunrequest_with_file")
 pub fn answer_bunrequest_with_file(file: BunFile) -> Promise(response.Response)
+
+fn generate_jsons(
+  mutable_model: mutable_model_type.MutableModel,
+) -> Promise(#(String, String)) {
+  use complete_data <- promise.await(config.load())
+  let complete_data_json =
+    complete_data |> configtype.encode_complete_data_for_client
+  let res_string = complete_data_json |> json.to_string
+  let res_jsonld = jsonld.generate_jsonld(complete_data)
+  // Add both JSON representations to the model cache
+  mutable_reference.update(mutable_model, fn(model) {
+    mutable_model_type.MutableModelContent(
+      ..model,
+      cached_response: Some({ res_string }),
+      cached_jsonld: Some({ res_jsonld }),
+    )
+  })
+  #(res_string, res_jsonld) |> promise.resolve
+}
