@@ -21,7 +21,7 @@ pub fn generate_sitemap(data: CompleteData) -> option.Option(String) {
     }),
   )
 
-  let post_entries =
+  let all_entries =
     data.content
     |> list.map(fn(post) {
       // We'll get the url, dates, title and description for each post
@@ -44,10 +44,6 @@ pub fn generate_sitemap(data: CompleteData) -> option.Option(String) {
       }
       #(url, lastmod, post.title, post.description)
     })
-
-  // Add homepage with default values 
-  let all_entries =
-    [#(base_url, "", "Homepage", "The main page of the site"), ..post_entries]
     |> list.map(fn(entry) {
       // If the entry is the homepage, make it / instead of the base URL
       let #(url, lastmod, title, desc) = entry
@@ -74,13 +70,14 @@ pub fn generate_sitemap(data: CompleteData) -> option.Option(String) {
         ),
       ],
       list.map(all_entries, fn(entry) {
-        let #(url, lastmod, title, desc) = entry
+        let #(url, lastmod, _title, _desc) = entry
         let mut_elements = [
           element("loc", [], [element.text(url)]),
           element("changefreq", [], [element.text("weekly")]),
           element("priority", [], [element.text("1.0")]),
-          cdata_into_lustre("title", element.text(title)),
-          cdata_into_lustre("description", pottery.parse_html(desc, "descr.dj")),
+          // Description and title are not standard in sitemaps, sadly.
+        // cdata_into_lustre("title", element.text(title)),
+        // cdata_into_lustre("description", pottery.parse_html(desc, "descr.dj")),
         ]
         // Only add lastmod if we have a date
         let elements = case lastmod {
@@ -94,18 +91,17 @@ pub fn generate_sitemap(data: CompleteData) -> option.Option(String) {
   // Convert the XML tree to a string
   option.Some(element.to_readable_string(urlset))
 }
-
-fn cdata_into_lustre(
-  element_tag: String,
-  inner: Element(a),
-) -> element.Element(a) {
-  // Create a CDATA section in Lustre
-  // as a string :
-  // <![CDATA[ ... ]]>
-  element.unsafe_raw_html(
-    "",
-    element_tag,
-    [],
-    "<![CDATA[" <> element.to_string(inner) <> "]]>",
-  )
-}
+// fn cdata_into_lustre(
+//   element_tag: String,
+//   inner: Element(a),
+// ) -> element.Element(a) {
+//   // Create a CDATA section in Lustre
+//   // as a string :
+//   // <![CDATA[ ... ]]>
+//   element.unsafe_raw_html(
+//     "",
+//     element_tag,
+//     [],
+//     "<![CDATA[" <> element.to_string(inner) <> "]]>",
+//   )
+// }
