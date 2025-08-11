@@ -21,12 +21,7 @@ pub fn generate_sitemap(data: CompleteData) -> option.Option(String) {
   )
 
   let post_entries =
-    list.filter(data.content, fn(post) {
-      case post.data {
-        contenttypes.PostData(..) -> True
-        contenttypes.PageData(..) -> !string.starts_with(post.permalink, "!")
-      }
-    })
+    data.content
     |> list.map(fn(post) {
       // We'll get both lastmod date and url for each post
       let url = base_url <> post.permalink
@@ -50,7 +45,20 @@ pub fn generate_sitemap(data: CompleteData) -> option.Option(String) {
     })
 
   // Add homepage with default values since it doesn't have dates
-  let all_entries = [#(base_url, ""), ..post_entries]
+  let all_entries =
+    [#(base_url, ""), ..post_entries]
+    |> list.map(fn(entry) {
+      // If the entry is the homepage, make it / instead of the base URL
+      let #(url, lastmod) = entry
+      let url = case url {
+        "" -> {
+          // If the URL is empty, we assume it's the homepage
+          base_url <> "/"
+        }
+        _ -> url
+      }
+      #(url, lastmod)
+    })
 
   // Create the XML using lustre
   let urlset =
