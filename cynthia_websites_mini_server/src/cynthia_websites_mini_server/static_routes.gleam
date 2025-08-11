@@ -141,7 +141,7 @@ pub fn footer(can_hide: Bool, git_integration: Bool) {
       ui.footer
     }
   }
-  "<footer id='cynthiafooter' class='footer transition-all duration-[2s] ease-in-out footer-center bg-base-300 dark:bg-slate-800 text-base-content dark:text-base-200 p-1 h-fit fixed bottom-0 max-h-1/8'><div><p>"
+  "<footer id='cynthiafooter' class='footer transition-all duration-[2s] ease-in-out footer-center bg-base-300 dark:bg-slate-800 text-base-content dark:text-base-200 p-1 h-fit fixed bottom-0 max-h-[50px]'><div><p>"
   <> f
   <> "</p></div></footer>"
   <> case can_hide {
