@@ -6,21 +6,21 @@ This TODO was created for branch `issue-fixer-1`. These are the issues and tasks
 
 ## Issues and Tasks
 
-### 1. Comment Out Birdie-Dependent Tests
+### ~~1. Comment Out Birdie-Dependent Tests~~ ✅
 
-**Related GitHub issue:**
+~~**Related GitHub issue:**~~
 
-- [#44](https://github.com/CynthiaWebsiteEngine/Mini/issues/44): Tests all fail
+~~- [#44](https://github.com/CynthiaWebsiteEngine/Mini/issues/44): Tests all fail~~
 
-**Description:**
+~~**Description:**~~
 
-- Almost all tests are failing due to issues with Birdie, which is temporarily broken on both ends.
+~~- Almost all tests are failing due to issues with Birdie, which is temporarily broken on both ends.~~
 
-**Task:**
+~~**Task:**~~
 
-- Identify and comment out all tests that rely on Birdie.
+~~- Identify and comment out all tests that rely on Birdie.~~
 
-**Priority:** Very High
+~~**Priority:** Very High~~
 
 ---
 
