@@ -5,7 +5,7 @@ import cynthia_websites_mini_client/configurable_variables
 import cynthia_websites_mini_client/contenttypes
 import cynthia_websites_mini_client/dom
 import cynthia_websites_mini_client/messages.{
-  type Msg, ApiReturnedData, UserNavigateTo,
+  type Msg, ApiReturnedData, TickUp, UserNavigateTo,
 }
 import cynthia_websites_mini_client/model_type.{type Model, Model}
 import cynthia_websites_mini_client/pottery
@@ -43,19 +43,76 @@ pub fn main() {
   Nil
 }
 
+fn up_next_tick() {
+  let set_timeout_nilled = fn(delay: Int, cb: fn() -> a) -> Nil {
+    global.set_timeout(delay, cb)
+    Nil
+  }
+  use dispatch <- effect.from
+  use <- set_timeout_nilled(50)
+  dispatch(TickUp)
+}
+
+/// Slightly more assertive way of finding url changes. This because sometimes a page change outside of the visibility of modem is undetected, mixing up the hashes and pages. This effect kicks in once they should have had their time and attempts to fix it.
+fn check_for_hash_change(model: Model) -> Effect(Msg) {
+  use dispatch <- effect.from
+  case model.ticks < 4 {
+    True -> {
+      Nil
+    }
+    False -> {
+      let assert Ok(session) = storage.local()
+        as "Browser is expected to have a localstorage."
+
+      case window.get_hash() |> echo {
+        Ok(f) -> {
+          let h = case f {
+            "" -> {
+              "/"
+            }
+            d -> {
+              d
+            }
+          }
+          case h == model.path {
+            True -> Nil
+            False -> {
+              console.log("[assertive] Hash changed to: " <> h)
+              let assert Ok(..) = storage.set_item(session, "last", h)
+              dispatch(UserNavigateTo(h))
+            }
+          }
+        }
+        _ -> {
+          // This happens whenever the hash is not found
+          // like for example when utterances login just happened.
+          // This is planned. Since the storage knows better in those cases.
+          Nil
+        }
+      }
+    }
+  }
+}
+
 fn init(_) -> #(Model, Effect(Msg)) {
   console.log("Cynthia Client starting up")
   let effects =
-    effect.batch([fetch_all(ApiReturnedData), modem.init(on_url_change)])
+    effect.batch([
+      fetch_all(ApiReturnedData),
+      modem.init(on_url_change),
+      up_next_tick(),
+    ])
   // Using local storage as session storage because session storage doesn't stay long enough
   let assert Ok(session) = storage.local()
-  // .. if the local storage is older than 15 minutes though, we clear it
+    as "Browser is expected to have a localstorage."
+  // .. if the local storage is older than 1 minute though, we clear it
   let val = case storage.get_item(session, "time") {
     Ok(time) -> {
       let now = utils.now()
       let stamp = result.unwrap(int.parse(time), 0)
       let diff = int.subtract(now, stamp) |> int.absolute_value
-      let order = int.compare(diff, 900)
+      // 1 minutes = 60 seconds
+      let order = int.compare(diff, 60)
       case order {
         order.Eq | order.Gt -> False
         order.Lt -> True
@@ -106,7 +163,7 @@ fn init(_) -> #(Model, Effect(Msg)) {
   }
   console.log("Initial path: " <> initial_path)
   let model =
-    Model(initial_path, None, dict.new(), Ok(Nil), dict.new(), session)
+    Model(initial_path, None, dict.new(), Ok(Nil), dict.new(), session, 0)
 
   #(model, effects)
 }
@@ -151,6 +208,12 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
     }
   }
   case msg {
+    TickUp -> {
+      #(
+        Model(..model, ticks: model.ticks + 1),
+        effect.batch([up_next_tick(), check_for_hash_change(model)]),
+      )
+    }
     UserNavigateTo(path) -> {
       dom.set_hash(path)
       let other =
@@ -171,6 +234,7 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
       let computed_menus = model.computed_menus
       let complete_data = model.complete_data
       let status = model.status
+      let ticks = model.ticks
       let other =
         model.other
         |> dict.insert("search_term", dynamic.from(search_term))
@@ -184,6 +248,7 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
           status:,
           other:,
           sessionstore:,
+          ticks:,
         ),
         effect.none(),
       )

@@ -10,4 +10,5 @@ pub type Msg {
   UserOnGitHubLayoutToggleMenu
   UserOnDocumentationLayoutToggleSidebar
   CindyToggleMenu1
+  TickUp
 }

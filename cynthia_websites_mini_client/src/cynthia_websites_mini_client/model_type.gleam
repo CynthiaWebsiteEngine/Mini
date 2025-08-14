@@ -26,6 +26,8 @@ pub type Model {
     other: Dict(String, dynamic.Dynamic),
     /// Session storage
     sessionstore: storage.Storage,
+    /// Ticks
+    ticks: Int,
   )
 }
 
