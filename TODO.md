@@ -41,21 +41,20 @@ This TODO was created for branch `issue-fixer-1`. These are the issues and tasks
 
 ---
 
-### 3. Resolve Navigational Mishap with Active CynthiaSession
+### ~~3. Resolve Navigational Mishap with Active CynthiaSession~~ ✅
 
-**Related GitHub issue:**
-To be created
+~~**Related GitHub issue:**~~
 
-**Description:**
+~~**Description:**~~
 
-- When a link is opened while the CynthiaSession is still active, a navigational mishap occurs. This is likely due to an overly long session lease.
+~~- When a link is opened while the CynthiaSession is still active, a navigational mishap occurs. This is likely due to an overly long session lease.~~
 
-**Task:**
+~~**Task:**~~
 
-- Investigate the session lease duration in the client.
-- Adjust the lease duration to prevent mishaps.
+~~- Investigate the session lease duration in the client.~~
+~~- Adjust the lease duration to prevent mishaps.~~
 
-**Priority:** Medium
+~~**Priority:** Medium~~
 
 ---
 
