@@ -24,21 +24,20 @@ This TODO was created for branch `issue-fixer-1`. These are the issues and tasks
 
 ---
 
-### 2. Fix Latency When Switching Pages with Comments
+### ~~2. Fix Latency When Switching Pages with Comments~~ ✅
 
-**Related GitHub issue:**
-To be created
+~~**Related GitHub issue:**~~
 
-**Description:**
+~~**Description:**~~
 
-- There is significant latency when switching from a post page with comments to another page. This issue likely stems from the timing of the removal of the comment box.
+~~- There is significant latency when switching from a post page with comments to another page. This issue likely stems from the timing of the removal of the comment box.~~
 
-**Task:**
+~~**Task:**~~
 
-- Investigate the client-side code responsible for comment box removal.
-- Optimize the timing to reduce latency.
+~~- Investigate the client-side code responsible for comment box removal.~~
+~~- Optimize the timing to reduce latency.~~
 
-**Priority:** High
+~~**Priority:** High~~
 
 ---
 

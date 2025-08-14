@@ -114,6 +114,7 @@ fn init(_) -> #(Model, Effect(Msg)) {
 // Effect handlers --------------------------------------------------------------
 /// On url change: (Obviously) is triggered on url change, this is useful for intercepting the url hash change on in-site-navigation, that Cynthia uses.
 fn on_url_change(uri: Uri) -> Msg {
+  pottery.destroy_comment_box()
   console.log("URL changed to: " <> uri.to_string(uri))
   let assert Ok(#(_, d)) =
     uri
@@ -163,7 +164,6 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
           console.error("Error storing last path: " <> string.inspect(e))
         }
       }
-      pottery.destroy_comment_box()
       #(Model(..model, path:, other:), effect.none())
     }
     messages.UserSearchTerm(search_term) -> {
