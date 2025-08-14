@@ -25,16 +25,16 @@ jobs:
             arch: arm64
             ext: ""
             bin_name: cynthiaweb-mini-linux-arm64
-          # - os: windows
-          #   runner: windows-latest
-          #   arch: x64
-          #   ext: ".exe"
-          #   bin_name: cynthiaweb-mini-windows-x64.exe
-          # - os: windows
-          #   runner: windows-latest
-          #   arch: arm64
-          #   ext: ".exe"
-          #   bin_name: cynthiaweb-mini-windows-arm64.exe
+          - os: windows
+            runner: windows-latest
+            arch: x64
+            ext: ".exe"
+            bin_name: cynthiaweb-mini-windows-x64.exe
+          - os: windows
+            runner: windows-latest
+            arch: arm64
+            ext: ".exe"
+            bin_name: cynthiaweb-mini-windows-arm64.exe
           - os: macos
             runner: macos-latest
             arch: arm64
