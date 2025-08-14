@@ -98,19 +98,19 @@ To be created
 
 ---
 
-### 6. Fix Windows Release and Prerelease Workflows
+### ~~6. Fix Windows Release and Prerelease Workflows~~ ✅
 
-**Related GitHub issue:**
+~~**Related GitHub issue:**~~
 
-- [#35](https://github.com/CynthiaWebsiteEngine/Mini/issues/35): Windows release and prerelease workflows failing
+~~- [#35](https://github.com/CynthiaWebsiteEngine/Mini/issues/35): Windows release and prerelease workflows failing~~
 
-**Description:**
+~~**Description:**~~
 
-- The Windows release and prerelease workflows are failing. The exact cause needs to be identified and resolved.
+~~- The Windows release and prerelease workflows are failing. The exact cause needs to be identified and resolved.~~
 
-**Task:**
+~~**Task:**~~
 
-- Investigate the failure in the Windows release and prerelease workflows.
-- Fix the workflows to ensure successful execution.
+~~- Investigate the failure in the Windows release and prerelease workflows.~~
+~~- Fix the workflows to ensure successful execution.~~
 
-**Priority:** High
+~~**Priority:** High~~
