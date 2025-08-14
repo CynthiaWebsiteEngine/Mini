@@ -79,22 +79,22 @@ To be created
 
 ---
 
-### 5. Fix NPM Publish Workflow Error
+### ~~5. Fix NPM Publish Workflow Error~~ ✅ NPM token was expired
 
-**Related GitHub issue:**
+~~**Related GitHub issue:**~~
 
-- [#35](https://github.com/CynthiaWebsiteEngine/Mini/issues/35): NPM publish workflow exits with HTTP ERROR 404
+~~- [#35](https://github.com/CynthiaWebsiteEngine/Mini/issues/35): NPM publish workflow exits with HTTP ERROR 404~~
 
-**Description:**
+~~**Description:**~~
 
-- The `npm.yaml` workflow exits with HTTP ERROR 404, even though the same steps run locally are successful.
+~~- The `npm.yaml` workflow exits with HTTP ERROR 404, even though the same steps run locally are successful.~~
 
-**Task:**
+~~**Task:**~~
 
-- Investigate the cause of the HTTP ERROR 404 in the GitHub Actions workflow.
-- Ensure the workflow runs successfully and publishes the package to npm.
+~~- Investigate the cause of the HTTP ERROR 404 in the GitHub Actions workflow.~~
+~~- Ensure the workflow runs successfully and publishes the package to npm.~~
 
-**Priority:** High
+~~**Priority:** High~~
 
 ---
 
