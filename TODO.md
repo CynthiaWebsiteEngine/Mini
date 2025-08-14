@@ -58,22 +58,22 @@ This TODO was created for branch `issue-fixer-1`. These are the issues and tasks
 
 ---
 
-### 4. Centralize Common Functions
+### ~~4. Centralize Common Functions~~ ✅
 
-**Related GitHub issue:**
+~~**Related GitHub issue:**~~
 
-- [#30](https://github.com/CynthiaWebsiteEngine/Mini/issues/30): Lessen the amount of FFI
+~~**Description:**~~
 
-**Description:**
+~~- Some common functions used by both the client and server reside on both sides. These should be centralized in the shared module within the client or at least on the client side.~~
 
-- Some common functions used by both the client and server reside on both sides. These should be centralized in the shared module within the client or at least on the client side.
+~~**Task:**~~
 
-**Task:**
+~~- Create a list of common functions currently duplicated across the client and server.~~
+~~- Plan the migration of these functions to the shared module.~~
 
-- Create a list of common functions currently duplicated across the client and server.
-- Plan the migration of these functions to the shared module.
+~~**Priority:** Low~~
 
-**Priority:** Low
+~~**Comment:** No candidates suited for removal~~
 
 ---
 
