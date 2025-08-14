@@ -38,9 +38,9 @@ run = [
 # Therefore, we need to rename `generate-ffi` to `generate-ffi.ts` before running it.
 # Then run it with Bun, and then rename it back.
 run_windows = [
-  "powershell -Command \"Rename-Item -Path './generate-ffi' -NewName 'generate-ffi.ts' -Force\"",
+  "cmd /c rename generate-ffi generate-ffi.ts",
   "bun ./generate-ffi.ts",
-  "powershell -Command \"Rename-Item -Path './generate-ffi.ts' -NewName 'generate-ffi' -Force\""
+  "cmd /c rename generate-ffi.ts generate-ffi"
 ]
 
 [tasks.generate-ffi-themes]
@@ -50,9 +50,9 @@ run = [
 ]
 # also run on Windows
 run_windows = [
-  "powershell -Command \"Rename-Item -Path './generate-ffi' -NewName 'generate-ffi.ts' -Force\"",
+  "cmd /c rename generate-ffi generate-ffi.ts",
   "bun ./generate-ffi.ts --only-themes",
-  "powershell -Command \"Rename-Item -Path './generate-ffi.ts' -NewName 'generate-ffi' -Force\""
+  "cmd /c rename generate-ffi.ts generate-ffi"
 ]
 
 
@@ -89,14 +89,16 @@ run = "rm -rf ./test/*"
 [tasks.build-client]
 run = [
   "gleam build",
+  "cat <<EOF   > ./build/dev/javascript/cynthia_websites_mini_client/cynthia_websites_mini_client.ts\nimport { main } from \"./cynthia_websites_mini_client.mjs\";document.addEventListener(\"DOMContentLoaded\", main());\nEOF",
+  "bun build \"./build/dev/javascript/cynthia_websites_mini_client/cynthia_websites_mini_client.ts\" --outdir \"./build/bundled/\" --minify-whitespace --minify-syntax --target browser",
+]
+run_windows = [
+  "gleam build",
   """
-  cat <<EOF   > ./build/dev/javascript/cynthia_websites_mini_client/cynthia_websites_mini_client.ts
-  import { main } from "./cynthia_websites_mini_client.mjs";document.addEventListener("DOMContentLoaded", main());
-EOF
+  echo import { main } from './cynthia_websites_mini_client.mjs'; > .\\build\\dev\\javascript\\cynthia_websites_mini_client\\cynthia_websites_mini_client.ts
+  echo document.addEventListener("DOMContentLoaded", main()); >> .\\build\\dev\\javascript\\cynthia_websites_mini_client\\cynthia_websites_mini_client.ts
   """,
-  """
-  bun build "./build/dev/javascript/cynthia_websites_mini_client/cynthia_websites_mini_client.ts" --outdir "./build/bundled/" --minify-whitespace --minify-syntax --target browser
-  """,
+  'bun build .\\build\\dev\\javascript\\cynthia_websites_mini_client\\cynthia_websites_mini_client.ts --outdir .\\build\\bundled\\ --minify-whitespace --minify-syntax --target browser',
 ]
 wait_for = "bun-install"
 depends = ["bun-install","generate-prelude", "generate-ffi-themes"]
@@ -110,10 +112,16 @@ wait_for = ["bun-install", "generate-prelude", "build-client", "generate-ffi"]
 description = "Build the server-side code and bundle it with Bun."
 run = [
   "gleam build",
-  # Create a TypeScript file that imports the main function from the generated module.
   "cat <<EOF   > ./build/dev/javascript/cynthia_websites_mini_server/cynthia_websites_mini_server.ts\nimport { main } from \"./cynthia_websites_mini_server.mjs\";main();\nEOF",
-  # Bundle the generated TypeScript file into a single JavaScript file.
   "bun build \"./build/dev/javascript/cynthia_websites_mini_server/cynthia_websites_mini_server.ts\" --outdir \"./build/bundled/\" --minify-whitespace --minify-syntax --target bun",
+]
+run_windows = [
+  "gleam build",
+  """
+  echo import { main } from './cynthia_websites_mini_server.mjs'; > .\\build\\dev\\javascript\\cynthia_websites_mini_server\\cynthia_websites_mini_server.ts
+  echo main(); >> .\\build\\dev\\javascript\\cynthia_websites_mini_server\\cynthia_websites_mini_server.ts
+  """,
+  'bun build .\\build\\dev\\javascript\\cynthia_websites_mini_server\\cynthia_websites_mini_server.ts --outdir .\\build\\bundled\\ --minify-whitespace --minify-syntax --target bun',
 ]
 dir = "{{ config_root }}/cynthia_websites_mini_server"
 
@@ -170,6 +178,14 @@ run = [
   "echo '#!/usr/bin/env bun' | cat - ./cynthia_websites_mini_server/build/bundled/cynthia_websites_mini_server.js > ./dist/cynthia_websites_mini_server.js",
   # Make the bundled file executable.
   "chmod +x ./dist/cynthia_websites_mini_server.js"
+]
+run_windows = [
+  # Create the dist directory if it doesn't exist.
+  "mkdir .\\dist 2>nul || echo dist already exists",
+  # Add a shebang line to the bundled file to make it executable.
+  "type .\\cynthia_websites_mini_server\\build\\bundled\\cynthia_websites_mini_server.js >> .\\dist\\cynthia_websites_mini_server.js",
+  # Make the bundled file executable (no-op on Windows).
+  "echo Skipping chmod on Windows"
 ]
 
 [tasks.publish]
