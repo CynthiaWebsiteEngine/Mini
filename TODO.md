@@ -76,3 +76,41 @@ To be created
 - Plan the migration of these functions to the shared module.
 
 **Priority:** Low
+
+---
+
+### 5. Fix NPM Publish Workflow Error
+
+**Related GitHub issue:**
+
+- [#35](https://github.com/CynthiaWebsiteEngine/Mini/issues/35): NPM publish workflow exits with HTTP ERROR 404
+
+**Description:**
+
+- The `npm.yaml` workflow exits with HTTP ERROR 404, even though the same steps run locally are successful.
+
+**Task:**
+
+- Investigate the cause of the HTTP ERROR 404 in the GitHub Actions workflow.
+- Ensure the workflow runs successfully and publishes the package to npm.
+
+**Priority:** High
+
+---
+
+### 6. Fix Windows Release and Prerelease Workflows
+
+**Related GitHub issue:**
+
+- [#35](https://github.com/CynthiaWebsiteEngine/Mini/issues/35): Windows release and prerelease workflows failing
+
+**Description:**
+
+- The Windows release and prerelease workflows are failing. The exact cause needs to be identified and resolved.
+
+**Task:**
+
+- Investigate the failure in the Windows release and prerelease workflows.
+- Fix the workflows to ensure successful execution.
+
+**Priority:** High
