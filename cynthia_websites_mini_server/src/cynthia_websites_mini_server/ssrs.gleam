@@ -2,6 +2,7 @@ import bungibindies/bun/http/serve/response
 import bungibindies/bun/spawn.{OptionsToSubprocess}
 import cynthia_websites_mini_client
 import cynthia_websites_mini_client/configtype
+import cynthia_websites_mini_client/dom
 import cynthia_websites_mini_client/ui
 import cynthia_websites_mini_server/mutable_model_type
 import cynthia_websites_mini_server/utils/files.{client_css, client_js}
@@ -38,8 +39,12 @@ pub fn index_html(model: mutable_model_type.MutableModelContent) {
 
 <head>
 <title>&lt;&lt;site hosted by Cynthia mini&gt;&gt;</title>
-<meta property='og:site_name' content='" <> gc.global_site_name <> "'/>
-<meta property='og:description' content='" <> gc.global_site_description <> "'/>
+<meta property='og:site_name' content='" <> gc.global_site_name
+  |> dom.jsonify_string()
+  |> result.unwrap("Site name is invalid") <> "'/>
+<meta property='og:description' content='" <> gc.global_site_description
+  |> dom.jsonify_string()
+  |> result.unwrap("Site description is invalid") <> "'/>
 <meta name='theme-color' content='" <> gc.global_colour <> "' />
 " <> case model.cached_jsonld {
     Some(jsonld) ->
