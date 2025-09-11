@@ -26,8 +26,12 @@ pub type Model {
     other: Dict(String, dynamic.Dynamic),
     /// Session storage
     sessionstore: storage.Storage,
-    /// Ticks
-    ticks: Int,
+    /// Safe time passed -- equals 200ms after initial load
+    /// This is to allow for any hash changes that might have happened during the initial load to be caught and acted upon.
+    /// 
+    /// This replaces the previous `ticks` variable which was a count of ticks (50ms each) since load. Ticks >= 4 was considered safe time passed.
+    /// Ticks led to unnecessary re-renders, which affected mobile performance negatively.
+    safetimepassed: Bool,
   )
 }
 

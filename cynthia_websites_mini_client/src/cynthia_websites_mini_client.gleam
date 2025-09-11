@@ -5,7 +5,8 @@ import cynthia_websites_mini_client/configurable_variables
 import cynthia_websites_mini_client/contenttypes
 import cynthia_websites_mini_client/dom
 import cynthia_websites_mini_client/messages.{
-  type Msg, ApiReturnedData, TickUp, UserNavigateTo,
+  type Msg, ApiReturnedData, SafeTimePassed, TriggerCheckForHashChange,
+  UserNavigateTo,
 }
 import cynthia_websites_mini_client/model_type.{type Model, Model}
 import cynthia_websites_mini_client/pottery
@@ -43,20 +44,31 @@ pub fn main() {
   Nil
 }
 
-fn up_next_tick() {
+fn await_safe_time() {
   let set_timeout_nilled = fn(delay: Int, cb: fn() -> a) -> Nil {
     global.set_timeout(delay, cb)
     Nil
   }
   use dispatch <- effect.from
-  use <- set_timeout_nilled(500)
-  dispatch(TickUp)
+  use <- set_timeout_nilled(200)
+  dispatch(SafeTimePassed)
+}
+
+fn check_for_hash_change_every_50ms() -> Effect(Msg) {
+  let set_interval_nilled = fn(interval: Int, cb: fn() -> a) -> Nil {
+    global.set_interval(interval, cb)
+    Nil
+  }
+  use dispatch <- effect.from
+  use <- set_interval_nilled(50)
+  dispatch(TriggerCheckForHashChange)
+  Nil
 }
 
 /// Slightly more assertive way of finding url changes. This because sometimes a page change outside of the visibility of modem is undetected, mixing up the hashes and pages. This effect kicks in once they should have had their time and attempts to fix it.
 fn check_for_hash_change(model: Model) -> Effect(Msg) {
   use dispatch <- effect.from
-  case model.ticks < 2 {
+  case model.safetimepassed {
     True -> {
       Nil
     }
@@ -100,7 +112,8 @@ fn init(_) -> #(Model, Effect(Msg)) {
     effect.batch([
       fetch_all(ApiReturnedData),
       modem.init(on_url_change),
-      up_next_tick(),
+      await_safe_time(),
+      check_for_hash_change_every_50ms(),
     ])
   // Using local storage as session storage because session storage doesn't stay long enough
   let assert Ok(session) = storage.local()
@@ -163,7 +176,7 @@ fn init(_) -> #(Model, Effect(Msg)) {
   }
   console.log("Initial path: " <> initial_path)
   let model =
-    Model(initial_path, None, dict.new(), Ok(Nil), dict.new(), session, 0)
+    Model(initial_path, None, dict.new(), Ok(Nil), dict.new(), session, False)
 
   #(model, effects)
 }
@@ -208,11 +221,11 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
     }
   }
   case msg {
-    TickUp -> {
-      #(
-        Model(..model, ticks: model.ticks + 1),
-        effect.batch([up_next_tick(), check_for_hash_change(model)]),
-      )
+    TriggerCheckForHashChange -> {
+      #(model, check_for_hash_change(model))
+    }
+    SafeTimePassed -> {
+      #(Model(..model, safetimepassed: True), check_for_hash_change(model))
     }
     UserNavigateTo(path) -> {
       dom.set_hash(path)
@@ -234,7 +247,7 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
       let computed_menus = model.computed_menus
       let complete_data = model.complete_data
       let status = model.status
-      let ticks = model.ticks
+      let safetimepassed = model.safetimepassed
       let other =
         model.other
         |> dict.insert("search_term", dynamic.from(search_term))
@@ -248,7 +261,7 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
           status:,
           other:,
           sessionstore:,
-          ticks:,
+          safetimepassed:,
         ),
         effect.none(),
       )
