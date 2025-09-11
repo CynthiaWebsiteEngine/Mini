@@ -49,14 +49,14 @@ fn up_next_tick() {
     Nil
   }
   use dispatch <- effect.from
-  use <- set_timeout_nilled(50)
+  use <- set_timeout_nilled(500)
   dispatch(TickUp)
 }
 
 /// Slightly more assertive way of finding url changes. This because sometimes a page change outside of the visibility of modem is undetected, mixing up the hashes and pages. This effect kicks in once they should have had their time and attempts to fix it.
 fn check_for_hash_change(model: Model) -> Effect(Msg) {
   use dispatch <- effect.from
-  case model.ticks < 4 {
+  case model.ticks < 2 {
     True -> {
       Nil
     }
@@ -86,7 +86,7 @@ fn check_for_hash_change(model: Model) -> Effect(Msg) {
         _ -> {
           // This happens whenever the hash is not found
           // like for example when utterances login just happened.
-          // This is planned. Since the storage knows better in those cases.
+          // This is not unexpected behaviour, since the storage knows better in those cases.
           Nil
         }
       }
