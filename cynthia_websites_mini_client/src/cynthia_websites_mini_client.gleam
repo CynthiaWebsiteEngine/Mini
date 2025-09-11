@@ -55,13 +55,16 @@ fn await_safe_time() {
 }
 
 fn check_for_hash_change_every_50ms() -> Effect(Msg) {
-  let set_interval_nilled = fn(interval: Int, cb: fn() -> a) -> Nil {
-    global.set_interval(interval, cb)
+  let set_timeout_nilled = fn(delay: Int, cb: fn() -> a) -> Nil {
+    global.set_timeout(delay, cb)
     Nil
   }
   use dispatch <- effect.from
-  use <- set_interval_nilled(50)
-  dispatch(TriggerCheckForHashChange)
+  // Every 50ms, check for hash changes until 200ms have passed
+  set_timeout_nilled(50, fn() { dispatch(TriggerCheckForHashChange) })
+  set_timeout_nilled(100, fn() { dispatch(TriggerCheckForHashChange) })
+  set_timeout_nilled(150, fn() { dispatch(TriggerCheckForHashChange) })
+  set_timeout_nilled(200, fn() { dispatch(TriggerCheckForHashChange) })
   Nil
 }
 
