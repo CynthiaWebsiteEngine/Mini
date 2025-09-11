@@ -95,8 +95,7 @@ run = [
 run_windows = [
   "gleam build",
   """
-  echo import { main } from './cynthia_websites_mini_client.mjs'; > .\\build\\dev\\javascript\\cynthia_websites_mini_client\\cynthia_websites_mini_client.ts
-  echo document.addEventListener("DOMContentLoaded", main()); >> .\\build\\dev\\javascript\\cynthia_websites_mini_client\\cynthia_websites_mini_client.ts
+  echo import { main } from './cynthia_websites_mini_client.mjs';document.addEventListener('DOMContentLoaded', main); > .\\build\\dev\\javascript\\cynthia_websites_mini_client\\cynthia_websites_mini_client.ts
   """,
   'bun build .\\build\\dev\\javascript\\cynthia_websites_mini_client\\cynthia_websites_mini_client.ts --outdir .\\build\\bundled\\ --minify-whitespace --minify-syntax --target browser',
 ]
@@ -118,8 +117,7 @@ run = [
 run_windows = [
   "gleam build",
   """
-  echo import { main } from './cynthia_websites_mini_server.mjs'; > .\\build\\dev\\javascript\\cynthia_websites_mini_server\\cynthia_websites_mini_server.ts
-  echo main(); >> .\\build\\dev\\javascript\\cynthia_websites_mini_server\\cynthia_websites_mini_server.ts
+  echo import { main } from './cynthia_websites_mini_server.mjs'; main(); > .\\build\\dev\\javascript\\cynthia_websites_mini_server\\cynthia_websites_mini_server.ts
   """,
   'bun build .\\build\\dev\\javascript\\cynthia_websites_mini_server\\cynthia_websites_mini_server.ts --outdir .\\build\\bundled\\ --minify-whitespace --minify-syntax --target bun',
 ]
