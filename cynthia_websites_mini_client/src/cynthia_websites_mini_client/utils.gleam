@@ -77,3 +77,6 @@ pub fn js_trim(a: String) -> String
 
 @external(javascript, "./utils_ffi.ts", "set_theme_body")
 pub fn set_theme_body(themename: String) -> Nil
+
+@external(javascript, "./utils_ffi.ts", "whatever_timestamp_to_unix_millis")
+pub fn whatever_timestamp_to_unix_millis(ts: String) -> Int

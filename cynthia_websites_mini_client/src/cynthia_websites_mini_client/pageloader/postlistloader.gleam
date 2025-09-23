@@ -4,6 +4,7 @@ import cynthia_websites_mini_client/model_type.{type Model}
 import cynthia_websites_mini_client/pottery
 import cynthia_websites_mini_client/utils
 import gleam/bool
+import gleam/int
 import gleam/list
 import gleam/option
 import gleam/result
@@ -92,8 +93,25 @@ pub fn postlist_by_search_term(model: Model, search_term: String) {
 fn postlist_to_html(
   posts: List(contenttypes.Content),
 ) -> element.Element(messages.Msg) {
-  let postlist =
+  let ordered_posts =
     posts
+    |> list.sort(fn(post_a: contenttypes.Content, post_b: contenttypes.Content) {
+      let a_date = case post_a.data {
+        PostData(date_updated:, ..) ->
+          utils.whatever_timestamp_to_unix_millis(date_updated)
+        // For pages there is no date. Use 0 so they go to the end of the list
+        contenttypes.PageData(..) -> 0
+      }
+      let b_date = case post_b.data {
+        PostData(date_updated:, ..) ->
+          utils.whatever_timestamp_to_unix_millis(date_updated)
+        contenttypes.PageData(..) -> 0
+      }
+      int.compare(b_date, a_date)
+    })
+
+  let postlist =
+    ordered_posts
     |> list.map(fn(item) {
       case item.data {
         PostData(
