@@ -21,7 +21,6 @@ export function set_theme_body(themename: string) {
   document.body.setAttribute("data-theme", themename);
 }
 
-
 export function whatever_timestamp_to_unix_millis(ts: string | number): number {
   if (typeof ts === "number") {
     // assume it's already unix millis
