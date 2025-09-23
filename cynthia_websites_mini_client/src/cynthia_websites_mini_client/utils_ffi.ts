@@ -31,9 +31,9 @@ export function whatever_timestamp_to_unix_millis(ts: string | number): number {
     if (!isNaN(parsed)) {
       return parsed;
     } else {
-      throw new Error("Invalid timestamp string");
+      return 0;
     }
   } else {
-    throw new Error("Invalid timestamp type");
+    return 0;
   }
 }
