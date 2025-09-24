@@ -2,7 +2,6 @@
 bun = "latest"
 erlang = "27"
 gleam = "latest"
-watchexec = "latest"
 
 # /================================== Tasks ================================\
 # |             These tasks are in comment-split sections                   |
