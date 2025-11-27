@@ -10,8 +10,8 @@ import semver from "semver";
 // Parse arguments and flags
 const args = process.argv.slice(2);
 const allowDirty = args.includes("--allow-dirty");
-const noCommit = args.includes("--no-commit");
-const noPush = args.includes("--no-push");
+const noCommit = args.includes("--no-commit") || args.includes("--dry-run");
+const noPush = args.includes("--no-push") || args.includes("--dry-run");
 
 // Firstly it should check for any uncommitted changes in the repository. If there are any, it should exit with an error.
 const difIndex = Bun.spawnSync(["git", "status", "-s"], {
@@ -138,19 +138,126 @@ gleamTomlPaths.forEach((TomlPath) => {
     }
 });
 
-// Finally, we commit the changes and create a new tag for the release
+// Step 1: Commit the version bump changes as a preparation commit
 if (!noCommit) {
-    const commitMessage = `v${newVersion}`;
-    const commitResult = Bun.spawnSync(["git", "commit", "-am", commitMessage], {
+    const prepareMessage = `prepare for v${newVersion}`;
+    const prepareCommit = Bun.spawnSync(["git", "commit", "-am", prepareMessage], {
         cwd: config_root,
     });
-    if (commitResult.exitCode !== 0) {
-        console.error("Failed to commit changes. Please check the output above for details.");
-        if (commitResult.stderr) {
-            console.error(commitResult.stderr.toString());
+    if (prepareCommit.exitCode !== 0) {
+        console.error("Failed to commit version bump changes. Please check the output above for details.");
+        if (prepareCommit.stderr) {
+            console.error(prepareCommit.stderr.toString());
         }
         process.exit(1);
     }
+    console.log(`Created preparation commit: ${prepareMessage}`);
+} else {
+    console.log("Skipping commit as --no-commit flag is set.");
+}
+
+// Step 2: Push the preparation commit (safe, doesn't trigger CI)
+if (!noPush && !noCommit) {
+    const pushPrepare = Bun.spawnSync(["git", "push"], { cwd: config_root });
+    if (pushPrepare.exitCode !== 0) {
+        console.error("Failed to push preparation commit to remote repository.");
+        if (pushPrepare.stderr) {
+            console.error(pushPrepare.stderr.toString());
+        }
+        process.exit(1);
+    }
+    console.log("Pushed preparation commit to remote.");
+} else if (noPush) {
+    console.log("Skipping push to remote repository as --no-push flag is set.");
+}
+
+// Step 3 & 4 & 5: Publish packages with temporary toml modification
+if (!noPush && !noCommit) {
+    const clientDir = join(config_root, "cynthia_websites_mini_client");
+    const serverDir = join(config_root, "cynthia_websites_mini_server");
+    const serverTomlPath = join(serverDir, "gleam.toml");
+    let serverTomlOrig = "";
+    let serverTomlModified = false;
+
+    try {
+        // Publish client first
+        console.log("Running 'gleam publish -y' in client directory...");
+        const clientPublish = Bun.spawnSync(["gleam", "publish", "-y"], { cwd: clientDir });
+        if (clientPublish.exitCode !== 0) {
+            console.error("Failed to publish client package via Gleam.");
+            if (clientPublish.stderr) {
+                console.error(clientPublish.stderr.toString());
+            }
+            throw new Error("Client publish failed");
+        }
+        console.log("Client package published successfully.");
+
+        // Temporarily replace server's path dependency on client with a version string (NOT COMMITTED)
+        serverTomlOrig = await Bun.file(serverTomlPath).text();
+        const pathDepRegex = /cynthia_websites_mini_client\s*=\s*\{\s*path\s*=\s*"\.\.\/cynthia_websites_mini_client"\s*\}/;
+        const versionDepLine = `cynthia_websites_mini_client = "${newVersion}"`;
+        const serverTomlUpdated = serverTomlOrig.replace(pathDepRegex, versionDepLine);
+        if (serverTomlOrig !== serverTomlUpdated) {
+            await Bun.write(serverTomlPath, serverTomlUpdated);
+            serverTomlModified = true;
+            console.log("Temporarily modified server gleam.toml for publishing.");
+        } else {
+            console.warn("Warning: Could not find path dependency for client in server's gleam.toml; proceeding.");
+        }
+
+        // Publish server second
+        console.log("Running 'gleam publish -y' in server directory...");
+        const serverPublish = Bun.spawnSync(["gleam", "publish", "-y"], { cwd: serverDir });
+        if (serverPublish.exitCode !== 0) {
+            console.error("Failed to publish server package via Gleam.");
+            if (serverPublish.stderr) {
+                console.error(serverPublish.stderr.toString());
+            }
+            throw new Error("Server publish failed");
+        }
+        console.log("Server package published successfully.");
+
+    } catch (err) {
+        // Always revert server gleam.toml on failure
+        if (serverTomlModified && serverTomlOrig) {
+            try {
+                await Bun.write(serverTomlPath, serverTomlOrig);
+                console.log("Reverted server gleam.toml back to path dependency.");
+            } catch (revertErr) {
+                console.error("Failed to revert server gleam.toml. Manual intervention required.");
+            }
+        }
+        console.error("\nPublishing failed. The preparation commit has been pushed to remote.");
+        console.error(`You may want to remove it with: git reset --hard HEAD~1 && git push origin main --force`);
+        process.exit(1);
+    }
+
+    // Always revert server gleam.toml back to path dependency after successful publish
+    if (serverTomlModified && serverTomlOrig) {
+        try {
+            await Bun.write(serverTomlPath, serverTomlOrig);
+            console.log("Reverted server gleam.toml back to path dependency.");
+        } catch (err) {
+            console.error("Failed to revert server gleam.toml back to path dependency.");
+            process.exit(1);
+        }
+    }
+
+    // Step 6: Create empty commit with version tag (this triggers CI)
+    const releaseMessage = `v${newVersion}`;
+    const releaseCommit = Bun.spawnSync(["git", "commit", "--allow-empty", "-m", releaseMessage], {
+        cwd: config_root,
+    });
+    if (releaseCommit.exitCode !== 0) {
+        console.error("Failed to create release commit. Please check the output above for details.");
+        if (releaseCommit.stderr) {
+            console.error(releaseCommit.stderr.toString());
+        }
+        process.exit(1);
+    }
+    console.log(`Created release commit: ${releaseMessage}`);
+
+    // Create the tag
     const tagResult = Bun.spawnSync(["git", "tag", `v${newVersion}`], {
         cwd: config_root,
     });
@@ -161,86 +268,18 @@ if (!noCommit) {
         }
         process.exit(1);
     }
-} else {
-    console.log("Skipping commit and tag as --no-commit flag is set.");
+    console.log(`Created tag: v${newVersion}`);
+
+    // Step 7: Push the release commit and tag together (triggers CI)
+    const pushRelease = Bun.spawnSync(["git", "push", "--follow-tags"], { cwd: config_root });
+    if (pushRelease.exitCode !== 0) {
+        console.error("Failed to push release commit and tag to remote repository.");
+        if (pushRelease.stderr) {
+            console.error(pushRelease.stderr.toString());
+        }
+        process.exit(1);
+    }
+    console.log("Pushed release commit and tag to remote (CI triggered).");
 }
 
-// Push commits, publish Gleam packages, then push the tag to the remote repository
-if (noPush) {
-    console.log("Skipping push to remote repository as --no-push flag is set.");
-}
-else if (!noCommit) {
-    // First push the commits
-    const pushCommits = Bun.spawnSync(["git", "push"], { cwd: config_root });
-    if (pushCommits.exitCode !== 0) {
-        console.error("Failed to push commits to the remote repository. Please check the output above for details.");
-        if (pushCommits.stderr) {
-            console.error(pushCommits.stderr.toString());
-        }
-        process.exit(1);
-    }
-
-    // Publish client first
-    const clientDir = join(config_root, "cynthia_websites_mini_client");
-    const serverDir = join(config_root, "cynthia_websites_mini_server");
-    console.log("Running 'gleam publish -y' in client directory...");
-    const clientPublish = Bun.spawnSync(["gleam", "publish", "-y"], { cwd: clientDir });
-    if (clientPublish.exitCode !== 0) {
-        console.error("Failed to publish client package via Gleam.");
-        if (clientPublish.stderr) {
-            console.error(clientPublish.stderr.toString());
-        }
-        process.exit(1);
-    }
-
-    // Temporarily replace server's path dependency on client with a version string
-    const serverTomlPath = join(serverDir, "gleam.toml");
-    const serverTomlOrig = await Bun.file(serverTomlPath).text();
-    const pathDepRegex = /cynthia_websites_mini_client\s*=\s*\{\s*path\s*=\s*"\.\.\/cynthia_websites_mini_client"\s*\}/;
-    const versionDepLine = `cynthia_websites_mini_client = "${newVersion}"`;
-    const serverTomlUpdated = serverTomlOrig.replace(pathDepRegex, versionDepLine);
-    if (serverTomlOrig !== serverTomlUpdated) {
-        try {
-            await Bun.write(serverTomlPath, serverTomlUpdated);
-        } catch (err) {
-            console.error("Failed to update server gleam.toml to version dependency.");
-            process.exit(1);
-        }
-    } else {
-        console.warn("Warning: Could not find path dependency for client in server's gleam.toml; proceeding.");
-    }
-
-    // Publish server second
-    console.log("Running 'gleam publish -y' in server directory...");
-    const serverPublish = Bun.spawnSync(["gleam", "publish", "-y"], { cwd: serverDir });
-    if (serverPublish.exitCode !== 0) {
-        console.error("Failed to publish server package via Gleam.");
-        if (serverPublish.stderr) {
-            console.error(serverPublish.stderr.toString());
-        }
-        // Attempt to revert the gleam.toml if modified
-        try { await Bun.write(serverTomlPath, serverTomlOrig); } catch { }
-        process.exit(1);
-    }
-
-    // Revert server gleam.toml back to path dependency
-    if (serverTomlOrig !== serverTomlUpdated) {
-        try {
-            await Bun.write(serverTomlPath, serverTomlOrig);
-        } catch (err) {
-            console.error("Failed to revert server gleam.toml back to path dependency.");
-            process.exit(1);
-        }
-    }
-
-    // Then push the tag
-    const pushTag = Bun.spawnSync(["git", "push", "origin", `v${newVersion}`], { cwd: config_root });
-    if (pushTag.exitCode !== 0) {
-        console.error("Failed to push tag to the remote repository. Please check the output above for details.");
-        if (pushTag.stderr) {
-            console.error(pushTag.stderr.toString());
-        }
-        process.exit(1);
-    }
-}
 console.log(`Successfully bumped version from ${currentVersion} to ${newVersion} and created a new release!`);
