@@ -181,9 +181,8 @@ else if (!noCommit) {
     }
 
     // Publish client first
-    const pathJoin = (a, b) => new URL(b, new URL('file://' + (a.endsWith('/') ? a : a + '/'))).pathname;
-    const clientDir = pathJoin(config_root, "cynthia_websites_mini_client");
-    const serverDir = pathJoin(config_root, "cynthia_websites_mini_server");
+    const clientDir = join(config_root, "cynthia_websites_mini_client");
+    const serverDir = join(config_root, "cynthia_websites_mini_server");
     console.log("Running 'gleam publish -y' in client directory...");
     const clientPublish = Bun.spawnSync(["gleam", "publish", "-y"], { cwd: clientDir });
     if (clientPublish.exitCode !== 0) {
@@ -195,7 +194,7 @@ else if (!noCommit) {
     }
 
     // Temporarily replace server's path dependency on client with a version string
-    const serverTomlPath = pathJoin(serverDir, "gleam.toml");
+    const serverTomlPath = join(serverDir, "gleam.toml");
     const serverTomlOrig = await Bun.file(serverTomlPath).text();
     const pathDepRegex = /cynthia_websites_mini_client\s*=\s*\{\s*path\s*=\s*"\.\.\/cynthia_websites_mini_client"\s*\}/;
     const versionDepLine = `cynthia_websites_mini_client = "${newVersion}"`;
