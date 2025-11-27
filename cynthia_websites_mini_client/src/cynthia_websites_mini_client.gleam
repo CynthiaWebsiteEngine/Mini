@@ -79,7 +79,7 @@ fn check_for_hash_change(model: Model) -> Effect(Msg) {
       let assert Ok(session) = storage.local()
         as "Browser is expected to have a localstorage."
 
-      case window.get_hash() |> echo {
+      case window.get_hash() {
         Ok(f) -> {
           let h = case f {
             "" -> {

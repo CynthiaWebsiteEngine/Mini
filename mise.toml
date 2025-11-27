@@ -236,4 +236,62 @@ dir = "./cynthia_websites_mini_server"
 description = "Run tests for both client and server"
 # Check-all dependency ensures dependencies are built before tests run, even though test also checks.
 depends = "check-all"
-run = [{task = "test-client"}, {task = "test-server"}]
+run = [{task = "test-client"}, {task = "test-server"}, {task = "check-for-prohibited-keywords"}]
+
+[tasks.check-for-prohibited-keywords]
+alias="check-keywords"
+description = "Check for prohibited keywords as `todo` or `echo` in the codebase"
+shell="bun"
+env = { PROHIBITED_KEYWORDS = "todo,echo", ALLOWED_INSTANCES = "cynthia_websites_mini_client/src/cynthia_websites_mini_client/configtype.gleam:236" }
+run="""
+#!/bin/env bun
+import { readFileSync } from "fs";
+const config_root = process.env.MISE_CONFIG_ROOT || ".";
+// Get all gleam files tracked by git as a list
+const { stdout } = Bun.spawnSync(["git", "ls-files", "*.gleam"],
+  { cwd: config_root }
+);
+const files = stdout.toString().trim().split("\\n");
+// Define prohibited keywords and allowed instances
+const prohibitedKeywords = `${process.env.PROHIBITED_KEYWORDS || "todo,echo"}`.split(",").map(k => k.trim());
+const allowedInstances = new Set(
+  (`${process.env.ALLOWED_INSTANCES || ""}`)
+    .split(",")
+    .map(s => s.trim())
+    .filter(s => s.length > 0)
+);
+let found = false;
+for (const file of files) {
+  const content =
+    readFileSync(file, "utf8");
+  for (const keyword of prohibitedKeywords) {
+  // If commented out, they are allowed
+    const regex = new RegExp(`(^|[^\\w])${keyword}([^\\w]|$)`, "gm");
+    let match;
+    
+    while ((match = regex.exec(content)) !== null) {
+      // Calculate line number
+      const lineNumber = content
+        .substring(0, match.index)
+        .split("\\n").length;
+      // Check if this instance is allowed
+      const instanceIdentifier = `${file}:${lineNumber}`;
+      if (allowedInstances.has(instanceIdentifier)) {
+      console.log(`Allowed instance of "${keyword}" in file "${file}:${lineNumber}"`);
+        continue;
+      }
+      
+      console.error(
+        `Prohibited keyword "${keyword}" found in file "${file}:${lineNumber}"`
+      );
+      found = true;
+    }
+  }
+}
+if (found) {
+  console.error("Prohibited keywords found. Please remove them before proceeding.");
+  process.exit(1);
+} else {
+  console.log("No prohibited keywords found.");
+}
+"""

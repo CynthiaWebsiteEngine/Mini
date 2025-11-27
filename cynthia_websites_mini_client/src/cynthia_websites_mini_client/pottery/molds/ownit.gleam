@@ -33,7 +33,6 @@ pub fn main(
   store model: model_type.Model,
   is_post is_post: Bool,
 ) {
-  echo variables
   let #(
     title,
     description,
