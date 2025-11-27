@@ -1,4 +1,4 @@
-Cynthia Mini's client package.
+# Cynthia Mini's server package
 
 Cynthia Mini consists of two packages: A client (cynthia_websites_mini_client) and a server (you are here).
 
