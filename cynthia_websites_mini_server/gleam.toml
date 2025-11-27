@@ -24,7 +24,7 @@ gleam_fetch = "1.3.0"
 argv = "1.0.2"
 birl = "1.8.0"
 conversation = "2.0.1"
-bungibindies = { git = "https://github.com/strawmelonjuice/bungibindies.git", ref = "main" }
+bungibindies = "1.2.0-rc"
 cynthia_websites_mini_client = { path = "../cynthia_websites_mini_client" }
 edit_distance = "2.0.1"
 envoy = "1.0.2"
