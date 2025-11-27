@@ -47,7 +47,7 @@ if (mainBranch !== "main") {
 }
 
 // Now, we want to know if the user wants to bump the version or set it to a specific value. The optional parameter is either "bump" or "set", followed by the version number.
-// It can also be `x.x.x` instead of `set`, or `+x.x.x` instead of `bump`, as a shorthand for the same operation. 
+// It can also be `x.x.x` instead of `set`, or `+x.x.x` instead of `bump`, as a shorthand for the same operation.
 // (The x's are numbers in this case, e.g., `+0.2.0` bumps the minor version by 2, while `1.2.3` sets the version to 1.2.3., you could call these 'relative' or 'absolute'.)
 if (args.length === 0) {
     console.error("Please provide a version to bump or set. Usage: new-release <bump|set> <version>");
@@ -184,8 +184,8 @@ else if (!noCommit) {
     const pathJoin = (a, b) => new URL(b, new URL('file://' + (a.endsWith('/') ? a : a + '/'))).pathname;
     const clientDir = pathJoin(config_root, "cynthia_websites_mini_client");
     const serverDir = pathJoin(config_root, "cynthia_websites_mini_server");
-    console.log("Running 'gleam publish' in client directory...");
-    const clientPublish = Bun.spawnSync(["gleam", "publish"], { cwd: clientDir });
+    console.log("Running 'gleam publish -y' in client directory...");
+    const clientPublish = Bun.spawnSync(["gleam", "publish", "-y"], { cwd: clientDir });
     if (clientPublish.exitCode !== 0) {
         console.error("Failed to publish client package via Gleam.");
         if (clientPublish.stderr) {
@@ -212,8 +212,8 @@ else if (!noCommit) {
     }
 
     // Publish server second
-    console.log("Running 'gleam publish' in server directory...");
-    const serverPublish = Bun.spawnSync(["gleam", "publish"], { cwd: serverDir });
+    console.log("Running 'gleam publish -y' in server directory...");
+    const serverPublish = Bun.spawnSync(["gleam", "publish", "-y"], { cwd: serverDir });
     if (serverPublish.exitCode !== 0) {
         console.error("Failed to publish server package via Gleam.");
         if (serverPublish.stderr) {
