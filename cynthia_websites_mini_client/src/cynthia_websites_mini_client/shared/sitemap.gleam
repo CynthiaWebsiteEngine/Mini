@@ -1,11 +1,10 @@
 import cynthia_websites_mini_client/configtype.{type CompleteData}
 import cynthia_websites_mini_client/contenttypes
-import cynthia_websites_mini_client/pottery
 import gleam/list
 import gleam/option
 import gleam/string
 import lustre/attribute.{attribute}
-import lustre/element.{type Element, element}
+import lustre/element.{element}
 
 pub fn generate_sitemap(data: CompleteData) -> option.Option(String) {
   use base_url: String <- option.then(

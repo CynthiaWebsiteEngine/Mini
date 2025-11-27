@@ -116,7 +116,7 @@ pub fn main() {
       )
       |> promise.resolve
     }
-    [a, ..] | [a] ->
+    [a, ..] ->
       console.error(
         premixed.text_error_red("Unknown subcommand: ")
         <> "´"

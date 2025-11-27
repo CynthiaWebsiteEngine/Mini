@@ -52,7 +52,8 @@ run_windows = [
   "bun ./generate-ffi.ts --only-themes",
   "cmd /c rename generate-ffi.ts generate-ffi"
 ]
-
+sources=["generate-ffi", "themes.json"]
+outputs=["cynthia_websites_mini_client/src/cynthia_websites_mini_client/shared/ffi_themes.ts"]
 
 
 [tasks.clean-client]

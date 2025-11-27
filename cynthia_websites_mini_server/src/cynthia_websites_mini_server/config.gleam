@@ -528,7 +528,7 @@ fn content_getter() -> promise.Promise(
     }
     |> list.map(get_inner_and_meta)
   }
-  let content = promise.map(promise.await_list(promises), result.all)
+  promise.map(promise.await_list(promises), result.all)
 }
 
 fn get_inner_and_meta(

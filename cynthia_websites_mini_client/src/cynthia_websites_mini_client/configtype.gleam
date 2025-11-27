@@ -1,5 +1,5 @@
 import cynthia_websites_mini_client/contenttypes.{type Content}
-import gleam/dict.{type Dict}
+import gleam/dict
 import gleam/dynamic/decode
 import gleam/json
 import gleam/list
