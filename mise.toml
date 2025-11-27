@@ -234,4 +234,6 @@ dir = "./cynthia_websites_mini_server"
 
 [tasks.test-all]
 description = "Run tests for both client and server"
-depends = ["test-client", "test-server"]
+# Check-all dependency ensures dependencies are built before tests run, even though test also checks.
+depends = "check-all"
+run = [{task = "test-client"}, {task = "test-server"}]
