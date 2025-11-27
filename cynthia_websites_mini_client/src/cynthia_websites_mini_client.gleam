@@ -529,12 +529,14 @@ fn convert_configurable(from: List(#(String, List(String)))) {
             Ok(#(keyname, dynamic.from(text)))
           }
 
-          "datetime", values -> {
-            todo
+          "datetime", _values -> {
+            // TODO: Implement datetime parsing later (non-blocking for releases)
+            Error("Datetime decoding not yet implemented in " <> or_keyname)
           }
 
-          "date", values -> {
-            todo
+          "date", _values -> {
+            // TODO: Implement date parsing later (non-blocking for releases)
+            Error("Date decoding not yet implemented in " <> or_keyname)
           }
 
           "time", values -> {
