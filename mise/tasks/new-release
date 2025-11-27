@@ -165,18 +165,81 @@ if (!noCommit) {
     console.log("Skipping commit and tag as --no-commit flag is set.");
 }
 
-// Push the changes and the new tag to the remote repository
+// Push commits, publish Gleam packages, then push the tag to the remote repository
 if (noPush) {
     console.log("Skipping push to remote repository as --no-push flag is set.");
 }
 else if (!noCommit) {
-    const pushResult = Bun.spawnSync(["git", "push", "origin", `v${newVersion}`], {
-        cwd: config_root,
-    });
-    if (pushResult.exitCode !== 0) {
-        console.error("Failed to push changes to the remote repository. Please check the output above for details.");
-        if (pushResult.stderr) {
-            console.error(pushResult.stderr.toString());
+    // First push the commits
+    const pushCommits = Bun.spawnSync(["git", "push"], { cwd: config_root });
+    if (pushCommits.exitCode !== 0) {
+        console.error("Failed to push commits to the remote repository. Please check the output above for details.");
+        if (pushCommits.stderr) {
+            console.error(pushCommits.stderr.toString());
+        }
+        process.exit(1);
+    }
+
+    // Publish client first
+    const pathJoin = (a, b) => new URL(b, new URL('file://' + (a.endsWith('/') ? a : a + '/'))).pathname;
+    const clientDir = pathJoin(config_root, "cynthia_websites_mini_client");
+    const serverDir = pathJoin(config_root, "cynthia_websites_mini_server");
+    console.log("Running 'gleam publish' in client directory...");
+    const clientPublish = Bun.spawnSync(["gleam", "publish"], { cwd: clientDir });
+    if (clientPublish.exitCode !== 0) {
+        console.error("Failed to publish client package via Gleam.");
+        if (clientPublish.stderr) {
+            console.error(clientPublish.stderr.toString());
+        }
+        process.exit(1);
+    }
+
+    // Temporarily replace server's path dependency on client with a version string
+    const serverTomlPath = pathJoin(serverDir, "gleam.toml");
+    const serverTomlOrig = await Bun.file(serverTomlPath).text();
+    const pathDepRegex = /cynthia_websites_mini_client\s*=\s*\{\s*path\s*=\s*"\.\.\/cynthia_websites_mini_client"\s*\}/;
+    const versionDepLine = `cynthia_websites_mini_client = "${newVersion}"`;
+    const serverTomlUpdated = serverTomlOrig.replace(pathDepRegex, versionDepLine);
+    if (serverTomlOrig !== serverTomlUpdated) {
+        try {
+            await Bun.write(serverTomlPath, serverTomlUpdated);
+        } catch (err) {
+            console.error("Failed to update server gleam.toml to version dependency.");
+            process.exit(1);
+        }
+    } else {
+        console.warn("Warning: Could not find path dependency for client in server's gleam.toml; proceeding.");
+    }
+
+    // Publish server second
+    console.log("Running 'gleam publish' in server directory...");
+    const serverPublish = Bun.spawnSync(["gleam", "publish"], { cwd: serverDir });
+    if (serverPublish.exitCode !== 0) {
+        console.error("Failed to publish server package via Gleam.");
+        if (serverPublish.stderr) {
+            console.error(serverPublish.stderr.toString());
+        }
+        // Attempt to revert the gleam.toml if modified
+        try { await Bun.write(serverTomlPath, serverTomlOrig); } catch { }
+        process.exit(1);
+    }
+
+    // Revert server gleam.toml back to path dependency
+    if (serverTomlOrig !== serverTomlUpdated) {
+        try {
+            await Bun.write(serverTomlPath, serverTomlOrig);
+        } catch (err) {
+            console.error("Failed to revert server gleam.toml back to path dependency.");
+            process.exit(1);
+        }
+    }
+
+    // Then push the tag
+    const pushTag = Bun.spawnSync(["git", "push", "origin", `v${newVersion}`], { cwd: config_root });
+    if (pushTag.exitCode !== 0) {
+        console.error("Failed to push tag to the remote repository. Please check the output above for details.");
+        if (pushTag.stderr) {
+            console.error(pushTag.stderr.toString());
         }
         process.exit(1);
     }
