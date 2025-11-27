@@ -3,6 +3,13 @@ target = "javascript"
 gleam = ">= 1.9.0"
 version = "1.2.0-rc"
 
+description = "The Cynthia Mini server."
+licences = ["AGPL-3.0"]
+repository = { type = "github", user = "CynthiaWebsiteEngine", repo = "Mini", path = "cynthia_websites_mini_server" }
+links = [
+	{ title = "NPM", href = "https://www.npmjs.com/package/@cynthiaweb/cynthiaweb-mini" },
+	{ title = "GitHub releases", href = "https://github.com/CynthiaWebsiteEngine/Mini/releases" }
+]
 
 
 [javascript]
