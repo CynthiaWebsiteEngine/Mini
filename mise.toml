@@ -1,6 +1,5 @@
 [tools]
 bun = "latest"
-erlang = "27"
 gleam = "latest"
 
 # /================================== Tasks ================================\
@@ -125,6 +124,7 @@ dir = "{{ config_root }}/cynthia_websites_mini_server"
 
 [tasks.check-client]
 description = "Check Gleam code in client"
+depends = "generate-ffi-themes"
 run = ["gleam check"]
 dir = "./cynthia_websites_mini_client"
 
