@@ -1,13 +1,11 @@
 import bungibindies/bun
 import bungibindies/bun/spawn
 import cynthia_websites_mini_client/configtype
-import cynthia_websites_mini_client/configurable_variables
 import cynthia_websites_mini_client/contenttypes
+import cynthia_websites_mini_server/config/v4
 import cynthia_websites_mini_server/utils/files
 import cynthia_websites_mini_server/utils/prompts
-import gleam/bit_array
 import gleam/bool
-import gleam/dict
 import gleam/dynamic/decode
 import gleam/fetch
 import gleam/float
@@ -27,7 +25,7 @@ import simplifile
 import tom
 
 /// # Config.load()
-/// Loads the configuration from the `cynthia-mini.toml` file and the content from the `content` directory.
+/// Loads the configuration from the `cynthia.toml` file and the content from the `content` directory.
 /// Then saves the configuration to the database.
 pub fn load() -> Promise(configtype.CompleteData) {
   use global_config <- promise.await(capture_config())
@@ -47,23 +45,78 @@ pub fn load() -> Promise(configtype.CompleteData) {
 }
 
 pub fn capture_config() {
-  let global_conf_filepath =
-    files.path_join([process.cwd(), "/cynthia-mini.toml"])
+  let global_conf_filepath = files.path_join([process.cwd(), "/cynthia.toml"])
   let global_conf_filepath_exists = files.file_exist(global_conf_filepath)
+
   case global_conf_filepath_exists {
     True -> Nil
     False -> {
-      dialog_initcfg()
-      Nil
+      let global_conf_filepath_legacy =
+        files.path_join([process.cwd(), "/cynthia-mini.toml"])
+      let global_conf_filepath_legacy_exists =
+        files.file_exist(global_conf_filepath_legacy)
+      case
+        global_conf_filepath_legacy_exists,
+        simplifile.read(global_conf_filepath_legacy)
+      {
+        True, Ok(legacy_config) -> {
+          console.warn(
+            "A legacy config file was found! Cynthia Mini will attempt to auto-convert it on the go and continue.",
+          )
+          let upgraded_config =
+            "# This file was upgraded to the universal Cynthia Config format\n# Do not edit these two variables! They are set by Cynthia to tell it's config format apart.\nconfig.edition=\"mini\"\nconfig.version=4\n\n"
+            <> legacy_config
+          case
+            simplifile.write(
+              to: global_conf_filepath,
+              contents: upgraded_config,
+            )
+          {
+            Ok(_) -> {
+              let _ =
+                simplifile.rename(
+                  at: global_conf_filepath_legacy,
+                  to: global_conf_filepath_legacy <> ".old",
+                )
+              Nil
+            }
+            Error(_) -> {
+              console.error("Some file write error.")
+              process.exit(1)
+            }
+          }
+        }
+        True, Error(_) -> {
+          console.error(
+            "Some error happened while trying to read "
+            <> global_conf_filepath_legacy
+            <> ".",
+          )
+          process.exit(1)
+        }
+        False, _ -> {
+          dialog_initcfg()
+          process.exit(0)
+        }
+      }
     }
   }
-  use parse_configtoml_result <- promise.await(parse_configtoml())
+  let global_conf_content_sync =
+    simplifile.read(global_conf_filepath) |> result.unwrap("")
+  let m = case parse_config_format(global_conf_content_sync) {
+    // Correct config format: mini-4
+    Ok(#("mini", 4)) -> v4.parse_mini()
+
+    // Erronous config format outcomes
+    Ok(#(c, d)) -> promise_error_unknown_config_format(c, d)
+    Error(_) -> promise_error_cannot_read_config_format()
+  }
+  use parse_configtoml_result <- promise.await(m)
+
   let global_config = case parse_configtoml_result {
     Ok(config) -> config
     Error(why) -> {
-      premixed.text_error_red(
-        "Error: Could not load cynthia-mini.toml: " <> why,
-      )
+      premixed.text_error_red("Error: Could not load cynthia.toml: " <> why)
       |> console.error
       process.exit(1)
       panic as "We should not reach here"
@@ -73,436 +126,43 @@ pub fn capture_config() {
   |> promise.resolve()
 }
 
-fn parse_configtoml() {
-  use str <- promise.try_await(
-    fs.read_file_sync(files.path_normalize(
-      process.cwd() <> "/cynthia-mini.toml",
-    ))
-    |> result.map_error(fn(e) {
-      premixed.text_error_red("Error: Could not read cynthia-mini.toml: " <> e)
-      process.exit(1)
-    })
-    |> result.map_error(string.inspect)
-    |> promise.resolve(),
-  )
-  use res <- promise.try_await(
-    tom.parse(str) |> result.map_error(string.inspect) |> promise.resolve(),
-  )
-
-  use config <- promise.try_await(
-    cynthia_config_global_only_exploiter(res)
-    |> promise.map(result.map_error(_, string.inspect)),
-  )
-  promise.resolve(Ok(config))
+fn promise_error_unknown_config_format(
+  edition: String,
+  version: Int,
+) -> Promise(Result(a, String)) {
+  let err =
+    "Config version "
+    <> version |> int.to_string()
+    <> " with edition '"
+    <> edition
+    <> "' is NOT supported by this version of Cynthia."
+    <> "\n  Usually this means one of these options:"
+    <> "\n - it was written for a different edition"
+    <> "\n - it is invalid"
+    <> "\n - or this version of cynthia is too old to understand this file."
+    <> case edition == "mini" {
+      True ->
+        "\n\n\n It seems to be that last option, since the edition it is written for, does match 'mini'."
+      False -> ""
+    }
+  promise.resolve(Error(err))
 }
 
-type ConfigTomlDecodeError {
-  TomlGetStringError(tom.GetError)
-  TomlGetIntError(tom.GetError)
-  FieldError(String)
-}
-
-fn cynthia_config_global_only_exploiter(
-  o: dict.Dict(String, tom.Toml),
-) -> Promise(
-  Result(configtype.SharedCynthiaConfigGlobalOnly, ConfigTomlDecodeError),
-) {
-  use global_theme <- promise.try_await(
-    {
-      use field <- result.try(
-        tom.get(o, ["global", "theme"])
-        |> result.replace_error(FieldError(
-          "config->global.theme does not exist",
-        )),
-      )
-      tom.as_string(field)
-      |> result.map_error(TomlGetStringError)
-    }
-    |> promise.resolve(),
-  )
-  use global_theme_dark <- promise.try_await(
-    {
-      use field <- result.try(
-        tom.get(o, ["global", "theme_dark"])
-        |> result.replace_error(FieldError(
-          "config->global.theme_dark does not exist",
-        )),
-      )
-      tom.as_string(field)
-      |> result.map_error(TomlGetStringError)
-    }
-    |> promise.resolve(),
-  )
-  use global_colour <- promise.try_await(
-    {
-      use field <- result.try(
-        tom.get(o, ["global", "colour"])
-        |> result.replace_error(FieldError(
-          "config->global.colour does not exist",
-        )),
-      )
-      tom.as_string(field)
-      |> result.map_error(TomlGetStringError)
-    }
-    |> promise.resolve(),
-  )
-  use global_site_name <- promise.try_await(
-    {
-      use field <- result.try(
-        tom.get(o, ["global", "site_name"])
-        |> result.replace_error(FieldError(
-          "config->global.site_name does not exist",
-        )),
-      )
-      tom.as_string(field)
-      |> result.map_error(TomlGetStringError)
-    }
-    |> promise.resolve(),
-  )
-  use global_site_description <- promise.try_await(
-    {
-      use field <- result.try(
-        tom.get(o, ["global", "site_description"])
-        |> result.replace_error(FieldError(
-          "config->global.site_description does not exist",
-        )),
-      )
-      tom.as_string(field)
-      |> result.map_error(TomlGetStringError)
-    }
-    |> promise.resolve(),
-  )
-  let server_port =
-    option.from_result({
-      use field <- result.try(
-        tom.get(o, ["server", "port"])
-        |> result.replace_error(FieldError("config->server.port does not exist")),
-      )
-      tom.as_int(field)
-      |> result.map_error(TomlGetIntError)
-    })
-  let server_host =
-    option.from_result({
-      use field <- result.try(
-        tom.get(o, ["server", "host"])
-        |> result.replace_error(FieldError("config->server.host does not exist")),
-      )
-      tom.as_string(field)
-      |> result.map_error(TomlGetStringError)
-    })
-  let comment_repo = case
-    tom.get(o, ["posts", "comment_repo"]) |> result.map(tom.as_string)
-  {
-    Ok(Ok(field)) -> {
-      Some(field)
-    }
-    _ -> None
-  }
-  let git_integration = case
-    tom.get(o, ["integrations", "git"]) |> result.map(tom.as_bool)
-  {
-    Ok(Ok(field)) -> {
-      field
-    }
-    _ -> True
-  }
-  let sitemap = case
-    tom.get(o, ["integrations", "sitemap"]) |> result.map(tom.as_string)
-  {
-    Ok(Ok(field)) -> {
-      case string.lowercase(field) {
-        "" -> None
-        "false" -> None
-        _ -> Some(field)
-      }
-    }
-    _ -> None
-  }
-  let crawlable_context = case
-    tom.get(o, ["integrations", "crawlable_context"]) |> result.map(tom.as_bool)
-  {
-    Ok(Ok(field)) -> {
-      field
-    }
-    _ -> False
-  }
-  let other_vars = case result.map(tom.get(o, ["variables"]), tom.as_table) {
-    Ok(Ok(d)) ->
-      {
-        dict.map_values(d, fn(key, unasserted_value) {
-          let promise_of_a_somewhat_asserted_value = case unasserted_value {
-            tom.InlineTable(inline) -> {
-              case inline |> dict.to_list() {
-                [#("url", tom.String(url))] -> {
-                  let start = bun.nanoseconds()
-                  console.log(
-                    "Downloading external data ´"
-                    <> premixed.text_blue(url)
-                    <> "´...",
-                  )
-
-                  let assert Ok(req) = request.to(url)
-                  use resp <- promise.await(
-                    promise.map(fetch.send(req), fn(e) {
-                      case e {
-                        Ok(v) -> v
-                        Error(_) -> {
-                          console.error(
-                            "There was an error while trying to download '"
-                            <> url |> premixed.text_bright_yellow()
-                            <> "' to a variable.",
-                          )
-                          process.exit(1)
-                          panic as "We should not reach here."
-                        }
-                      }
-                    }),
-                  )
-                  use resp <- promise.await(
-                    promise.map(fetch.read_bytes_body(resp), fn(e) {
-                      case e {
-                        Ok(v) -> v
-                        Error(_) -> {
-                          console.error(
-                            "There was an error while trying to download '"
-                            <> url |> premixed.text_bright_yellow()
-                            <> "' to a variable.",
-                          )
-                          process.exit(1)
-                          panic as "We should not reach here."
-                        }
-                      }
-                    }),
-                  )
-                  let end = bun.nanoseconds()
-                  let duration_ms = { end -. start } /. 1_000_000.0
-                  case resp.status {
-                    200 -> {
-                      console.log(
-                        "Downloaded external content ´"
-                        <> premixed.text_blue(url)
-                        <> "´ in "
-                        <> int.to_string(duration_ms |> float.truncate)
-                        <> "ms!",
-                      )
-                      [
-                        bit_array.base64_encode(resp.body, True),
-                        configurable_variables.var_bitstring,
-                      ]
-                    }
-                    _ -> {
-                      console.error(
-                        "There was an error while trying to download '"
-                        <> url |> premixed.text_bright_yellow()
-                        <> "' to a variable.",
-                      )
-                      process.exit(1)
-                      panic as "We should not reach here."
-                    }
-                  }
-                  |> promise.resolve()
-                }
-                [#("path", tom.String(path))] -> {
-                  // let file = bun.file(path)
-                  // use content <- promise.await(bunfile.text())
-                  // `bunfile.text()` pretends it's infallible but is not. It should return a promised result.
-                  //
-                  // Also see: https://github.com/strawmelonjuice/bungibindies/issues/2
-                  // Also missing: bunfile.bits(), but that is also because the bitarray and byte array transform is scary to me.
-                  //
-                  // For now, this means we continue using the sync simplifile.read_bits() function,
-                  case simplifile.read_bits(path) {
-                    Ok(bits) -> [
-                      bit_array.base64_encode(bits, True),
-                      configurable_variables.var_bitstring,
-                    ]
-                    Error(_) -> {
-                      console.error(
-                        "Unable to read file '"
-                        <> path |> premixed.text_bright_yellow()
-                        <> "' to variable.",
-                      )
-                      process.exit(1)
-                      panic as "Should not reach here."
-                    }
-                  }
-                  |> promise.resolve()
-                }
-                _ ->
-                  [configurable_variables.var_unsupported]
-                  |> promise.resolve()
-              }
-            }
-            _ -> {
-              case unasserted_value {
-                tom.Bool(z) -> [
-                  bool.to_string(z),
-                  configurable_variables.var_boolean,
-                ]
-                tom.Date(date) -> [
-                  date.year |> int.to_string,
-                  date.month |> int.to_string,
-                  date.day |> int.to_string,
-                  configurable_variables.var_date,
-                ]
-                tom.DateTime(tom.DateTimeValue(date, time, offset)) -> {
-                  case offset {
-                    tom.Local -> [
-                      int.to_string(date.year),
-                      int.to_string(date.month),
-                      int.to_string(date.day),
-                      int.to_string(time.hour),
-                      int.to_string(time.minute),
-                      int.to_string(time.second),
-                      int.to_string(time.millisecond),
-                      configurable_variables.var_datetime,
-                    ]
-                    _ -> [configurable_variables.var_unsupported]
-                  }
-                }
-                tom.Float(a) -> [
-                  float.to_string(a),
-                  configurable_variables.var_float,
-                ]
-                tom.Int(b) -> [int.to_string(b), configurable_variables.var_int]
-                tom.String(guitar) -> [
-                  guitar,
-                  configurable_variables.var_string,
-                ]
-                tom.Time(time) -> [
-                  int.to_string(time.hour),
-                  int.to_string(time.minute),
-                  int.to_string(time.second),
-                  int.to_string(time.millisecond),
-                  configurable_variables.var_time,
-                ]
-                _ -> [configurable_variables.var_unsupported]
-              }
-              |> promise.resolve()
-            }
-          }
-          use reality <- promise.await(
-            promise_of_a_somewhat_asserted_value
-            |> promise.map(fn(somewhat_asserted_value) {
-              let assert Ok(conclusion) = somewhat_asserted_value |> list.last()
-                as "This must be a value, since we just actively set it above."
-              conclusion
-            }),
-          )
-          use somewhat_asserted_value <- promise.await(
-            promise_of_a_somewhat_asserted_value,
-          )
-          let expectation =
-            configurable_variables.typecontrolled
-            |> list.key_find(key)
-            |> result.unwrap(reality)
-          // Sometimes, reality can be transitioned into expectation
-          // --that's a horrible joke.
-          let #(reality, expectation, somewhat_asserted_value) = {
-            case reality, expectation {
-              "bits", "string" -> {
-                let assert Ok(b64) = somewhat_asserted_value |> list.first()
-                let hopefully_bits = b64 |> bit_array.base16_decode
-                case hopefully_bits {
-                  Ok(bits) -> {
-                    case bits |> bit_array.to_string() {
-                      Ok(str) -> #(
-                        configurable_variables.var_unsupported,
-                        expectation,
-                        [str, configurable_variables.var_string],
-                      )
-                      Error(..) -> #(
-                        configurable_variables.var_unsupported,
-                        expectation,
-                        [configurable_variables.var_unsupported],
-                      )
-                    }
-                  }
-                  Error(..) -> {
-                    #(configurable_variables.var_unsupported, expectation, [
-                      configurable_variables.var_unsupported,
-                    ])
-                  }
-                }
-              }
-              _, _ -> #(reality, expectation, somewhat_asserted_value)
-            }
-          }
-          let z: Result(List(String), ConfigTomlDecodeError) = case
-            reality == configurable_variables.var_unsupported
-          {
-            True ->
-              Error(FieldError(
-                "variables->" <> key <> " does not contain a supported value.",
-              ))
-            False -> {
-              { expectation == reality }
-              |> bool.guard(Ok(somewhat_asserted_value), fn() {
-                Error(FieldError(
-                  "variables->"
-                  <> key
-                  <> " does not contain the expected value. --> Expected: "
-                  <> expectation
-                  <> ", got: "
-                  <> reality,
-                ))
-              })
-            }
-          }
-          promise.resolve(z)
-        })
-      }
-      |> dict.to_list()
-      |> list.map(fn(x) {
-        let #(key, promise_of_a_value) = x
-        use value <- promise.await(promise_of_a_value)
-        promise.resolve(#(key, value))
-      })
-      |> promise.await_list()
-    _ -> promise.resolve([])
-  }
-  use other_vars <- promise.await(other_vars)
-  // A kind of manual result.all()
-  let other_vars = case
-    list.find_map(other_vars, fn(le) {
-      let #(_key, result_of_value): #(
-        String,
-        Result(List(String), ConfigTomlDecodeError),
-      ) = le
-      case result_of_value {
-        Error(err) -> Ok(err)
-        _ -> Error(Nil)
-      }
-    })
-  {
-    Ok(pq) -> Error(pq)
-    Error(Nil) -> {
-      other_vars
-      |> list.map(fn(it) {
-        let assert Ok(b) = it.1
-        #(it.0, b)
-      })
-      |> Ok
-    }
-  }
-
-  use other_vars <- promise.try_await(other_vars |> promise.resolve)
-
-  Ok(configtype.SharedCynthiaConfigGlobalOnly(
-    global_theme:,
-    global_theme_dark:,
-    global_colour:,
-    global_site_name:,
-    global_site_description:,
-    server_port:,
-    server_host:,
-    git_integration:,
-    crawlable_context:,
-    sitemap:,
-    comment_repo:,
-    other_vars:,
+fn promise_error_cannot_read_config_format() {
+  promise.resolve(Error(
+    "Cannot properly read config.edition and/or config.version, Cynthia doesn't know how to parse this file anymore!",
   ))
-  |> promise.resolve()
+}
+
+fn parse_config_format(toml_str: String) -> Result(#(String, Int), Nil) {
+  use d <- result.try(tom.parse(toml_str) |> result.replace_error(Nil))
+  use edition <- result.try(
+    tom.get_string(d, ["config", "edition"]) |> result.replace_error(Nil),
+  )
+  use version <- result.try(
+    tom.get_int(d, ["config", "version"]) |> result.replace_error(Nil),
+  )
+  Ok(#(edition, version))
 }
 
 fn content_getter() -> promise.Promise(
@@ -746,7 +406,7 @@ fn dialog_initcfg() {
   case
     prompts.for_confirmation(
       "CynthiaMini can create \n"
-        <> premixed.text_orange(process.cwd() <> "/cynthia-mini.toml")
+        <> premixed.text_orange(process.cwd() <> "/cynthia.toml")
         <> "\n ...and some sample content.\n"
         <> premixed.text_magenta(
         "Do you want to initialise new config at this location?",
@@ -763,87 +423,71 @@ fn dialog_initcfg() {
   }
 }
 
-pub fn initcfg() {
-  console.log("Creating Cynthia Mini configuration...")
-  // Check if cynthia-mini.toml exists
-  case files.file_exist(process.cwd() <> "/cynthia-mini.toml") {
-    True -> {
-      console.error(
-        "Error: A config already exists in this directory. Please remove it and try again.",
-      )
-      process.exit(1)
-      panic as "We should not reach here"
-    }
-    False -> Nil
-  }
-  let assert Ok(_) =
-    simplifile.create_directory_all(process.cwd() <> "/content")
-  let assert Ok(_) = simplifile.create_directory_all(process.cwd() <> "/assets")
-  let _ =
-    { process.cwd() <> "/cynthia-mini.toml" }
-    |> fs.write_file_sync(
-      "[global]
-  # Theme to use for light mode - default themes: autumn, default
-  theme = \"autumn\"
-  # Theme to use for dark mode - default themes: night, default-dark
-  theme_dark = \"night\"
-  # For some browsers, this will change the colour of UI elements such as the address bar
-  # and the status bar on mobile devices.
-  # This is a hex colour, e.g. #FFFFFF
-  colour = \"#FFFFFF\"
-  # Your website's name, displayed in various places
-  site_name = \"My Site\"
-  # A brief description of your website
-  site_description = \"A big site on a mini Cynthia!\"
+const brand_new_config = "# Do not edit these variables! It is set by Cynthia to tell it's config format apart.
+config.edition=\"mini\"
+config.version=4
+[global]
+# Theme to use for light mode - default themes: autumn, default
+theme = \"autumn\"
+# Theme to use for dark mode - default themes: night, default-dark
+theme_dark = \"night\"
+# For some browsers, this will change the colour of UI elements such as the address bar
+# and the status bar on mobile devices.
+# This is a hex colour, e.g. #FFFFFF
+colour = \"#FFFFFF\"
+# Your website's name, displayed in various places
+site_name = \"My Site\"
+# A brief description of your website
+site_description = \"A big site on a mini Cynthia!\"
 
-  [server]
-  # Port number for the web server
-  port = 8080
-  # Host address for the web server
-  host = \"localhost\"
+[server]
+# Port number for the web server
+port = 8080
+# Host address for the web server
+host = \"localhost\"
 
-  [integrations]
-  # Enable git integration for the website
-  # This will allow Cynthia Mini to detect the git repository
-  # For example linking to the commit hash in the footer
-  git = true
+[integrations]
+# Enable git integration for the website
+# This will allow Cynthia Mini to detect the git repository
+# For example linking to the commit hash in the footer
+git = true
 
-  # Enable sitemap generation
-  # This will generate a sitemap.xml file in the root of the website
-  # 
-  # You will need to enter the base URL of your website in the sitemap variable below.
-  # If your homepage is at \"https://example.com/#/\", then the sitemap variable should be set to \"https://example.com\".
-  # If you do not want to use a sitemap, set this to \"false\", or leave it empty (\"\"), you can also remove the sitemap variable altogether.
-  sitemap = \"\"
+# Enable sitemap generation
+# This will generate a sitemap.xml file in the root of the website
+#
+# You will need to enter the base URL of your website in the sitemap variable below.
+# If your homepage is at \"https://example.com/#/\", then the sitemap variable should be set to \"https://example.com\".
+# If you do not want to use a sitemap, set this to \"false\", or leave it empty (\"\"), you can also remove the sitemap variable altogether.
+sitemap = \"\"
 
-  # Enable crawlable context (JSON-LD injection)
-  # This will allow search engines to crawl the website, and makes it
-  # possible for the website to be indexed by search engine and LLMs.
-  crawlable_context = false
+# Enable crawlable context (JSON-LD injection)
+# This will allow search engines to crawl the website, and makes it
+# possible for the website to be indexed by search engine and LLMs.
+crawlable_context = false
 
-  [variables]
-  # You can define your own variables here, which can be used in templates.
+[variables]
+# You can define your own variables here, which can be used in templates.
 
-  ## ownit_template
-  ##
-  ## Use this to define your own template for the 'ownit' layout.
-  ##
-  ## The template will be used for the 'ownit' layout, which is used for pages and posts.
-  ## You can use the following variables in the template:
-  ##  - body: string (The main HTML content)
-  ##  - is_post: boolean (True if the current item is a post, false if it's a page)
-  ##  - title: string (The title of the page or post)
-  ##  - description: string (The description of the page or post)
-  ##  - site_name: string (The global site name)
-  ##  - category: string (The category of the post, empty for pages)
-  ##  - date_modified: string (The last modification date of the post, empty for pages)
-  ##  - date_published: string (The publication date of the post, empty for pages)
-  ##  - tags: string[] (An array of tags for the post, empty for pages)
-  ##  - menu_1_items: [string, string][] (Array of menu items for menu 1, e.g., [[\"Home\", \"/\"], [\"About\", \"/about\"]])
-  ##  - menu_2_items: [string, string][] (Array of menu items for menu 2)
-  ##  - menu_3_items: [string, string][] (Array of menu items for menu 3)
-  ownit_template = \"\"\"
- <div class=\"p-4\">
+## ownit_template
+##
+## Use this to define your own template for the 'ownit' layout.
+##
+## The template will be used for the 'ownit' layout, which is used for pages and posts.
+## You can use the following variables in the template:
+##  - body: string (The main HTML content)
+##  - is_post: boolean (True if the current item is a post, false if it's a page)
+##  - title: string (The title of the page or post)
+##  - description: string (The description of the page or post)
+##  - site_name: string (The global site name)
+##  - category: string (The category of the post, empty for pages)
+##  - date_modified: string (The last modification date of the post, empty for pages)
+##  - date_published: string (The publication date of the post, empty for pages)
+##  - tags: string[] (An array of tags for the post, empty for pages)
+##  - menu_1_items: [string, string][] (Array of menu items for menu 1, e.g., [[\"Home\", \"/\"], [\"About\", \"/about\"]])
+##  - menu_2_items: [string, string][] (Array of menu items for menu 2)
+##  - menu_3_items: [string, string][] (Array of menu items for menu 3)
+ownit_template = \"\"\"
+  <div class=\"p-4\">
   <h1 class=\"text-3xl font-bold mb-4\">{{ title }}</h1>
   <nav class=\"mb-4\">
     <p class=\"font-semibold\">Menu:</p>
@@ -874,19 +518,37 @@ pub fn initcfg() {
       {{/if}}
     {{/if}}
     </div>
-  \"\"\"
+\"\"\"
 
-  [posts]
-  # Enable comments on posts using utteranc.es
-  # Format: \"username/repositoryname\"
-  #
-  # You will need to give the utterances bot access to your repo.
-  # See https://github.com/apps/utterances to add the utterances bot to your repo
-  comment_repo = \"\"
-  ",
-    )
+[posts]
+# Enable comments on posts using utteranc.es
+# Format: \"username/repositoryname\"
+#
+# You will need to give the utterances bot access to your repo.
+# See https://github.com/apps/utterances to add the utterances bot to your repo
+comment_repo = \"\""
+
+pub fn initcfg() {
+  console.log("Creating Cynthia Mini configuration...")
+  // Check if cynthia.toml exists
+  case files.file_exist(process.cwd() <> "/cynthia.toml") {
+    True -> {
+      console.error(
+        "Error: A config already exists in this directory. Please remove it and try again.",
+      )
+      process.exit(1)
+      panic as "We should not reach here"
+    }
+    False -> Nil
+  }
+  let assert Ok(_) =
+    simplifile.create_directory_all(process.cwd() <> "/content")
+  let assert Ok(_) = simplifile.create_directory_all(process.cwd() <> "/assets")
+  let _ =
+    { process.cwd() <> "/cynthia.toml" }
+    |> fs.write_file_sync(brand_new_config)
     |> result.map_error(fn(e) {
-      premixed.text_error_red("Error: Could not write cynthia-mini.toml: " <> e)
+      premixed.text_error_red("Error: Could not write cynthia.toml: " <> e)
       process.exit(1)
     })
   {
