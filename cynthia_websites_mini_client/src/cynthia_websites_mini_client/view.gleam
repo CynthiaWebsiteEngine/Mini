@@ -32,7 +32,7 @@ pub fn main(model: Model) -> Element(Msg) {
                 layout: "theme",
                 permalink: "404",
                 inner_plain: "# 404!\n\nThe page you are looking for does not exist.",
-                data: contenttypes.PageData([]),
+                data: contenttypes.PageData([], True),
               )
             })
           let content = case model.path {
@@ -57,7 +57,7 @@ pub fn main(model: Model) -> Element(Msg) {
                     layout: "default",
                     permalink: model.path,
                     filename: "postlist.html",
-                    data: contenttypes.PageData([]),
+                    data: contenttypes.PageData([], False),
                     inner_plain: postlistloader.postlist_by_category(
                       model,
                       category,
@@ -78,7 +78,7 @@ pub fn main(model: Model) -> Element(Msg) {
                     layout: "default",
                     permalink: model.path,
                     filename: "postlist.html",
-                    data: contenttypes.PageData([]),
+                    data: contenttypes.PageData([], True),
                     inner_plain: postlistloader.postlist_by_tag(model, tag)
                       |> element.to_string,
                   )
@@ -93,7 +93,7 @@ pub fn main(model: Model) -> Element(Msg) {
                     layout: "default",
                     permalink: model.path,
                     filename: "postlist.html",
-                    data: contenttypes.PageData([]),
+                    data: contenttypes.PageData([], False),
                     inner_plain: postlistloader.postlist_by_search_term(
                       model,
                       search_term,
@@ -110,7 +110,7 @@ pub fn main(model: Model) -> Element(Msg) {
                     layout: "default",
                     permalink: model.path,
                     filename: "postlist.html",
-                    data: contenttypes.PageData([]),
+                    data: contenttypes.PageData([], False),
                     inner_plain: postlistloader.postlist_all(model)
                       |> element.to_string,
                   )

@@ -116,6 +116,8 @@ pub type ContentData {
   PageData(
     /// In which menus this page should appear
     in_menus: List(Int),
+    /// Hide the block with title and description for a page.
+    hide_meta_block: Bool,
   )
 }
 
@@ -131,7 +133,12 @@ pub fn content_data_decoder() -> decode.Decoder(ContentData) {
     }
     "page_data" -> {
       use in_menus <- decode.field("in_menus", decode.list(decode.int))
-      decode.success(PageData(in_menus:))
+      use hide_meta_block <- decode.optional_field(
+        "hide_meta",
+        False,
+        decode.bool,
+      )
+      decode.success(PageData(in_menus:, hide_meta_block:))
     }
     _ ->
       decode.failure(
@@ -151,10 +158,11 @@ pub fn encode_content_data(content_data: ContentData) -> json.Json {
         #("category", json.string(category)),
         #("tags", json.array(tags, json.string)),
       ])
-    PageData(in_menus:) ->
+    PageData(in_menus:, hide_meta_block:) ->
       json.object([
         #("type", json.string("page_data")),
         #("in_menus", json.array(in_menus, json.int)),
+        #("hide_meta", json.bool(hide_meta_block)),
       ])
   }
 }

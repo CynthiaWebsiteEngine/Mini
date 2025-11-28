@@ -24,7 +24,7 @@ pub fn render_content(
   let assert Ok(def) = paints.get_sytheme(model)
 
   let #(into, output, variables) = case content.data {
-    contenttypes.PageData(_) -> {
+    contenttypes.PageData(_, hide_metadata_block) -> {
       let mold = case content.layout {
         "default" | "theme" | "" -> molds.into(def.layout, "page", model)
         layout -> molds.into(layout, "page", model)
@@ -39,6 +39,10 @@ pub fn render_content(
         |> dict.insert("title", content.title |> dynamic.from)
         |> dict.insert("description_html", description |> dynamic.from)
         |> dict.insert("description", content.description |> dynamic.from)
+        |> dict.insert(
+          "hide_metadata_block",
+          hide_metadata_block |> dynamic.from,
+        )
       #(mold, parse_html(content.inner_plain, content.filename), variables)
     }
     contenttypes.PostData(category:, date_published:, date_updated:, tags:) -> {
