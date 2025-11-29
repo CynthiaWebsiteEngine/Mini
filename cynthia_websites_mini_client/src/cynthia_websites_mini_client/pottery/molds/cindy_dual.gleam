@@ -357,7 +357,7 @@ fn cindy_common(
           html.div(
             [
               attribute.class(
-                "col-span-5 row-span-4 row-start-9 md:row-span-8 md:col-span[] md:col-start-1 md:row-start-3 min-h-full bg-base-200 rounded-br-2xl overflow-auto w-full md:w-fit md:max-w-[20VW] p-4 md:p-3 break-words shadow-inner"
+                "col-span-5 row-span-4 row-start-9 md:row-span-8 md:col-start-1 md:row-start-3 min-h-full bg-base-200 rounded-br-2xl overflow-auto w-full md:w-fit md:max-w-[20VW] p-4 md:p-3 break-words shadow-inner"
                 <> hide_metadata_block_classonly,
               ),
             ],
