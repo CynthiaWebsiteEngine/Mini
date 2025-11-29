@@ -552,7 +552,9 @@ pub fn initcfg() {
     { process.cwd() <> "/cynthia.toml" }
     |> fs.write_file_sync(brand_new_config)
     |> result.map_error(fn(e) {
-      premixed.text_error_red("Error: Could not write cynthia.toml: " <> e)
+      console.error(premixed.text_error_red(
+        "Error: Could not write cynthia.toml: " <> e,
+      ))
       process.exit(1)
     })
   {
