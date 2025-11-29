@@ -353,7 +353,7 @@ fn cynthia_config_global_only_exploiter(
             case reality, expectation {
               "bits", "string" -> {
                 let assert Ok(b64) = somewhat_asserted_value |> list.first()
-                let hopefully_bits = b64 |> bit_array.base16_decode
+                let hopefully_bits = b64 |> bit_array.base64_decode
                 case hopefully_bits {
                   Ok(bits) -> {
                     case bits |> bit_array.to_string() {
