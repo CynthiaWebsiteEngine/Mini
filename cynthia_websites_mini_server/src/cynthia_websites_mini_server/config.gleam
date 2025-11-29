@@ -81,7 +81,11 @@ pub fn capture_config() {
               Nil
             }
             Error(_) -> {
-              console.error("Some file write error.")
+              console.error(
+                "Error: Could not write upgraded config to "
+                <> global_conf_filepath
+                <> ". Please check file permissions.",
+              )
               process.exit(1)
             }
           }
