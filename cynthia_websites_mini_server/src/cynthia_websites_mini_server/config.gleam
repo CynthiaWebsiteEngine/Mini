@@ -593,11 +593,11 @@ This page will only show up if you have a layout with two or more menus availabl
         to: "themes.dj",
         // We are downloading markdown content as Djot content without conversion... Hopefully it'll parse correctly.
         // Until the documentation is updated to reflect the new default file type :)
-        from: "https://raw.githubusercontent.com/CynthiaWebsiteEngine/Mini-docs/refs/heads/main/content/3.%20Customisation/3.2-themes.md",
+        from: "https://raw.githubusercontent.com/CynthiaWebsiteEngine/Mini-docs/refs/heads/main/content/3.%20Customisation/3.2-themes.dj",
         with: contenttypes.Content(
           filename: "themes.dj",
           title: "Themes",
-          description: "External page example, using the theme list, downloading from <https://raw.githubusercontent.com/CynthiaWebsiteEngine/Mini-docs/refs/heads/main/content/3.%20customisation/3.2-themes.md>",
+          description: "External page example, using the theme list, downloading from <https://github.com/CynthiaWebsiteEngine/Mini-docs/blob/main/content/3.%20Customisation/3.2-themes.dj>",
           layout: "theme",
           permalink: "/themes",
           data: contenttypes.PageData([1], False),
