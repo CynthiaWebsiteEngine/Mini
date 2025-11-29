@@ -192,7 +192,18 @@ fn cynthia_config_global_only_exploiter(
                     <> "´...",
                   )
 
-                  let assert Ok(req) = request.to(url)
+                  let req = case request.to(url) {
+                    Ok(r) -> r
+                    Error(_) -> {
+                      console.error(
+                        "Invalid URL for variable: '"
+                        <> url |> premixed.text_bright_yellow()
+                        <> "'.",
+                      )
+                      process.exit(1)
+                      panic as "We should not reach here."
+                    }
+                  }
                   use resp <- promise.await(
                     promise.map(fetch.send(req), fn(e) {
                       case e {
