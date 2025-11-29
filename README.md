@@ -73,7 +73,7 @@ For detailed information about configuration, theming, and deployment, check out
         article1.dj.meta.json
         article2.dj
         article2.dj.meta.json
-./cynthia-mini.toml
+./cynthia.toml
 ```
 
 ## Contributing

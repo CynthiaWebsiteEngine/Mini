@@ -573,7 +573,7 @@ fn compute_menus(content: List(contenttypes.Content), model: Model) {
     content
     |> list.filter_map(fn(alls) {
       case alls.data {
-        contenttypes.PageData(soms) -> Ok(soms)
+        contenttypes.PageData(soms, _) -> Ok(soms)
         _ -> Error(Nil)
       }
     })
@@ -595,7 +595,7 @@ fn add_each_menu(
       let hits: List(model_type.MenuItem) =
         list.filter_map(items, fn(item) -> Result(model_type.MenuItem, Nil) {
           case item.data {
-            contenttypes.PageData(m) -> {
+            contenttypes.PageData(m, _) -> {
               case m |> list.contains(current_menu) {
                 True -> {
                   Ok(model_type.MenuItem(name: item.title, to: item.permalink))
