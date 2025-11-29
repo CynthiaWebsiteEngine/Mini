@@ -210,8 +210,13 @@ fn cindy_common(
       decode.bool,
     )
     |> result.unwrap(False)
+  let hide_metadata_block_classonly = case hide_metadata_block {
+    True -> " hidden"
+    False -> ""
+  }
   html.div([attribute.id("content"), attribute.class("w-full mb-2")], [
     html.span([], [
+      //   element.text(variables |> string.inspect),
       html.div(
         [
           attribute.class(
@@ -351,10 +356,7 @@ fn cindy_common(
             [
               attribute.class(
                 "col-span-5 row-span-4 row-start-9 md:row-span-8 md:col-span[] md:col-start-1 md:row-start-2 min-h-full bg-base-200 rounded-br-2xl overflow-auto w-full md:w-fit md:max-w-[20VW] p-4 md:p-3 break-words shadow-inner"
-                <> case hide_metadata_block {
-                  True -> " hidden"
-                  False -> ""
-                },
+                <> hide_metadata_block_classonly,
               ),
             ],
             [post_meta],
