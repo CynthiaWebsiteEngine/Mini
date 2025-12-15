@@ -42,7 +42,7 @@ jobs:
             ext: ""
             bin_name: cynthiaweb-mini-macos-arm
           - os: macos
-            runner: macos-13
+            runner: macos-15
             arch: intel
             ext: ""
             bin_name: cynthiaweb-mini-macos-intel
