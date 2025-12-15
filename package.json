@@ -1,6 +1,6 @@
 {
   "name": "@cynthiaweb/cynthiaweb-mini",
-  "version": "1.3.0-rc",
+  "version": "1.3.0",
   "license": "AGPL-3.0-only",
   "repository": {
     "url": "git+https://github.com/CynthiaWebsiteEngine/Mini.git"
