@@ -51,7 +51,7 @@ jobs:
       - name: Install mise and let it install dependencies (Bun, Gleam, etc.)
         uses: jdx/mise-action@v2
         with:
-          version: 2025.7.0
+          version: 2025.11.2
           install: true
           cache: true
       - name: Build and bundle
