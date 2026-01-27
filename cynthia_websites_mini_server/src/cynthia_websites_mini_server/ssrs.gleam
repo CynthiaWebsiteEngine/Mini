@@ -1,4 +1,5 @@
 import bungibindies/bun/http/serve/response
+import bungibindies/bun.{which}
 import bungibindies/bun/spawn.{OptionsToSubprocess}
 import cynthia_websites_mini_client
 import cynthia_websites_mini_client/configtype
@@ -235,9 +236,11 @@ fn helper_get_git_remote_commit() -> Option(String) {
     when: bool.negate(string.starts_with(remote, "http")),
     return: None,
   )
+case which("git") {
+Ok(git) -> {
   let commit_cmd =
     spawn.sync(OptionsToSubprocess(
-      cmd: ["git", "rev-parse", "--verify", "HEAD"],
+      cmd: [git, "rev-parse", "--verify", "HEAD"],
       cwd: Some(process.cwd()),
       env: None,
       stderr: Some(spawn.Ignore),
@@ -248,4 +251,7 @@ fn helper_get_git_remote_commit() -> Option(String) {
     |> option.from_result()
   use commit <- option.then(commit_cmd)
   Some(remote <> "/commit/" <> commit)
+  }
+_ -> None
+  }
 }
