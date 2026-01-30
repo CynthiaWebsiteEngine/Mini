@@ -38,5 +38,8 @@
     "prepack": "bun run bundle",
     "run-in-test": "mise run run-dev",
     "test": "mise run test-all"
+  },
+  "dependencies": {
+    "@djot/djot": "^0.3.2"
   }
 }
