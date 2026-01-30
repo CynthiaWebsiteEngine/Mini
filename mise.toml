@@ -1,6 +1,6 @@
 [tools]
 bun = "latest"
-gleam = "latest"
+gleam = "1.14.0"
 
 # /================================== Tasks ================================\
 # |             These tasks are in comment-split sections                   |
