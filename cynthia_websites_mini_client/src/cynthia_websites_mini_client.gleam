@@ -1,5 +1,6 @@
 import chilp/widget/base as chilp_base
 import cynthia_websites_mini_client/model_messages.{Model}
+import cynthia_websites_mini_client/ui/themes_generated
 import cynthia_websites_mini_shared/config/site_json
 import cynthia_websites_mini_shared/config/v4_1
 import cynthia_websites_mini_shared/ffi
@@ -144,7 +145,6 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
         )
       #(model, effect.none())
     }
-    model_messages.CindyMsg(_) -> todo
   }
 }
 
@@ -212,7 +212,12 @@ fn view_into_layout(
   let item_theme =
     item.layout
     |> option.unwrap(global_theme)
-  let component_name = "layout_" <> item_theme
+  let assert Ok(theme) =
+    themes_generated.themes
+    |> list.find(fn(i) { i.name == item_theme })
+    as "Unknown theme set."
+
+  let component_name = "layout_" <> theme.layout
   // layout_cindy-simple for example, which can then be used from element.element
   todo
 }
