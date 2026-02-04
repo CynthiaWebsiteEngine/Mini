@@ -8,7 +8,7 @@
 //// - Multiple theme options (light, dark, sepia, etc.)
 
 import cynthia_websites_mini_client/messages
-import cynthia_websites_mini_client/model_type
+import cynthia_websites_mini_client/model_messages
 import cynthia_websites_mini_client/utils
 import gleam/dict.{type Dict}
 import gleam/dynamic
@@ -34,8 +34,8 @@ import odysseus
 /// @return A fully constructed page layout
 pub fn page_layout(
   from content: Element(messages.Msg),
-  with variables: Dict(String, Dynamic),
-  store model: model_type.Model,
+  content item: site_json.Content,
+  store model: model_messages.Model,
 ) -> Element(messages.Msg) {
   let menu = menu_1(model)
 
@@ -84,8 +84,8 @@ pub fn page_layout(
 /// @return A fully constructed post layout
 pub fn post_layout(
   from content: Element(messages.Msg),
-  with variables: Dict(String, Dynamic),
-  store model: model_type.Model,
+  content item: site_json.Content,
+  store model: model_messages.Model,
 ) -> Element(messages.Msg) {
   let menu = menu_1(model)
   let assert Ok(description) =
@@ -213,7 +213,7 @@ fn documentation_common(
   menu: List(Element(messages.Msg)),
   sidebar_content: Element(messages.Msg),
   variables: Dict(String, Dynamic),
-  model: model_type.Model,
+  model: model_messages.Model,
 ) -> Element(messages.Msg) {
   let assert Ok(site_name) =
     dict.get(variables, "global_site_name")
@@ -590,7 +590,7 @@ fn documentation_common(
 ///
 /// @param model Client model containing menus and current path
 /// @return List of HTML elements representing menu items
-pub fn menu_1(from model: model_type.Model) -> List(Element(messages.Msg)) {
+pub fn menu_1(from model: model_messages.Model) -> List(Element(messages.Msg)) {
   let hash = model.path
   let content = model.computed_menus
 
@@ -600,10 +600,10 @@ pub fn menu_1(from model: model_type.Model) -> List(Element(messages.Msg)) {
       list.map(menu_items, fn(item) {
         // Convert item to tuple, this is not the best approach, but it works as well as refactoring for custom type here.
         let item = case item.to {
-          "" -> model_type.MenuItem(item.name, "/")
+          "" -> model_messages.MenuItem(item.name, "/")
           _ -> item
         }
-        let model_type.MenuItem(name:, to:) = item
+        let model_messages.MenuItem(name:, to:) = item
         let is_active = hash == to
 
         html.li([], [
@@ -645,17 +645,17 @@ pub fn menu_1(from model: model_type.Model) -> List(Element(messages.Msg)) {
 
 /// Find the previous and next menu items relative to the current path
 fn find_prev_next_links(
-  menu_items: List(model_type.MenuItem),
+  menu_items: List(model_messages.MenuItem),
   current_path: String,
-) -> #(Option(model_type.MenuItem), Option(model_type.MenuItem)) {
+) -> #(Option(model_messages.MenuItem), Option(model_messages.MenuItem)) {
   find_prev_next_links_looped(menu_items, current_path, None)
 }
 
 fn find_prev_next_links_looped(
-  left_menu_items: List(model_type.MenuItem),
+  left_menu_items: List(model_messages.MenuItem),
   current_path: String,
-  last_item: Option(model_type.MenuItem),
-) -> #(Option(model_type.MenuItem), Option(model_type.MenuItem)) {
+  last_item: Option(model_messages.MenuItem),
+) -> #(Option(model_messages.MenuItem), Option(model_messages.MenuItem)) {
   case left_menu_items, last_item {
     // End of list, nothing found
     [], None -> #(None, None)

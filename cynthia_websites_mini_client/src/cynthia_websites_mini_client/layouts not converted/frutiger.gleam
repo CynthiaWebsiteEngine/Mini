@@ -8,7 +8,7 @@
 //// - Modern, attention-grabbing design
 
 import cynthia_websites_mini_client/messages
-import cynthia_websites_mini_client/model_type
+import cynthia_websites_mini_client/model_messages
 import cynthia_websites_mini_client/utils
 import gleam/dict.{type Dict}
 import gleam/dynamic
@@ -28,8 +28,8 @@ import lustre/event
 /// striking visual elements and glass-like effects.
 pub fn page_layout(
   from content: Element(messages.Msg),
-  with variables: Dict(String, Dynamic),
-  store model: model_type.Model,
+  content item: site_json.Content,
+  store model: model_messages.Model,
 ) -> Element(messages.Msg) {
   let menu = menu_1(model)
 
@@ -78,8 +78,8 @@ pub fn page_layout(
 /// eye-catching metadata display and glossy effects.
 pub fn post_layout(
   from content: Element(messages.Msg),
-  with variables: Dict(String, Dynamic),
-  store model: model_type.Model,
+  content item: site_json.Content,
+  store model: model_messages.Model,
 ) -> Element(messages.Msg) {
   let menu = menu_1(model)
 
@@ -199,7 +199,7 @@ pub fn post_layout(
 /// Primary navigation menu generator
 ///
 /// Creates the main site navigation with glossy, attention-grabbing styling.
-pub fn menu_1(from model: model_type.Model) -> List(Element(messages.Msg)) {
+pub fn menu_1(from model: model_messages.Model) -> List(Element(messages.Msg)) {
   let hash = model.path
   let content = model.computed_menus
 
@@ -209,7 +209,7 @@ pub fn menu_1(from model: model_type.Model) -> List(Element(messages.Msg)) {
       list.map(menu_items, fn(item) {
         // Convert item to tuple, this is not the best approach, but it works as well as refactoring for custom type here.
         let item = {
-          let model_type.MenuItem(name:, to:) = item
+          let model_messages.MenuItem(name:, to:) = item
           #(name, to)
         }
         let item = case item.1 {

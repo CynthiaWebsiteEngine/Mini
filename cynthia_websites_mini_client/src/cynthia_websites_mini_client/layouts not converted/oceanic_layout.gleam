@@ -14,7 +14,7 @@
 //// good fit for the oceanic theme.
 
 import cynthia_websites_mini_client/messages
-import cynthia_websites_mini_client/model_type
+import cynthia_websites_mini_client/model_messages
 import cynthia_websites_mini_client/utils
 import gleam/dict.{type Dict}
 import gleam/dynamic
@@ -44,8 +44,8 @@ import lustre/event
 /// @return A fully constructed page layout
 pub fn page_layout(
   from content: Element(messages.Msg),
-  with variables: Dict(String, Dynamic),
-  store model: model_type.Model,
+  content item: site_json.Content,
+  store model: model_messages.Model,
 ) -> Element(messages.Msg) {
   // Load the primary navigation menu if not in priority mode
   let menu = menu_1(model)
@@ -129,8 +129,8 @@ pub fn page_layout(
 /// @return A fully constructed post layout
 pub fn post_layout(
   from content: Element(messages.Msg),
-  with variables: Dict(String, Dynamic),
-  store model: model_type.Model,
+  content item: site_json.Content,
+  store model: model_messages.Model,
 ) -> Element(messages.Msg) {
   // Load the primary navigation menu if not in priority mode
   let menu = menu_1(model)
@@ -491,7 +491,7 @@ fn oceanic_common(
 ///
 /// @param content Dictionary mapping menu levels to lists of menu items
 /// @return List of HTML elements representing menu items
-pub fn menu_1(from model: model_type.Model) -> List(Element(messages.Msg)) {
+pub fn menu_1(from model: model_messages.Model) -> List(Element(messages.Msg)) {
   // Get the current URL hash to identify the active page
   let hash = model.path
   let content = model.computed_menus
@@ -504,7 +504,7 @@ pub fn menu_1(from model: model_type.Model) -> List(Element(messages.Msg)) {
       list.map(menu_items, fn(item) {
         // Convert item to tuple, this is not the best approach, but it works as well as refactoring for custom type here.
         let item = {
-          let model_type.MenuItem(name:, to:) = item
+          let model_messages.MenuItem(name:, to:) = item
           #(name, to)
         }
         // Handle empty URLs as links to homepage
@@ -539,7 +539,7 @@ pub fn menu_1(from model: model_type.Model) -> List(Element(messages.Msg)) {
 ///
 /// @param content Dictionary mapping menu levels to lists of menu items
 /// @return List of HTML elements representing secondary menu items
-pub fn menu_2(from model: model_type.Model) -> List(Element(messages.Msg)) {
+pub fn menu_2(from model: model_messages.Model) -> List(Element(messages.Msg)) {
   // Get the current URL hash to identify the active page
   let hash = model.path
   let content = model.computed_menus
@@ -551,7 +551,7 @@ pub fn menu_2(from model: model_type.Model) -> List(Element(messages.Msg)) {
       list.map(menu_items, fn(item) {
         // Convert item to tuple, this is not the best approach, but it works as well as refactoring for custom type here.
         let item = {
-          let model_type.MenuItem(name:, to:) = item
+          let model_messages.MenuItem(name:, to:) = item
           #(name, to)
         }
         // Handle empty URLs as links to homepage

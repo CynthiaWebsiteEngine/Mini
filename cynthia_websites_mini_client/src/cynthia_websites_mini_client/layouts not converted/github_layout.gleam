@@ -9,7 +9,7 @@
 //// - Responsive design that works well on all devices
 
 import cynthia_websites_mini_client/messages
-import cynthia_websites_mini_client/model_type
+import cynthia_websites_mini_client/model_messages
 import cynthia_websites_mini_client/utils
 import gleam/dict.{type Dict}
 import gleam/dynamic
@@ -36,8 +36,8 @@ import cynthia_websites_mini_client/dom
 /// @return A fully constructed page layout
 pub fn page_layout(
   from content: Element(messages.Msg),
-  with variables: Dict(String, Dynamic),
-  store model: model_type.Model,
+  content item: site_json.Content,
+  store model: model_messages.Model,
 ) -> Element(messages.Msg) {
   // Load the primary navigation menu
   let menu = menu_1(model)
@@ -92,8 +92,8 @@ pub fn page_layout(
 /// @return A fully constructed post layout
 pub fn post_layout(
   from content: Element(messages.Msg),
-  with variables: Dict(String, Dynamic),
-  store model: model_type.Model,
+  content item: site_json.Content,
+  store model: model_messages.Model,
 ) -> Element(messages.Msg) {
   // Load the primary navigation menu
   let menu = menu_1(model)
@@ -323,7 +323,7 @@ fn github_common(
   menu: List(Element(messages.Msg)),
   sidebar: Element(messages.Msg),
   variables: Dict(String, Dynamic),
-  model: model_type.Model,
+  model: model_messages.Model,
 ) -> Element(messages.Msg) {
   let menu_is_open =
     result.is_ok(dict.get(model.other, "github-layout menu open"))
@@ -526,7 +526,7 @@ fn github_common(
                         list.map(mobile_menu_items, fn(item) {
                           // Convert item to tuple, this is not the best approach, but it works as well as refactoring for custom type here.
                           let item = {
-                            let model_type.MenuItem(name:, to:) = item
+                            let model_messages.MenuItem(name:, to:) = item
                             #(name, to)
                           }
                           // Handle empty URLs as links to homepage
@@ -720,7 +720,7 @@ fn github_common(
 ///
 /// @param model Client model containing menus and current path
 /// @return List of HTML elements representing menu items
-pub fn menu_1(from model: model_type.Model) -> List(Element(messages.Msg)) {
+pub fn menu_1(from model: model_messages.Model) -> List(Element(messages.Msg)) {
   // Get the current URL hash to identify the active page
   let hash = model.path
   let content = model.computed_menus
@@ -733,7 +733,7 @@ pub fn menu_1(from model: model_type.Model) -> List(Element(messages.Msg)) {
       list.map(menu_items, fn(menu_item) {
         // Convert item to tuple, this is not the best approach, but it works as well as refactoring for custom type here.
         let item = {
-          let model_type.MenuItem(name:, to:) = menu_item
+          let model_messages.MenuItem(name:, to:) = menu_item
           #(name, to)
         }
         // Handle empty URLs as links to homepage

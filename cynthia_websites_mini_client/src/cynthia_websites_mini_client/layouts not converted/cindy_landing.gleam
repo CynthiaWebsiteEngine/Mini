@@ -5,7 +5,7 @@
 
 // Common imports for layouts
 import cynthia_websites_mini_client/messages
-import cynthia_websites_mini_client/model_type
+import cynthia_websites_mini_client/model_messages
 import gleam/dict.{type Dict}
 import gleam/dynamic
 import gleam/dynamic/decode.{type Dynamic}
@@ -27,8 +27,8 @@ import cynthia_websites_mini_client/pottery/molds/cindy_simple.{menu_1}
 /// - `content`
 pub fn page_layout(
   from content: Element(messages.Msg),
-  with variables: Dict(String, Dynamic),
-  store model: model_type.Model,
+  content item: site_json.Content,
+  store model: model_messages.Model,
 ) -> Element(messages.Msg) {
   let menu = menu_1(model)
   let assert Ok(title) =
@@ -82,7 +82,7 @@ pub fn page_layout(
   |> landing_common(content, menu, _, variables, model)
 }
 
-/// Special common layout for landing pages: 
+/// Special common layout for landing pages:
 /// - More focused design
 /// - Content centered and emphasized
 /// - Full width content area
@@ -92,7 +92,7 @@ fn landing_common(
   menu: List(Element(messages.Msg)),
   post_meta: Element(messages.Msg),
   variables: Dict(String, Dynamic),
-  model: model_type.Model,
+  model: model_messages.Model,
 ) {
   let assert Ok(site_name) = {
     dict.get(variables, "global_site_name")

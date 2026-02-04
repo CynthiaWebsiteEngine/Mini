@@ -3,12 +3,7 @@
 //// Extension of the default Cindy Simple layout with a secondary menu.
 
 // Common imports for layouts
-import cynthia_websites_mini_client/messages
-import cynthia_websites_mini_client/model_type
-import cynthia_websites_mini_client/utils
-import gleam/dict.{type Dict}
-import gleam/dynamic
-import gleam/dynamic/decode.{type Dynamic}
+import cynthia_websites_mini_client/model_messages
 import gleam/list
 import gleam/option
 import gleam/result
@@ -24,18 +19,12 @@ import lustre/event
 /// - `content`
 pub fn page_layout(
   from content: Element(messages.Msg),
-  with variables: Dict(String, Dynamic),
-  store model: model_type.Model,
+  content item: site_json.Content,
+  store model: model_messages.Model,
 ) -> Element(messages.Msg) {
   let menu = menu_1(model)
   let secondary_menu = menu_2(model)
-
-  let assert Ok(title) =
-    decode.run(
-      result.unwrap(dict.get(variables, "title"), dynamic.from(option.None)),
-      decode.string,
-    )
-    as "Could not determine title"
+  let tittle = item.
   let assert Ok(description) =
     decode.run(
       result.unwrap(
@@ -56,8 +45,8 @@ pub fn page_layout(
 
 pub fn post_layout(
   from content: Element(messages.Msg),
-  with variables: Dict(String, Dynamic),
-  store model: model_type.Model,
+  content item: site_json.Content,
+  store model: model_messages.Model,
 ) -> Element(messages.Msg) {
   let menu = menu_1(model)
   let secondary_menu = menu_2(model)
@@ -169,7 +158,7 @@ fn cindy_common(
   post_meta: Element(messages.Msg),
   secondary_menu: List(Element(messages.Msg)),
   variables: Dict(String, Dynamic),
-  model: model_type.Model,
+  model: model_messages.Model,
 ) {
   let assert Ok(site_name) = {
     dict.get(variables, "global_site_name")
@@ -370,7 +359,7 @@ fn cindy_common(
 }
 
 /// Primary menu for cindy-dual
-pub fn menu_1(from model: model_type.Model) -> List(Element(messages.Msg)) {
+pub fn menu_1(from model: model_messages.Model) -> List(Element(messages.Msg)) {
   let hash = model.path
   let content = model.computed_menus
   case dict.get(content, 1) {
@@ -378,8 +367,8 @@ pub fn menu_1(from model: model_type.Model) -> List(Element(messages.Msg)) {
     Ok(menu_items) -> {
       list.map(menu_items, fn(this_item) {
         let current_item = case this_item {
-          model_type.MenuItem(name:, to: "") ->
-            model_type.MenuItem(name:, to: "/")
+          model_messages.MenuItem(name:, to: "") ->
+            model_messages.MenuItem(name:, to: "/")
           _ -> this_item
         }
         html.li([], [
@@ -402,16 +391,16 @@ pub fn menu_1(from model: model_type.Model) -> List(Element(messages.Msg)) {
 }
 
 /// Secondary menu for cindy-dual
-pub fn menu_2(from model: model_type.Model) -> List(Element(messages.Msg)) {
-  let hash = model.path
+pub fn menu_2(from model: model_messages.Model) -> List(Element(messages.Msg)) {
+  let hash = model.route
   let content = model.computed_menus
   case dict.get(content, 2) {
     Error(_) -> []
     Ok(menu_items) -> {
       list.map(menu_items, fn(a) {
         let a = case a {
-          model_type.MenuItem(name:, to: "") ->
-            model_type.MenuItem(name:, to: "/")
+          model_messages.MenuItem(name:, to: "") ->
+            model_messages.MenuItem(name:, to: "/")
           _ -> a
         }
         html.li([], [

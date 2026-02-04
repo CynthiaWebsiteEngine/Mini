@@ -9,7 +9,7 @@
 //// - Focus on readability and classic aesthetics
 
 import cynthia_websites_mini_client/messages
-import cynthia_websites_mini_client/model_type
+import cynthia_websites_mini_client/model_messages
 import cynthia_websites_mini_client/utils
 import gleam/dict.{type Dict}
 import gleam/dynamic
@@ -29,8 +29,8 @@ import lustre/event
 /// traditional typography and warm visual elements.
 pub fn page_layout(
   from content: Element(messages.Msg),
-  with variables: Dict(String, Dynamic),
-  store model: model_type.Model,
+  content item: site_json.Content,
+  store model: model_messages.Model,
 ) -> Element(messages.Msg) {
   let menu = menu_1(model)
 
@@ -79,8 +79,8 @@ pub fn page_layout(
 /// elegant metadata presentation and classic typography.
 pub fn post_layout(
   from content: Element(messages.Msg),
-  with variables: Dict(String, Dynamic),
-  store model: model_type.Model,
+  content item: site_json.Content,
+  store model: model_messages.Model,
 ) -> Element(messages.Msg) {
   let menu = menu_1(model)
 
@@ -221,7 +221,7 @@ pub fn post_layout(
 /// Primary navigation menu generator
 ///
 /// Creates the main site navigation with classic, book-inspired styling.
-pub fn menu_1(from model: model_type.Model) -> List(Element(messages.Msg)) {
+pub fn menu_1(from model: model_messages.Model) -> List(Element(messages.Msg)) {
   let hash = model.path
   let content = model.computed_menus
 
@@ -230,8 +230,8 @@ pub fn menu_1(from model: model_type.Model) -> List(Element(messages.Msg)) {
     Ok(menu_items) -> {
       list.map(menu_items, fn(item) {
         let item = case item {
-          model_type.MenuItem(name:, to: "") ->
-            model_type.MenuItem(name:, to: "/")
+          model_messages.MenuItem(name:, to: "") ->
+            model_messages.MenuItem(name:, to: "/")
           _ -> item
         }
 
