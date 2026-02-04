@@ -1,6 +1,6 @@
 import cynthia_websites_mini_client/contenttypes.{PostData}
 import cynthia_websites_mini_client/messages
-import cynthia_websites_mini_client/model_type.{type Model}
+import cynthia_websites_mini_client/model_messages.{type Model}
 import cynthia_websites_mini_client/pottery
 import cynthia_websites_mini_client/utils
 import gleam/bool
@@ -30,7 +30,7 @@ fn fetch_post_list(model: Model) {
 
 pub fn postlist_all(model: Model) {
   fetch_post_list(model)
-  |> postlist_to_html
+  |> postlist_to_lustre
 }
 
 pub fn postlist_by_tag(model: Model, card: String) {
@@ -44,7 +44,7 @@ pub fn postlist_by_tag(model: Model, card: String) {
     ): contenttypes.ContentData = post.data
     tags |> list.contains(card)
   })
-  |> postlist_to_html
+  |> postlist_to_lustre
 }
 
 pub fn postlist_by_category(model: Model, cat: String) {
@@ -58,7 +58,7 @@ pub fn postlist_by_category(model: Model, cat: String) {
     ) = post.data
     category == cat
   })
-  |> postlist_to_html
+  |> postlist_to_lustre
 }
 
 pub fn postlist_by_search_term(model: Model, search_term: String) {
@@ -87,10 +87,10 @@ pub fn postlist_by_search_term(model: Model, search_term: String) {
 
     title_contains || description_contains || content_contains
   })
-  |> postlist_to_html
+  |> postlist_to_lustre
 }
 
-fn postlist_to_html(
+fn postlist_to_lustre(
   posts: List(contenttypes.Content),
 ) -> element.Element(messages.Msg) {
   let ordered_posts =

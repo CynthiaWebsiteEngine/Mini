@@ -2,7 +2,7 @@
 # You typically do not need to edit this file
 
 packages = [
-  { name = "chilp", version = "1.0.0", build_tools = ["gleam"], requirements = ["gleam_json", "gleam_stdlib", "gleam_time", "lustre", "rsvp"], source = "git", repo = "https://forge.strawmelonjuice.com/strawmelonjuice/chilp.git", commit = "b43d01e6c39d12121a5cbfbf53b6b1dec8bc49f1" },
+  { name = "chilp", version = "1.0.0", build_tools = ["gleam"], requirements = ["gleam_json", "gleam_stdlib", "gleam_time", "lustre", "rsvp"], source = "git", repo = "https://forge.strawmelonjuice.com/strawmelonjuice/chilp.git", commit = "54bbfb1ec0f40d17ffb11080de30090eee0345dc" },
   { name = "gleam_erlang", version = "1.3.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "gleam_erlang", source = "hex", outer_checksum = "1124AD3AA21143E5AF0FC5CF3D9529F6DB8CA03E43A55711B60B6B7B3874375C" },
   { name = "gleam_fetch", version = "1.3.0", build_tools = ["gleam"], requirements = ["gleam_http", "gleam_javascript", "gleam_stdlib"], otp_app = "gleam_fetch", source = "hex", outer_checksum = "2CBF9F2E1C71AEBBFB13A9D5720CD8DB4263EB02FE60C5A7A1C6E17B0151C20C" },
   { name = "gleam_http", version = "4.3.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "gleam_http", source = "hex", outer_checksum = "82EA6A717C842456188C190AFB372665EA56CE13D8559BF3B1DD9E40F619EE0C" },
@@ -22,7 +22,7 @@ packages = [
 ]
 
 [requirements]
-chilp = { git = "https://forge.strawmelonjuice.com/strawmelonjuice/chilp.git", ref = "b43d01e6c39d12121a5cbfbf53b6b1dec8bc49f1" }
+chilp = { git = "https://forge.strawmelonjuice.com/strawmelonjuice/chilp.git", ref = "54bbfb1ec0f40d17ffb11080de30090eee0345dc" }
 gleam_fetch = { version = ">= 1.3.0 and < 2.0.0" }
 gleam_http = { version = ">= 4.3.0 and < 5.0.0" }
 gleam_json = { version = ">= 3.1.0 and < 4.0.0" }

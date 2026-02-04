@@ -22,7 +22,7 @@ modem = ">= 2.1.2 and < 3.0.0"
 rsvp = ">= 1.2.0 and < 2.0.0"
 gleam_fetch = ">= 1.3.0 and < 2.0.0"
 gleam_http = ">= 4.3.0 and < 5.0.0"
-chilp = { git = "https://forge.strawmelonjuice.com/strawmelonjuice/chilp.git", ref = "b43d01e6c39d12121a5cbfbf53b6b1dec8bc49f1" }
+chilp = { git = "https://forge.strawmelonjuice.com/strawmelonjuice/chilp.git", ref = "54bbfb1ec0f40d17ffb11080de30090eee0345dc" }
 
 [dev-dependencies]
 gleeunit = ">= 1.0.0 and < 2.0.0"

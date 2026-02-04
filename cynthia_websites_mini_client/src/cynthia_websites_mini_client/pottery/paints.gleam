@@ -1,6 +1,6 @@
 import cynthia_websites_mini_client/configtype
 import cynthia_websites_mini_client/dom
-import cynthia_websites_mini_client/model_type.{type Model}
+import cynthia_websites_mini_client/model_messages.{type Model}
 import cynthia_websites_mini_client/ui/themes_generated
 import gleam/list
 import gleam/option

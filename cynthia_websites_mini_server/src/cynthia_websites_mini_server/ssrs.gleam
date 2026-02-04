@@ -4,7 +4,7 @@ import bungibindies/bun/spawn.{OptionsToSubprocess}
 import cynthia_websites_mini_client
 import cynthia_websites_mini_client/configtype
 import cynthia_websites_mini_client/ui
-import cynthia_websites_mini_server/mutable_model_type
+import cynthia_websites_mini_server/mutable_model_messages
 import cynthia_websites_mini_server/utils/files.{client_css, client_js}
 import gleam/bool
 import gleam/dict
@@ -18,7 +18,7 @@ import gleamy_lights/console
 import plinth/node/process
 import simplifile
 
-pub fn ssrs(mutable_model: mutable_model_type.MutableModel) {
+pub fn ssrs(mutable_model: mutable_model_messages.MutableModel) {
   let model = mutable_model |> mutable_reference.get()
   dict.new()
   |> dict.insert("/index.html", main(model))
@@ -26,7 +26,7 @@ pub fn ssrs(mutable_model: mutable_model_type.MutableModel) {
   |> Some
 }
 
-fn main(model: mutable_model_type.MutableModelContent) {
+fn main(model: mutable_model_messages.MutableModelContent) {
   response.new()
   |> response.set_body(index_html(model))
   |> response.set_headers(

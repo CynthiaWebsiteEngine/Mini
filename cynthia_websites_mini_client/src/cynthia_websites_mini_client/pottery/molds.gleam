@@ -1,6 +1,6 @@
 // Imports
 import cynthia_websites_mini_client/messages
-import cynthia_websites_mini_client/model_type
+import cynthia_websites_mini_client/model_messages
 import cynthia_websites_mini_client/pottery/oven
 import gleam/bool
 import gleam/dict.{type Dict}
@@ -23,7 +23,7 @@ import cynthia_websites_mini_client/pottery/molds/pastels
 pub fn into(
   layout layout: String,
   for theme_type: String,
-  using model: model_type.Model,
+  using model: model_messages.Model,
 ) -> fn(Element(messages.Msg), Dict(String, decode.Dynamic)) ->
   element.Element(messages.Msg) {
   let #(v, is_post) = case theme_type {

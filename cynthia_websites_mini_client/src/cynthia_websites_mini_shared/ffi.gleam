@@ -27,7 +27,7 @@ pub fn version() -> String
 
 /// Get the color scheme of the user's system (media query)
 @external(javascript, "./ts_ffi.ts", "get_color_scheme")
-pub fn get_color_scheme() -> String
+pub fn get_color_scheme() -> Bool
 
 /// Set the data attribute of an element
 @external(javascript, "./ts_ffi.ts", "set_data")
