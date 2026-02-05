@@ -3,12 +3,11 @@ import cynthia_websites_mini_client/ui/themes_generated
 import cynthia_websites_mini_shared/config/site_json
 import cynthia_websites_mini_shared/config/v4_1
 import cynthia_websites_mini_shared/ffi
-import gleam/dict.{type Dict}
+import gleam/dict
 import gleam/dynamic/decode
 import gleam/fetch
 import gleam/http/request
 import gleam/http/response
-import gleam/int
 import gleam/javascript/promise
 import gleam/list
 import gleam/option.{None, Some}
@@ -279,7 +278,15 @@ fn view_notfound(model: Model, uri: Uri) -> #(String, Element(Msg)) {
 }
 
 fn view_content(model: Model, slug: String) {
-  todo
+  case dict.get(model.data.content, slug) {
+    Error(_) ->
+      view_notfound(
+        model,
+        rsvp.parse_relative_uri(stringify_route(Content(slug), model))
+          |> result.unwrap(uri.empty),
+      )
+    Ok(_) -> todo
+  }
 }
 
 fn view_postlist(model: Model, filter: PostFilter) {
