@@ -310,25 +310,5 @@ fn cindy_common(
 pub fn menu_1(
   from model: model_messages.Model,
 ) -> List(Element(model_messages.Msg)) {
-  let href = model_messages.href(_, model)
-  let current = model.route
-  [
-    model.menu_items
-    |> list.key_filter(1)
-    |> list.map(fn(item) {
-      html.a(
-        [
-          attribute.class({
-            case current == item.1 {
-              True -> "menu-active menu-focused active font-medium"
-              False -> "hover:bg-base-300/50 transition-colors duration-200"
-            }
-          }),
-          href(item.1),
-        ],
-        [html.text(item.0)],
-      )
-    })
-    |> html.li([], _),
-  ]
+  todo
 }

@@ -570,15 +570,5 @@
       }
     },
     "layout": "sepia"
-  },
-  {
-    "name": "ownit",
-    "prevalence": "light",
-    "fonts": [],
-    "font-size": 16,
-    "fonts-mono": ["Fira Code", "Monaco", "monospace"],
-    "font-size-mono": 14,
-    "daisyUI": "autumn",
-    "layout": "ownit"
   }
 ]

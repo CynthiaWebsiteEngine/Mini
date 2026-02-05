@@ -12,6 +12,8 @@ const config_root = process.env.MISE_CONFIG_ROOT || ".";
 
 // 1. Generate Gleam theme file
 const daisyui_themes = [];
+const layouts_doubles = [];
+
 let themes_gleam_content = `
 // This file is generated in Cynthia Mini's build process.
 // Do not edit it manually.
@@ -36,6 +38,10 @@ pub type ThemePrevalence {
 pub const themes = [
 `;
 for (const theme of themeconf) {
+  let layout = theme.layout.trim()
+  if (layout == "cindy") {layout="cindy-simple"}
+  layout = layout.replaceAll("-","_")
+  if (existsSync("./cynthia_websites_mini_client/src/cynthia_websites_mini_client/layouts/" + layout + ".gleam")) {
   let prevalence = "ThemeLight";
   if (theme.prevalence === "dark") prevalence = "ThemeDark";
   const daisy_ui_theme_name = (typeof theme.daisyUI === "string") ? theme.daisyUI : Object.keys(theme.daisyUI)[0];
@@ -43,8 +49,23 @@ for (const theme of themeconf) {
   const font_size_mono = theme["font-size-mono"].toString().includes(".") ? theme["font-size-mono"] : `${theme["font-size-mono"]}.0`;
   themes_gleam_content += `  SharedCynthiaTheme(\n    name: \"${theme.name}\",\n    fonts: ${JSON.stringify(theme.fonts)},\n    fonts_mono: ${JSON.stringify(theme["fonts-mono"])},\n    font_size: ${font_size},\n    font_size_mono: ${font_size_mono},\n    prevalence: ${prevalence},\n    daisy_ui_theme_name: \"${daisy_ui_theme_name}\",\n    layout: \"${theme.layout}\"\n  ),\n`;
   daisyui_themes.push(theme.daisyUI);
+  layouts_doubles.push(layout);
+  }
 }
+
+
 themes_gleam_content += `]\n`;
+let s = new Set(layouts_doubles);
+const layouts = [...s]
+let layout_imports = "";
+let layout_registrars = `
+/// Registers all layouts as Lustre components
+pub fn register_all() {`
+for (let layout of layouts) {
+  layout_registrars+="\n\tlet assert Ok(_) = "+layout+".register()\n"
+  layout_imports+="\nimport cynthia_websites_mini_client/layouts/"+layout+"\n"
+}
+layout_registrars+="}"
 // Write the generated Gleam file, creating the directory if it doesn't exist
 const shared_ui_dir = path.join(config_root, "/cynthia_websites_mini_client/src/cynthia_websites_mini_client/ui");
 if (!existsSync(shared_ui_dir)) {
@@ -52,7 +73,7 @@ if (!existsSync(shared_ui_dir)) {
 }
 writeFileSync(
   path.join(shared_ui_dir, "themes_generated.gleam"),
-  themes_gleam_content
+  layout_imports+themes_gleam_content+layout_registrars
 );
 
 // If this is part of the client's build process, we stop here. The themes file is still generated, but the CSS and client bundle will not be created.
