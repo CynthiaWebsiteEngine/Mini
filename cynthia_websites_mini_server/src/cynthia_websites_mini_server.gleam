@@ -14,7 +14,6 @@ import gleam/result
 import gleam/string
 import gleamy_lights/console
 import gleamy_lights/premixed
-import plinth/javascript/console
 import plinth/node/process
 import simplifile
 
