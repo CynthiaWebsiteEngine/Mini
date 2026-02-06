@@ -16,8 +16,8 @@ gleam = "1.14.0"
 wait_for = "bun-install"
 description = "Generate Gleam prelude for TypeScript FFI"
 run = [
-  "gleam export typescript-prelude > ./cynthia_websites_mini_client/prelude.ts",
-  "gleam export typescript-prelude > ./cynthia_websites_mini_server/prelude.ts",
+  "gleam export javascript-prelude > ./cynthia_websites_mini_client/prelude.mjs",
+  "gleam export javascript-prelude > ./cynthia_websites_mini_server/prelude.mjs",
 ]
 
 [tasks.bun-install]
@@ -59,13 +59,13 @@ outputs=["cynthia_websites_mini_client/src/cynthia_websites_mini_client/shared/f
 [tasks.clean-client]
 hide = true
 description = "Clean client build artifacts"
-run = ["gleam clean", "rm -rf ./build", "rm -rf ./prelude.ts"]
+run = ["gleam clean", "rm -rf ./build", "rm -rf ./prelude.mjs"]
 dir = "./cynthia_websites_mini_client"
 
 [tasks.clean-server]
 hide = true
 description = "Clean server build artifacts"
-run = ["gleam clean", "rm -rf ./build", "rm -rf ./prelude.ts", "rm -rf ./src/client_code_generated_ffi.ts"]
+run = ["gleam clean", "rm -rf ./build", "rm -rf ./prelude.mjs", "rm -rf ./src/client_code_generated_ffi.ts"]
 dir = "./cynthia_websites_mini_server"
 
 

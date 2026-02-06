@@ -1,5 +1,4 @@
-import { Error, Ok } from "../../prelude";
-
+import { Result$Ok, Result$Error } from "../../prelude.mjs";
 export function get_color_scheme() {
   // Media queries the preferred color colorscheme
 
@@ -9,23 +8,40 @@ export function get_color_scheme() {
   return true;
 }
 
-export function set_data(el: HTMLElement, key: string, val: string) {
+export function set_data(el, key, val) {
   // Set a data attribute on an element
   el.setAttribute("data-" + key, val);
 }
 
-export function set_hash(hash: string) {
+export function set_hash(hash) {
   // Set the hash of the page
   window.location.hash = hash;
 }
-export function set_to_404(body: string) {
+export function set_to_404(body) {
   document.body.dataset["404"] = "true";
   document.body.classList.value = "bg-base-100 w-full h-full min-h-screen";
   document.body.innerHTML = body;
   document.title = "404 - Page Not Found";
 }
 
-export function get_inner_html(el: HTMLElement) {
+export function whatever_timestamp_to_unix_millis(ts) {
+  if (typeof ts === "number") {
+    // assume it's already unix millis
+    return ts;
+  } else if (typeof ts === "string") {
+    // try to parse as ISO 8601 string
+    const parsed = Date.parse(ts);
+    if (!isNaN(parsed)) {
+      return parsed;
+    } else {
+      return 0;
+    }
+  } else {
+    return 0;
+  }
+}
+
+export function get_inner_html(el) {
   // Get the innerHTML of an element
   return el.innerHTML;
 }
@@ -60,26 +76,27 @@ export function destroy_comment_box() {
   }
 }
 
-export function jsonify_string(str: string) {
+export function jsonify_string(str) {
   // Convert a string to a JSON object
   try {
-    return new Ok(JSON.stringify(str));
+    return Result$Ok(JSON.stringify(str));
   } catch (e) {
     console.error("Failed to parse JSON string:", e);
-    return new Error(null);
+    return Result$Error(null);
   }
 }
 
 import { version } from "package.json";
-export function my_own_version(): string {
+// const version = "Version is not available";
+export function my_own_version() {
   return version;
 }
 
-export function browse_prompt(l: string) {
+export function browse_prompt(l) {
   if (window.confirm("Leave this page and go to '" + l + "'?")) {
     browse(l);
   }
 }
-export function browse(l: string) {
+export function browse(l) {
   window.location.assign(l);
 }

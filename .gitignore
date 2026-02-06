@@ -137,8 +137,8 @@ cynthia_websites_mini_server/src/client_code_generated_ffi.ts
 cynthia_websites_mini_client/src/cynthia_websites_mini_client/ui/themes_generated.gleam
 
 # Linked files for FFI type declarations
-cynthia_websites_mini_server/prelude.ts
-cynthia_websites_mini_client/prelude.ts
+cynthia_websites_mini_server/prelude.mjs
+cynthia_websites_mini_client/prelude.mjs
 
 # Test env
 test/*

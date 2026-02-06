@@ -106,6 +106,10 @@ fn update(model: Model, msg: Msg) -> #(Model, effect.Effect(Msg)) {
 }
 
 fn view(model: Model) -> Element(Msg) {
-  component.named_slot("menu1", [], [element.text("No menu items.")])
-  component.default_slot([], [])
+  [
+    element.text("This layout is for now just flatted."),
+    component.named_slot("menu1", [], [element.text("No menu items.")]),
+    component.default_slot([], []),
+  ]
+  |> element.fragment()
 }
