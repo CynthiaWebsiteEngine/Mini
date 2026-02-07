@@ -1,4 +1,5 @@
 import cynthia_websites_mini_shared/config/v4_1
+import gbor
 import gleam/bool
 import gleam/json
 
@@ -47,10 +48,64 @@ pub fn v4p1_mini_json(v4p1_mini: v4_1.V4p1Mini) -> json.Json {
   ])
 }
 
+pub fn v4p1_mini_cbor(v4p1_mini: v4_1.V4p1Mini) {
+  gbor.CBMap([
+    #(
+      gbor.CBString("global"),
+      gbor.CBMap([
+        #(gbor.CBString("theme"), gbor.CBString(v4p1_mini.global.theme)),
+        #(
+          gbor.CBString("theme_dark"),
+          gbor.CBString(v4p1_mini.global.theme_dark),
+        ),
+        #(gbor.CBString("site_name"), gbor.CBString(v4p1_mini.global.site_name)),
+        #(
+          gbor.CBString("site_description"),
+          gbor.CBString(v4p1_mini.global.site_description),
+        ),
+      ]),
+    ),
+    #(
+      gbor.CBString("integrations"),
+      gbor.CBMap([
+        #(gbor.CBString("git"), gbor.CBBool(v4p1_mini.integrations.git)),
+        #(
+          gbor.CBString("sitemap"),
+          gbor.CBString(v4p1_mini.integrations.sitemap),
+        ),
+        #(
+          gbor.CBString("crawlable_context"),
+          gbor.CBBool(v4p1_mini.integrations.crawlable_context),
+        ),
+      ]),
+    ),
+    #(gbor.CBString("posts"), {
+      gbor.CBMap([
+        #(gbor.CBString("comments"), case v4p1_mini.posts.comments {
+          v4_1.CommentsMastodonStored ->
+            gbor.CBMap([
+              #(gbor.CBString("store"), gbor.CBString("mastodon")),
+            ])
+          v4_1.CommentsGithubStored(username:, repositoryname:) ->
+            gbor.CBMap([
+              #(gbor.CBString("store"), gbor.CBString("github")),
+              #(gbor.CBString("username"), gbor.CBString(username)),
+              #(gbor.CBString("repositoryname"), gbor.CBString(repositoryname)),
+            ])
+          v4_1.CommentsDisabled ->
+            gbor.CBMap([
+              #(gbor.CBString("store"), gbor.CBString("disabled")),
+            ])
+        }),
+      ])
+    }),
+  ])
+}
+
 pub fn v4p1_mini_toml(v4p1_mini: v4_1.V4p1Mini) -> String {
   "# Do not edit these variables! It is set by Cynthia to tell it's config format apart.
-  config.edition=\"mini\"
-  config.version=4.1
+  configbor.edition=\"mini\"
+  configbor.version=4.1
   [global]
   # Theme to use for light mode - default themes: autumn, default
   # Theme to use for dark mode - default themes: night, default-dark
