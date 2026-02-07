@@ -83,10 +83,11 @@ pub fn vp4p1mini_toml(toml_source: String) {
   case tom.parse(toml_source) {
     Ok(toml) -> {
       let edition =
-        tom.get_string(toml, ["edition"]) |> result.map(string.lowercase)
+        tom.get_string(toml, ["config", "edition"])
+        |> result.map(string.lowercase)
       let version =
         result.or(tom.get_float(toml, ["version"]), {
-          tom.get_int(toml, ["version"]) |> result.map(int.to_float)
+          tom.get_int(toml, ["config", "version"]) |> result.map(int.to_float)
         })
 
       case edition, version {
@@ -160,8 +161,9 @@ pub fn vp4p1mini_toml(toml_source: String) {
           console.error("Unknown combination of edition and version.")
           Error(Nil)
         }
-        Error(_), Error(_) -> {
+        Error(e), Error(_) -> {
           console.log("Could not parse TOML!")
+          echo e
           Error(Nil)
         }
         Ok(edition), Ok(version) -> {
@@ -186,8 +188,9 @@ pub fn vp4p1mini_toml(toml_source: String) {
       }
     }
     // We don't propogate upwards, we give back a Error value but inform here and then exit upstream.
-    Error(_) -> {
+    Error(e) -> {
       console.log("Could not parse TOML!")
+      echo e
       Error(Nil)
     }
   }
