@@ -16,21 +16,23 @@ export function path_normalize(p: string): string {
 }
 
 export function djot_to_html(dj: string) {
-  djot.renderHTML(djot.parse(dj, { sourcePositions: true }), {
-    overrides: {
-      heading(node, context) {
-        const level = node.level;
-        const classes: Record<number, string> = {
-          1: "text-4xl font-bold text-accent",
-          2: "text-3xl font-bold text-accent",
-          3: "text-2xl font-bold text-accent",
-          4: "text-xl font-bold text-accent",
-          5: "text-lg font-bold text-accent",
-          6: "font-bold text-accent",
-        };
-        return `<h${level}${context.renderAttributes(node)} class="${classes[level] || classes[6]}">${context.renderChildren(node)}</h${level}>`;
+  return (
+    djot.renderHTML(djot.parse(dj, { sourcePositions: false }), {
+      overrides: {
+        heading(node, context) {
+          const level = node.level;
+          const classes: Record<number, string> = {
+            1: "text-4xl font-bold text-accent",
+            2: "text-3xl font-bold text-accent",
+            3: "text-2xl font-bold text-accent",
+            4: "text-xl font-bold text-accent",
+            5: "text-lg font-bold text-accent",
+            6: "font-bold text-accent",
+          };
+          return `<h${level}${context.renderAttributes(node)} class="${classes[level] || classes[6]}">${context.renderChildren(node)}</h${level}>`;
+        },
+        // Todo: Add more https://github.com/CynthiaWebsiteEngine/Mini/blob/main/cynthia_websites_mini_client/src/cynthia_websites_mini_client/pottery/djotparse.gleam overrides.
       },
-      // Todo: Add more https://github.com/CynthiaWebsiteEngine/Mini/blob/main/cynthia_websites_mini_client/src/cynthia_websites_mini_client/pottery/djotparse.gleam overrides.
-    },
-  });
+    }) ?? dj
+  );
 }
