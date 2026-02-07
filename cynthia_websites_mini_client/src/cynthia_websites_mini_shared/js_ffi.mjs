@@ -113,3 +113,10 @@ export function cbor_to_dyn(data) {
     return [];
   }
 }
+
+export function is_browser() {
+  if (typeof window !== "undefined") {
+    return true;
+  }
+  return false;
+}

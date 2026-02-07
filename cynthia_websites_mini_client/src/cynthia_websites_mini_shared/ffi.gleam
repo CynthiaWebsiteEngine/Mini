@@ -51,3 +51,6 @@ pub fn cbor_to_dyn(data: BitArray) {
     _ -> Error(Nil)
   }
 }
+
+@external(javascript, "./js_ffi.mjs", "is_browser")
+pub fn is_browser() -> Bool

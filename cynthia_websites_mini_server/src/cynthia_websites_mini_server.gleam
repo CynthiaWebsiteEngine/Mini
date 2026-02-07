@@ -244,6 +244,7 @@ fn get_context() -> site_json.SiteJSON {
 import cynthia_websites_mini_shared/config/v4_1/decodes
 
 pub fn create_html(model: client.Model, slug: String) {
+  console.log("Writing HTML for " <> slug)
   let json = model.data
   case json.content |> dict.get(slug) {
     Ok(content) -> {
@@ -264,12 +265,15 @@ pub fn create_html(model: client.Model, slug: String) {
       |> ffi.jsonify_string()
       |> result.unwrap("Site description is invalid") <> "/>
 " <> {
-        // Todo: Find out the actual permalink
-        case site_json.content_to_jsonld(content, "todo-permalink") {
-          Ok(obj) -> {
+        case
+          model.data.config.integrations.crawlable_context,
+          // Todo: Find out the actual permalink
+          site_json.content_to_jsonld(content, "todo-permalink")
+        {
+          True, Ok(obj) -> {
             "<script type=\"application/ld+json\">\n" <> obj <> "\n</script>"
           }
-          Error(_) -> ""
+          _, _ -> ""
         }
       } <> "
 <link rel='shortcut icon' href='./assets/site_icon.png' type='image/x-icon'/>
@@ -280,8 +284,7 @@ pub fn create_html(model: client.Model, slug: String) {
 </head>
 <body class='h-full w-full'>
   <div id='viewable' class='bg-base-100 w-full h-full min-h-screen will-change-transform'>
-  " <> #(content.content, content, slug)
-      |> client.html_into_layout(model) <> "
+  " <> client.slug_into_layout(slug, model) <> "
   </div>
  " <> dynamic_footer(True, json.config.integrations.git) <> "
 </body>
@@ -585,6 +588,31 @@ fn start() {
   let #(model, _) = client.init(context)
   context.content
   |> dict.keys
+  |> list.append({
+    context.content
+    |> dict.values
+    |> list.filter_map(fn(m) {
+      case m {
+        site_json.Post(category:, ..) -> {
+          Ok("/category/" <> category)
+        }
+        site_json.Page(..) -> Error(Nil)
+      }
+    })
+  })
+  |> list.append({
+    context.content
+    |> dict.values
+    |> list.filter_map(fn(m) {
+      case m {
+        site_json.Post(tags:, ..) -> {
+          Ok(list.map(tags, fn(tag) { "/tagged/" <> tag }))
+        }
+        site_json.Page(..) -> Error(Nil)
+      }
+    })
+    |> list.flatten
+  })
   |> list.each(fn(slug) {
     case string.contains(slug, "!") || string.contains(slug, "#") {
       True -> {

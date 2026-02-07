@@ -5,7 +5,6 @@ import cynthia_websites_mini_shared/config/v4_1
 import cynthia_websites_mini_shared/ffi
 import gleam/bool
 import gleam/dict
-import gleam/dynamic/decode
 import gleam/fetch
 import gleam/float
 import gleam/http/request
@@ -64,18 +63,25 @@ pub type Route {
 }
 
 pub fn parse_route(uri: Uri) -> Route {
-  case uri.path_segments(uri.path) {
+  case uri.path_segments(uri.path) |> echo {
     [] | [""] -> {
-      case js_location.hash(js_window.location(js_window.self())) {
-        Error(_) -> Index
+      case ffi.is_browser() {
+        True -> {
+          case js_location.hash(js_window.location(js_window.self())) {
+            Error(_) -> Index
 
-        Ok("#!/category/" <> cat) -> ContentList(PostsByCategory(cat))
-        Ok("#!/tag/" <> tag) -> ContentList(PostsByTag(tag))
-        Ok("#!/search/" <> tag) -> ContentList(AnyFieldContains(tag))
+            Ok("!/category/" <> cat) -> ContentList(PostsByCategory(cat))
+            Ok("!/tag/" <> tag) -> ContentList(PostsByTag(tag))
+            Ok("!/search/" <> tag) -> ContentList(AnyFieldContains(tag))
 
-        Ok(c) -> {
-          let d = "Unhandled hashroute: " <> c
-          panic as d
+            Ok(c) -> {
+              let d = "Unhandled hashroute: " <> c
+              panic as d
+            }
+          }
+        }
+        False -> {
+          Index
         }
       }
     }
@@ -87,11 +93,24 @@ pub fn parse_route(uri: Uri) -> Route {
   }
 }
 
+pub fn find_slug(contents: dict.Dict(String, site_json.Content), slug: String) {
+  use item <- result.try({
+    dict.to_list(contents)
+    |> list.find(fn(c) {
+      let slug_no_slashes = slug |> string.replace("/", " ") |> string.trim
+      let c_no_slashes = c.0 |> string.replace("/", " ") |> string.trim
+
+      c_no_slashes == slug_no_slashes
+    })
+  })
+  Ok(item.1)
+}
+
 pub fn stringify_route(route: Route, model: Model) {
   case route {
     Index -> "/"
     Content(c) -> {
-      dict.get(model.data.content, c)
+      find_slug(model.data.content, c)
       |> result.map(fn(content) {
         case content {
           site_json.Post(..) -> {
@@ -179,57 +198,69 @@ pub fn init(appdata: site_json.SiteJSON) -> #(Model, Effect(Msg)) {
       |> parse_route
       |> UserNavigatedTo
     })
-  let menu_items = {
-    appdata.content
-    |> dict.values
-    |> list.shuffle
-    |> list.filter(keeping: fn(c) {
-      case c {
-        site_json.Page(in_menus:, ..) -> {
-          !{ in_menus |> list.is_empty }
-        }
-        site_json.Post(..) -> False
-      }
-    })
-    |> list.map(fn(page) {
-      let assert site_json.Page(title:, in_menus:, ..) = page
-      list.map(in_menus, fn(menuid) { #(menuid, #(title, route)) })
-    })
-    |> list.flatten
-    |> list.sort(fn(item_1, item_2) { string.compare(item_1.1.0, item_2.1.0) })
-    // Sort some specials higher up.
-    |> list.sort(fn(item_1, item_2) {
-      let specials_1 =
-        case item_1.1.0 |> string.lowercase() {
-          "home" -> 2.0
-          "blog" -> 0.2
-          "contact" -> 1.0
-          _ -> 0.0
-        }
-        |> float.add({
-          case item_1.1.1 {
-            Index -> 1.0
-            _ -> 0.0
+  let menu_items =
+    {
+      appdata.content
+      |> dict.to_list
+      |> list.shuffle
+      |> list.filter(keeping: fn(c) {
+        case c.1 {
+          site_json.Page(in_menus:, ..) -> {
+            !{ in_menus |> list.is_empty }
           }
-        })
+          site_json.Post(..) -> False
+        }
+      })
+      |> list.map(fn(item) {
+        let assert site_json.Page(title:, in_menus:, ..) = item.1
 
-      let specials_2 =
-        case item_2.1.0 |> string.lowercase() {
-          "home" -> 2.0
-          "blog" -> 0.2
-          "contact" -> 1.0
-          _ -> 0.0
-        }
-        |> float.add({
-          case item_1.1.1 {
-            Index -> 1.0
+        list.map(in_menus, fn(menuid) {
+          #(
+            menuid,
+            #(title, case item.0 {
+              "/" -> Index
+              "/" <> rest -> Content(rest)
+              all -> Content(all)
+            }),
+          )
+        })
+      })
+      |> list.flatten
+      |> list.sort(fn(item_1, item_2) { string.compare(item_1.1.0, item_2.1.0) })
+      // Sort some specials higher up.
+      |> list.sort(fn(item_1, item_2) {
+        let specials_1 =
+          case item_1.1.0 |> string.lowercase() {
+            "home" -> 2.0
+            "blog" -> 0.2
+            "contact" -> 1.0
             _ -> 0.0
           }
-        })
-      float.compare(specials_1, specials_2)
-    })
-    |> list.reverse()
-  }
+          |> float.add({
+            case item_1.1.1 {
+              Index -> 1.0
+              _ -> 0.0
+            }
+          })
+
+        let specials_2 =
+          case item_2.1.0 |> string.lowercase() {
+            "home" -> 2.0
+            "blog" -> 0.2
+            "contact" -> 1.0
+            _ -> 0.0
+          }
+          |> float.add({
+            case item_1.1.1 {
+              Index -> 1.0
+              _ -> 0.0
+            }
+          })
+        float.compare(specials_1, specials_2)
+      })
+      |> list.reverse()
+    }
+    |> echo
 
   let model = Model(appdata, route:, chilp_model:, menu_items:)
   let effect = case appdata.config.posts.comments {
@@ -539,7 +570,7 @@ fn postlist_to_lustre(
   )
 }
 
-fn view(model: Model) -> #(String, Element(Msg)) {
+pub fn view(model: Model) -> #(String, Element(Msg)) {
   case model.route {
     Index -> view_content(model, "/")
     ContentList(a) -> view_postlist(model, a)
@@ -572,14 +603,17 @@ fn view_notfound(model: Model, uri: Uri) -> #(String, Element(Msg)) {
 }
 
 fn view_content(model: Model, slug: String) {
-  case dict.get(model.data.content, slug) {
+  case find_slug(model.data.content, slug) {
     Error(_) ->
       view_notfound(
         model,
         rsvp.parse_relative_uri(stringify_route(Content(slug), model))
           |> result.unwrap(uri.empty),
       )
-    Ok(_) -> todo as "view_content is not yet ready to view content!"
+    Ok(item) -> {
+      #(item.content |> element.unsafe_raw_html("", "div", [], _), item, slug)
+      |> view_into_layout(model)
+    }
   }
 }
 
@@ -600,10 +634,10 @@ fn view_postlist(model model: Model, filter filter: ContentFilter) {
   }
 }
 
-pub fn html_into_layout(in: #(String, site_json.Content, String), model: Model) {
-  let #(content, item, slug) = in
-  #(content |> element.unsafe_raw_html("", "div", [], _), item, slug)
-  |> view_into_layout(model)
+/// Meant to be used for pregeneration. Allows a single-call override on the route in the model based on a slug string, and returns htmlstring.
+pub fn slug_into_layout(slug: String, model: Model) {
+  Model(..model, route: parse_route(uri.Uri(..uri.empty, path: slug)))
+  |> view()
   |> pair.second
   |> element.to_string
 }
