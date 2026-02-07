@@ -28,6 +28,7 @@ import plinth/browser/document as js_document
 import plinth/browser/element as js_element
 import plinth/browser/location as js_location
 import plinth/browser/window as js_window
+import plinth/javascript/console
 import rsvp
 
 // MODEL
@@ -165,7 +166,7 @@ pub fn main() {
   promise.resolve(Ok(Nil))
 }
 
-fn init(appdata: site_json.SiteJSON) -> #(Model, Effect(Msg)) {
+pub fn init(appdata: site_json.SiteJSON) -> #(Model, Effect(Msg)) {
   let route = case modem.initial_uri() {
     Ok(uri) -> parse_route(uri)
     Error(_) -> Index
@@ -544,7 +545,7 @@ fn view_content(model: Model, slug: String) {
         rsvp.parse_relative_uri(stringify_route(Content(slug), model))
           |> result.unwrap(uri.empty),
       )
-    Ok(_) -> todo
+    Ok(_) -> todo as "view_content is not yet ready to view content!"
   }
 }
 
@@ -565,6 +566,14 @@ fn view_postlist(model model: Model, filter filter: ContentFilter) {
   }
 }
 
+pub fn html_into_layout(in: #(String, site_json.Content, String), model: Model) {
+  let #(content, item, slug) = in
+  #(content |> element.unsafe_raw_html("", "div", [], _), item, slug)
+  |> view_into_layout(model)
+  |> pair.second
+  |> element.to_string
+}
+
 fn view_into_layout(
   in: #(Element(Msg), site_json.Content, String),
   model model: Model,
@@ -583,10 +592,11 @@ fn view_into_layout(
   let item_theme =
     item.layout
     |> option.unwrap(global_theme)
+  let s = "Unknown theme set: " <> item_theme
   let assert Ok(theme) =
     themes_generated.themes
     |> list.find(fn(i) { i.name == item_theme })
-    as "Unknown theme set."
+    as s
 
   let github_comment_color_scheme = case theme.prevalence {
     themes_generated.ThemeDark -> "github-dark"
