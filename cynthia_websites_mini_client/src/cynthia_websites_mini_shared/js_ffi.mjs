@@ -1,10 +1,14 @@
 import { Result$Ok, Result$Error } from "../../prelude.mjs";
+import { decode  } from 'cborg';
 export function get_color_scheme() {
-  // Media queries the preferred color colorscheme
+  if (typeof window !== 'undefined') {
+    // Media queries the preferred color colorscheme
 
   if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
     return false;
   }
+  }
+  // Default always light.
   return true;
 }
 
@@ -99,4 +103,14 @@ export function browse_prompt(l) {
 }
 export function browse(l) {
   window.location.assign(l);
+}
+
+export function cbor_to_dyn(data) {
+  try {
+    return [decode(data.rawBuffer, {})];
+  }
+  catch (a) {
+    console.error(a);
+    return [];
+  }
 }

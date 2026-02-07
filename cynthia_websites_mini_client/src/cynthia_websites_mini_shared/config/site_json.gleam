@@ -2,18 +2,53 @@
 
 import cynthia_websites_mini_shared/config/v4_1
 import cynthia_websites_mini_shared/config/v4_1/decodes
+import cynthia_websites_mini_shared/config/v4_1/encodes
+import cynthia_websites_mini_shared/ffi
+import gbor
+import gbor/encode as gbor_encode
 import gleam/dict
 import gleam/dynamic/decode
 import gleam/json
-import gleam/option
+import gleam/list
+import gleam/option.{None, Some}
+import gleam/result
+import gleam/string
 
 /// This is the content of site.json, factually the entire site
+/// In v2 this is replaced with CBOR, but the point still stands and interaction does not change.
 pub type SiteJSON {
   SiteJSON(
     config: v4_1.V4p1Mini,
     // Slug, or a random number if not set and the content
     content: dict.Dict(String, Content),
   )
+}
+
+pub fn site_json(site_json: SiteJSON) -> String {
+  let SiteJSON(config:, content:) = site_json
+  json.object([
+    #("config", encodes.v4p1_mini_json(config)),
+    #("content", json.dict(content, fn(string) { string }, content_to_json)),
+  ])
+  |> json.to_string()
+}
+
+pub fn site_cbor(
+  site_json: SiteJSON,
+) -> Result(BitArray, gbor_encode.EncodeError) {
+  let SiteJSON(config:, content:) = site_json
+  gbor.CBMap([
+    #(gbor.CBString("config"), encodes.v4p1_mini_cbor(config)),
+    #(
+      gbor.CBString("content"),
+      dict.to_list(content)
+        |> list.map(fn(item) {
+          #(gbor.CBString(item.0), content_to_cbor(item.1))
+        })
+        |> gbor.CBMap,
+    ),
+  ])
+  |> gbor_encode.to_bit_array
 }
 
 pub fn site_json_decoder() -> decode.Decoder(SiteJSON) {
@@ -27,6 +62,14 @@ pub fn site_json_decoder() -> decode.Decoder(SiteJSON) {
           use title <- decode.field("title", decode.string)
           use description <- decode.field("description", decode.string)
           use layout <- decode.field("layout", decode.optional(decode.string))
+          let layout = case
+            layout == Some("theme")
+            || layout == Some("")
+            || layout == Some("site")
+          {
+            True -> None
+            False -> layout
+          }
           use content <- decode.field("content", decode.string)
           use in_menus <- decode.field("in_menus", decode.list(decode.int))
           use hide_meta_block <- decode.field("hide_meta_block", decode.bool)
@@ -43,6 +86,14 @@ pub fn site_json_decoder() -> decode.Decoder(SiteJSON) {
           use title <- decode.field("title", decode.string)
           use description <- decode.field("description", decode.string)
           use layout <- decode.field("layout", decode.optional(decode.string))
+          let layout = case
+            layout == Some("theme")
+            || layout == Some("")
+            || layout == Some("site")
+          {
+            True -> None
+            False -> layout
+          }
           use content <- decode.field("content", decode.string)
           use date_published <- decode.field("date_published", decode.string)
           use date_updated <- decode.field("date_updated", decode.string)
@@ -75,6 +126,17 @@ pub fn site_json_decoder() -> decode.Decoder(SiteJSON) {
     }),
   )
   decode.success(SiteJSON(config:, content:))
+}
+
+pub fn site_cbor_decoder(body: BitArray) -> Result(SiteJSON, String) {
+  use dyn <- result.try(
+    ffi.cbor_to_dyn(body)
+    |> result.replace_error("Could not turn CBOR into dynamic JS data."),
+  )
+  use val <- result.try(
+    decode.run(dyn, site_json_decoder()) |> result.map_error(string.inspect),
+  )
+  Ok(val)
 }
 
 fn field_or(
@@ -145,6 +207,12 @@ fn metadata_decoder(content: String) -> decode.Decoder(#(String, Content)) {
   use title <- decode.field("title", decode.string)
   use description <- decode.field("description", decode.string)
   use layout <- field_or("layout", decode.optional(decode.string), option.None)
+  let layout = case
+    layout == Some("theme") || layout == Some("") || layout == Some("site")
+  {
+    True -> None
+    False -> layout
+  }
   use slug <- decode.field("slug", decode.string)
   use variant <- decode.field("kind", decode.string)
   case variant {
@@ -206,7 +274,23 @@ pub fn old_metadata_decoder(
   use title <- decode.field("title", decode.string)
   use description <- decode.field("description", decode.string)
   use layout <- field_or("layout", decode.optional(decode.string), option.None)
+  let layout = case
+    layout == Some("theme") || layout == Some("") || layout == Some("site")
+  {
+    True -> None
+    False -> layout
+  }
   use permalink <- decode.field("permalink", decode.string)
+  let slug = {
+    case permalink |> string.starts_with("#/") {
+      True -> permalink |> string.drop_start(1)
+      False ->
+        case permalink |> string.starts_with("/#/") {
+          True -> permalink |> string.drop_start(1)
+          False -> permalink
+        }
+    }
+  }
   use data <- decode.field("data", {
     use variant <- decode.field("type", decode.string)
     case variant {
@@ -255,7 +339,63 @@ pub fn old_metadata_decoder(
       _ -> decode.failure(content_zerodata(), "ContentData")
     }
   })
-  decode.success(#(permalink, data))
+  decode.success(#(slug, data))
+}
+
+pub fn content_to_cbor(content: Content) {
+  case content {
+    Page(title:, description:, layout:, content:, in_menus:, hide_meta_block:) ->
+      gbor.CBMap([
+        #(gbor.CBString("type"), gbor.CBString("page")),
+        #(gbor.CBString("title"), gbor.CBString(title)),
+        #(gbor.CBString("description"), gbor.CBString(description)),
+        #(gbor.CBString("layout"), case layout {
+          option.None -> gbor.CBNull
+          option.Some(value) -> gbor.CBString(value)
+        }),
+        #(gbor.CBString("content"), gbor.CBString({ content })),
+        #(
+          gbor.CBString("in_menus"),
+          gbor.CBArray(list.map(in_menus, gbor.CBInt)),
+        ),
+        #(gbor.CBString("hide_meta_block"), gbor.CBBool(hide_meta_block)),
+      ])
+    Post(
+      title:,
+      description:,
+      layout:,
+      content:,
+      date_published:,
+      date_updated:,
+      category:,
+      tags:,
+      mastodon_comments:,
+    ) ->
+      gbor.CBMap([
+        #(gbor.CBString("type"), gbor.CBString("post")),
+        #(gbor.CBString("title"), gbor.CBString(title)),
+        #(gbor.CBString("description"), gbor.CBString(description)),
+        #(gbor.CBString("layout"), case layout {
+          option.None -> gbor.CBNull
+          option.Some(value) -> gbor.CBString(value)
+        }),
+        #(gbor.CBString("content"), gbor.CBString(content)),
+        #(gbor.CBString("date_published"), gbor.CBString(date_published)),
+        #(gbor.CBString("date_updated"), gbor.CBString(date_updated)),
+        #(gbor.CBString("category"), gbor.CBString(category)),
+        #(gbor.CBString("tags"), gbor.CBArray(list.map(tags, gbor.CBString))),
+        #(gbor.CBString("mastodon_comments"), case mastodon_comments {
+          option.None -> gbor.CBNull
+          option.Some(value) -> {
+            let MastodonStatus(instance:, id:) = value
+            gbor.CBMap([
+              #(gbor.CBString("instance"), gbor.CBString(instance)),
+              #(gbor.CBString("id"), gbor.CBString(id)),
+            ])
+          }
+        }),
+      ])
+  }
 }
 
 pub fn content_to_json(content: Content) -> json.Json {

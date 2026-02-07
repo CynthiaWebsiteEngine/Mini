@@ -13,6 +13,7 @@ import gleam/javascript/promise
 import gleam/json
 import gleam/list
 import gleam/option.{None, Some}
+import gleam/pair
 import gleam/result
 import gleam/string
 import gleam/uri.{type Uri}
@@ -143,17 +144,21 @@ pub fn main() {
       }
       elements
     })
-  let assert Ok(sitejsonuri) = rsvp.parse_relative_uri("/site.json")
+  let assert Ok(sitejsonuri) = rsvp.parse_relative_uri("/site.cbor")
   let assert Ok(req) = request.to(sitejsonuri |> uri.to_string())
   use resp <- promise.try_await(fetch.send(req))
-  use resp <- promise.try_await(fetch.read_json_body(resp))
-  let result = decode.run(resp.body, site_json.site_json_decoder())
+  use resp <- promise.try_await(fetch.read_bytes_body(resp))
+  let result = site_json.site_cbor_decoder(resp.body)
   case resp.status, result {
     200, Ok(sitejson) -> {
       let assert Ok(_) = lustre.start(app, "#viewable", sitejson)
       Nil
     }
     // Failure here is okay, we just don't activate and hope the server served well enough pregenerations.
+    _, Error(what) -> {
+      console.log("application failure: " <> what)
+      Nil
+    }
     _, _ -> Nil
   }
 

@@ -38,3 +38,16 @@ pub fn browse(a: String) -> Nil
 
 @external(javascript, "./js_ffi.mjs", "browse_prompt")
 pub fn browse_prompt(s: String) -> Nil
+
+import gleam/dynamic.{type Dynamic}
+import gleam/javascript/array
+
+@external(javascript, "./js_ffi.mjs", "cbor_to_dyn")
+fn ffi_cbor_to_dyn(data: BitArray) -> array.Array(Dynamic)
+
+pub fn cbor_to_dyn(data: BitArray) {
+  case ffi_cbor_to_dyn(data) |> array.to_list {
+    [dyn] -> Ok(dyn)
+    _ -> Error(Nil)
+  }
+}
