@@ -40,6 +40,7 @@
     "test": "mise run test-all"
   },
   "dependencies": {
-    "@djot/djot": "^0.3.2"
+    "@djot/djot": "^0.3.2",
+    "cborg": "^4.5.8"
   }
 }
