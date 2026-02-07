@@ -1,12 +1,12 @@
 import { Result$Ok, Result$Error } from "../../prelude.mjs";
-import { decode  } from 'cborg';
+import { decode } from "cborg";
 export function get_color_scheme() {
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     // Media queries the preferred color colorscheme
 
-  if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-    return false;
-  }
+    if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      return false;
+    }
   }
   // Default always light.
   return true;
@@ -108,8 +108,7 @@ export function browse(l) {
 export function cbor_to_dyn(data) {
   try {
     return [decode(data.rawBuffer, {})];
-  }
-  catch (a) {
+  } catch (a) {
     console.error(a);
     return [];
   }
