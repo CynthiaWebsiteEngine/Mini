@@ -40,7 +40,7 @@ pub fn v4mini_toml(toml_source: String) -> Result(v4.V4mini, Nil) {
 
           v4.V4miniGlobal(
             theme:,
-            theme_dark: tom.get_string(toml, ["global", "theme", "dark"])
+            theme_dark: tom.get_string(toml, ["global", "theme_dark"])
               |> unsafe_unwrap,
             site_name: tom.get_string(toml, ["global", "site_name"])
               |> unsafe_unwrap,
@@ -81,8 +81,9 @@ pub fn v4mini_toml(toml_source: String) -> Result(v4.V4mini, Nil) {
       |> Ok
     }
     // We don't propogate upwards, we give back a Error value but inform here and then exit upstream.
-    Error(_) -> {
+    Error(e) -> {
       console.log("Could not parse TOML!")
+      echo e
       Error(Nil)
     }
   }
@@ -91,10 +92,12 @@ pub fn v4mini_toml(toml_source: String) -> Result(v4.V4mini, Nil) {
 fn unsafe_unwrap(v: Result(s, _)) {
   case v {
     Ok(a) -> a
-    Error(_) -> {
+    Error(a) -> {
       let d =
         "Encountered invalid value in legacy config, Cynthia Mini won't try to recover for this in legacy configs."
       console.error(d)
+      echo a
+
       panic as d
     }
   }
