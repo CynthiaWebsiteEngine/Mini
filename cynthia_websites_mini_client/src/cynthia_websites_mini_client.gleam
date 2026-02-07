@@ -7,6 +7,7 @@ import gleam/bool
 import gleam/dict
 import gleam/dynamic/decode
 import gleam/fetch
+import gleam/float
 import gleam/http/request
 import gleam/int
 import gleam/javascript/promise
@@ -195,6 +196,39 @@ pub fn init(appdata: site_json.SiteJSON) -> #(Model, Effect(Msg)) {
       list.map(in_menus, fn(menuid) { #(menuid, #(title, route)) })
     })
     |> list.flatten
+    |> list.sort(fn(item_1, item_2) { string.compare(item_1.1.0, item_2.1.0) })
+    // Sort some specials higher up.
+    |> list.sort(fn(item_1, item_2) {
+      let specials_1 =
+        case item_1.1.0 |> string.lowercase() {
+          "home" -> 2.0
+          "blog" -> 0.2
+          "contact" -> 1.0
+          _ -> 0.0
+        }
+        |> float.add({
+          case item_1.1.1 {
+            Index -> 1.0
+            _ -> 0.0
+          }
+        })
+
+      let specials_2 =
+        case item_2.1.0 |> string.lowercase() {
+          "home" -> 2.0
+          "blog" -> 0.2
+          "contact" -> 1.0
+          _ -> 0.0
+        }
+        |> float.add({
+          case item_1.1.1 {
+            Index -> 1.0
+            _ -> 0.0
+          }
+        })
+      float.compare(specials_1, specials_2)
+    })
+    |> list.reverse()
   }
 
   let model = Model(appdata, route:, chilp_model:, menu_items:)
