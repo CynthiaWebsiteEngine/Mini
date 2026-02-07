@@ -7,7 +7,6 @@ import cynthia_websites_mini_shared/config/site_json
 import cynthia_websites_mini_shared/config/v4_1
 import cynthia_websites_mini_shared/config/v4_1/encodes
 import cynthia_websites_mini_shared/ffi
-import gleam/bit_array
 import gleam/bool
 import gleam/dict
 import gleam/javascript/array
@@ -567,7 +566,11 @@ fn start() {
   let write = fn(to: String, with: String) {
     writer(to, with, simplifile.write)
   }
-  write("site.json", site_json.site_json(context))
+  case context.config.integrations.crawlable_context {
+    // Only write site.json if crawlable context is on, otherwise the cbor is enough.
+    True -> write("site.json", site_json.site_json(context))
+    False -> Nil
+  }
   case site_json.site_cbor(context) {
     Error(s) -> {
       console.error("Error: Could not encode data!")
@@ -577,7 +580,7 @@ fn start() {
     }
     Ok(cbor) -> writer("site.cbor", cbor, simplifile.write_bits)
   }
-  write("cynthia_client.mjs", files.client_js())
+  write("cynthia_client.mjs", client_js())
 
   let #(model, _) = client.init(context)
   context.content
