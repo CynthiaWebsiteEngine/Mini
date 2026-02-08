@@ -63,7 +63,7 @@ pub type Route {
 }
 
 pub fn parse_route(uri: Uri) -> Route {
-  case uri.path_segments(uri.path) |> echo {
+  case uri.path_segments(uri.path) {
     [] | [""] -> {
       case ffi.is_browser() {
         True -> {
@@ -198,69 +198,67 @@ pub fn init(appdata: site_json.SiteJSON) -> #(Model, Effect(Msg)) {
       |> parse_route
       |> UserNavigatedTo
     })
-  let menu_items =
-    {
-      appdata.content
-      |> dict.to_list
-      |> list.shuffle
-      |> list.filter(keeping: fn(c) {
-        case c.1 {
-          site_json.Page(in_menus:, ..) -> {
-            !{ in_menus |> list.is_empty }
-          }
-          site_json.Post(..) -> False
+  let menu_items = {
+    appdata.content
+    |> dict.to_list
+    |> list.shuffle
+    |> list.filter(keeping: fn(c) {
+      case c.1 {
+        site_json.Page(in_menus:, ..) -> {
+          !{ in_menus |> list.is_empty }
         }
-      })
-      |> list.map(fn(item) {
-        let assert site_json.Page(title:, in_menus:, ..) = item.1
+        site_json.Post(..) -> False
+      }
+    })
+    |> list.map(fn(item) {
+      let assert site_json.Page(title:, in_menus:, ..) = item.1
 
-        list.map(in_menus, fn(menuid) {
-          #(
-            menuid,
-            #(title, case item.0 {
-              "/" -> Index
-              "/" <> rest -> Content(rest)
-              all -> Content(all)
-            }),
-          )
+      list.map(in_menus, fn(menuid) {
+        #(
+          menuid,
+          #(title, case item.0 {
+            "/" -> Index
+            "/" <> rest -> Content(rest)
+            all -> Content(all)
+          }),
+        )
+      })
+    })
+    |> list.flatten
+    |> list.sort(fn(item_1, item_2) { string.compare(item_1.1.0, item_2.1.0) })
+    // Sort some specials higher up.
+    |> list.sort(fn(item_1, item_2) {
+      let specials_1 =
+        case item_1.1.0 |> string.lowercase() {
+          "home" -> 2.0
+          "blog" -> 0.2
+          "contact" -> 1.0
+          _ -> 0.0
+        }
+        |> float.add({
+          case item_1.1.1 {
+            Index -> 1.0
+            _ -> 0.0
+          }
         })
-      })
-      |> list.flatten
-      |> list.sort(fn(item_1, item_2) { string.compare(item_1.1.0, item_2.1.0) })
-      // Sort some specials higher up.
-      |> list.sort(fn(item_1, item_2) {
-        let specials_1 =
-          case item_1.1.0 |> string.lowercase() {
-            "home" -> 2.0
-            "blog" -> 0.2
-            "contact" -> 1.0
-            _ -> 0.0
-          }
-          |> float.add({
-            case item_1.1.1 {
-              Index -> 1.0
-              _ -> 0.0
-            }
-          })
 
-        let specials_2 =
-          case item_2.1.0 |> string.lowercase() {
-            "home" -> 2.0
-            "blog" -> 0.2
-            "contact" -> 1.0
+      let specials_2 =
+        case item_2.1.0 |> string.lowercase() {
+          "home" -> 2.0
+          "blog" -> 0.2
+          "contact" -> 1.0
+          _ -> 0.0
+        }
+        |> float.add({
+          case item_1.1.1 {
+            Index -> 1.0
             _ -> 0.0
           }
-          |> float.add({
-            case item_1.1.1 {
-              Index -> 1.0
-              _ -> 0.0
-            }
-          })
-        float.compare(specials_1, specials_2)
-      })
-      |> list.reverse()
-    }
-    |> echo
+        })
+      float.compare(specials_1, specials_2)
+    })
+    |> list.reverse()
+  }
 
   let model = Model(appdata, route:, chilp_model:, menu_items:)
   let effect = case appdata.config.posts.comments {
@@ -619,19 +617,69 @@ fn view_content(model: Model, slug: String) {
 
 fn view_postlist(model model: Model, filter filter: ContentFilter) {
   case filter {
-    AnyFieldContains(term) ->
-      #(content_list_by_search_term(model:, term:), todo, todo)
-      |> view_into_layout(model)
-    PostsByCategory(cat) ->
-      #(postlist_by_category(model:, cat:), todo, todo)
-      |> view_into_layout(model)
-    PostsByTag(tag) ->
-      #(postlist_by_tag(model:, tag:), todo, todo)
-      |> view_into_layout(model)
-    Posts ->
-      #(postlist_all(model:), todo, todo)
-      |> view_into_layout(model)
+    AnyFieldContains(term) -> {
+      let slug = "/#!/search/" <> term
+      #(
+        content_list_by_search_term(model:, term:),
+        site_json.Page(
+          title: "Search results for: " <> term,
+          description: "",
+          layout: None,
+          content: "",
+          in_menus: [],
+          hide_meta_block: True,
+        ),
+        slug,
+      )
+    }
+
+    PostsByCategory(cat) -> {
+      let slug = "/category/" <> cat
+      #(
+        postlist_by_category(model:, cat:),
+        site_json.Page(
+          title: "Category: " <> cat,
+          description: "",
+          layout: None,
+          content: "",
+          in_menus: [],
+          hide_meta_block: True,
+        ),
+        slug,
+      )
+    }
+    PostsByTag(tag) -> {
+      let slug = "/tagged/" <> tag
+      #(
+        postlist_by_tag(model:, tag:),
+        site_json.Page(
+          title: "Tagged: " <> tag,
+          description: "",
+          layout: None,
+          content: "",
+          in_menus: [],
+          hide_meta_block: True,
+        ),
+        slug,
+      )
+    }
+    Posts -> {
+      let slug = "/#!/"
+      #(
+        postlist_all(model:),
+        site_json.Page(
+          title: "Posts",
+          description: "",
+          layout: None,
+          content: "",
+          in_menus: [],
+          hide_meta_block: True,
+        ),
+        slug,
+      )
+    }
   }
+  |> view_into_layout(model)
 }
 
 /// Meant to be used for pregeneration. Allows a single-call override on the route in the model based on a slug string, and returns htmlstring.
