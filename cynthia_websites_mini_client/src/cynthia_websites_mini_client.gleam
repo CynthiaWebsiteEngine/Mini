@@ -144,12 +144,7 @@ pub fn main() {
   let app =
     lustre.application(init, update, fn(model) {
       let #(title, elements) = view(model)
-      let assert Ok(_) = {
-        use title_element <- result.try(
-          js_document.query_selector("title")
-          |> result.replace_error("No title element found"),
-        )
-
+      {
         let sitetitle =
           {
             use a <- result.try(js_document.query_selector(
@@ -160,8 +155,7 @@ pub fn main() {
           }
           |> result.map(fn(x) { x <> " — " })
           |> result.unwrap("")
-        title_element |> js_element.set_inner_text(sitetitle <> title)
-        Ok(Nil)
+        js_document.set_title(sitetitle <> title)
       }
       elements
     })
