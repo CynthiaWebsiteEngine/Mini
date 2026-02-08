@@ -1,8 +1,8 @@
 import chilp/widget/base as chilp_base
-import cynthia_websites_mini_client/ui/themes_generated
 import cynthia_websites_mini_shared/config/site_json
 import cynthia_websites_mini_shared/config/v4_1
 import cynthia_websites_mini_shared/ffi
+import cynthia_websites_mini_shared/themes_generated
 import gleam/bool
 import gleam/dict
 import gleam/fetch

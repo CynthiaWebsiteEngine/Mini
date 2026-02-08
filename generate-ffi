@@ -41,7 +41,7 @@ for (const theme of themeconf) {
   let layout = theme.layout.trim()
   if (layout == "cindy") {layout="cindy-simple"}
   layout = layout.replaceAll("-","_")
-  if (existsSync("./cynthia_websites_mini_client/src/cynthia_websites_mini_client/layouts/" + layout + ".gleam")) {
+  if (existsSync("./cynthia_websites_mini_client/src/cynthia_websites_mini_shared/layouts/" + layout + ".gleam")) {
   let prevalence = "ThemeLight";
   if (theme.prevalence === "dark") prevalence = "ThemeDark";
   const daisy_ui_theme_name = (typeof theme.daisyUI === "string") ? theme.daisyUI : Object.keys(theme.daisyUI)[0];
@@ -63,11 +63,11 @@ let layout_registrars = `
 pub fn register_all() {`
 for (let layout of layouts) {
   layout_registrars+="\n\tlet assert Ok(_) = "+layout+".register()\n"
-  layout_imports+="\nimport cynthia_websites_mini_client/layouts/"+layout+"\n"
+  layout_imports+="\nimport cynthia_websites_mini_shared/layouts/"+layout+"\n"
 }
 layout_registrars+="}"
 // Write the generated Gleam file, creating the directory if it doesn't exist
-const shared_ui_dir = path.join(config_root, "/cynthia_websites_mini_client/src/cynthia_websites_mini_client/ui");
+const shared_ui_dir = path.join(config_root, "/cynthia_websites_mini_client/src/cynthia_websites_mini_shared/");
 if (!existsSync(shared_ui_dir)) {
   mkdirSync(shared_ui_dir, { recursive: true });
 }
