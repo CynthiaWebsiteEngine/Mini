@@ -732,6 +732,7 @@ fn view_into_layout(
       [
         attribute.attribute("title", item.title),
         attribute.attribute("description", item.description),
+        attribute.attribute("data-theme", theme.daisy_ui_theme_name),
       ],
       [
         html.div([component.slot("menu1")], [
