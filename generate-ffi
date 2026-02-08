@@ -86,9 +86,9 @@ if (argv.includes("--only-themes")) {
 const tailwindconfig = {
   daisyui: { themes: daisyui_themes },
   content: [
-    `${config_root}/cynthia_websites_mini_client/**/*{.gleam,.ts}`,
-    `${config_root}/cynthia_websites_mini_server/src/cynthia_websites_mini_server/ssrs.gleam`,
-    `${config_root}/cynthia_websites_mini_client/src/cynthia_websites_mini_client/ui.gleam`,
+    `${config_root}/cynthia_websites_mini_client/**/*{.gleam,.ts,.mjs}`,
+    `${config_root}/cynthia_websites_mini_server/src/cynthia_websites_mini_server/utils/djotparse.gleam`,
+    `${config_root}/cynthia_websites_mini_client/src/cynthia_websites_mini_shared/layouts/**/*.gleam`,
   ],
   theme: { extend: {} },
   plugins: [daisyui],

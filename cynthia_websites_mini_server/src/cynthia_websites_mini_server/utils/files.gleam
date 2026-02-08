@@ -7,8 +7,9 @@ pub fn path_join(parts: List(String)) -> String
 @external(javascript, "./files_ffi.ts", "path_normalize")
 pub fn path_normalize(path: String) -> String
 
+// Not in use. Using Jot instead for now.
 @external(javascript, "./files_ffi.ts", "djot_to_html")
-pub fn djot_to_html_string(djot: String) -> String
+fn djot_to_html_string(djot: String) -> String
 
 @external(javascript, "../../client_code_generated_ffi.ts", "client_script")
 pub fn client_js() -> String

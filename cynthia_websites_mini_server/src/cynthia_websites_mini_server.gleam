@@ -2,6 +2,7 @@ import bungibindies
 import bungibindies/bun.{which}
 import bungibindies/bun/spawn.{OptionsToSubprocess}
 import cynthia_websites_mini_client as client
+import cynthia_websites_mini_server/utils/djotparse
 import cynthia_websites_mini_server/utils/files.{client_css, client_js}
 import cynthia_websites_mini_shared/config/site_json
 import cynthia_websites_mini_shared/config/v4_1
@@ -18,6 +19,7 @@ import gleam/string
 import gleamy_lights/console
 import gleamy_lights/premixed
 import gleamy_lights/premixed/gleam_colours
+import jot
 import plinth/node/process
 import simplifile
 
@@ -212,7 +214,8 @@ fn get_context() -> site_json.SiteJSON {
           let htmlcontent = {
             case file_ext {
               "dj" | "djot" -> {
-                files.djot_to_html_string(file_content)
+                // files.djot_to_html_string(file_content)
+                djotparse.djot_to_html(file_content)
               }
 
               "html" | "htm" -> file_content
