@@ -5,6 +5,7 @@ import cynthia_websites_mini_shared/ffi
 import cynthia_websites_mini_shared/themes_generated
 import gleam/bool
 import gleam/dict
+import gleam/dynamic/decode
 import gleam/fetch
 import gleam/float
 import gleam/http/request
@@ -23,6 +24,7 @@ import lustre/component
 import lustre/effect.{type Effect}
 import lustre/element.{type Element}
 import lustre/element/html
+import lustre/event
 import modem
 import plinth/browser/document as js_document
 import plinth/browser/element as js_element
@@ -142,6 +144,7 @@ pub const version = ffi.version
 // MAIN ------------------------------------------------------------------------
 
 pub fn main() {
+  let assert Ok(_) = themes_generated.register_all()
   let app =
     lustre.application(init, update, fn(model) {
       let #(title, elements) = view(model)
@@ -720,7 +723,7 @@ fn view_into_layout(
   }
 
   // layout_cindy-simple for example, which can then be used from element.element
-  let component_name = "layout_" <> theme.layout
+  let component_name = "layout-" <> theme.layout
   let current = model.route
   let href = href(_, model)
 
@@ -733,6 +736,9 @@ fn view_into_layout(
         attribute.attribute("title", item.title),
         attribute.attribute("description", item.description),
         attribute.attribute("data-theme", theme.daisy_ui_theme_name),
+        event.on("search", {
+          decode.at(["details"], decode.string) |> decode.map(UserSearchTerm)
+        }),
       ],
       [
         html.div([component.slot("menu1")], [
