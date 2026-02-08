@@ -242,7 +242,7 @@ run = [{task = "test-client"}, {task = "test-server"}, {task = "check-for-prohib
 alias="check-keywords"
 description = "Check for prohibited keywords as `todo` or `echo` in the codebase"
 shell="bun"
-env = { PROHIBITED_KEYWORDS = "todo,echo", ALLOWED_INSTANCES = "cynthia_websites_mini_client/src/cynthia_websites_mini_client/configtype.gleam:236" }
+env = { PROHIBITED_KEYWORDS = "todo,echo,html.text", ALLOWED_INSTANCES = "" }
 run="""
 #!/bin/env bun
 import { readFileSync } from "fs";
@@ -268,7 +268,7 @@ for (const file of files) {
   // If commented out, they are allowed
     const regex = new RegExp(`(^|[^\\w])${keyword}([^\\w]|$)`, "gm");
     let match;
-    
+
     while ((match = regex.exec(content)) !== null) {
       // Calculate line number
       const lineNumber = content
@@ -280,7 +280,7 @@ for (const file of files) {
       console.log(`Allowed instance of "${keyword}" in file "${file}:${lineNumber}"`);
         continue;
       }
-      
+
       console.error(
         `Prohibited keyword "${keyword}" found in file "${file}:${lineNumber}"`
       );
