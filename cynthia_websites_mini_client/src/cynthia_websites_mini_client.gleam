@@ -70,6 +70,7 @@ pub fn parse_route(uri: Uri) -> Route {
           case js_location.hash(js_window.location(js_window.self())) {
             Error(_) -> Index
 
+            Ok("!/") -> ContentList(Posts)
             Ok("!/category/" <> cat) -> ContentList(PostsByCategory(cat))
             Ok("!/tag/" <> tag) -> ContentList(PostsByTag(tag))
             Ok("!/search/" <> tag) -> ContentList(AnyFieldContains(tag))
