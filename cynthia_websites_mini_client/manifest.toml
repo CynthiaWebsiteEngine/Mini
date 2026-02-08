@@ -4,7 +4,7 @@
 packages = [
   { name = "argv", version = "1.0.2", build_tools = ["gleam"], requirements = [], otp_app = "argv", source = "hex", outer_checksum = "BA1FF0929525DEBA1CE67256E5ADF77A7CDDFE729E3E3F57A5BDCAA031DED09D" },
   { name = "booklet", version = "1.1.0", build_tools = ["gleam"], requirements = [], otp_app = "booklet", source = "hex", outer_checksum = "08E0FDB78DC4D8A5D3C80295B021505C7D2A2E7B6C6D5EAB7286C36F4A53C851" },
-  { name = "chilp", version = "1.0.0", build_tools = ["gleam"], requirements = ["gleam_json", "gleam_stdlib", "gleam_time", "lustre", "rsvp"], source = "git", repo = "https://forge.strawmelonjuice.com/strawmelonjuice/chilp.git", commit = "54bbfb1ec0f40d17ffb11080de30090eee0345dc" },
+  { name = "chilp", version = "1.0.0-pre", build_tools = ["gleam"], requirements = ["gleam_json", "gleam_stdlib", "gleam_time", "lustre", "rsvp"], otp_app = "chilp", source = "hex", outer_checksum = "4F927BB2984ECB3F3CF5B6189A46B8A84D844926A3ECB325498C172596C246B7" },
   { name = "directories", version = "1.2.0", build_tools = ["gleam"], requirements = ["envoy", "gleam_stdlib", "platform", "simplifile"], otp_app = "directories", source = "hex", outer_checksum = "D13090CFCDF6759B87217E8DDD73A75903A700148A82C1D33799F333E249BF9E" },
   { name = "envoy", version = "1.1.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "envoy", source = "hex", outer_checksum = "850DA9D29D2E5987735872A2B5C81035146D7FE19EFC486129E44440D03FD832" },
   { name = "exception", version = "2.1.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "exception", source = "hex", outer_checksum = "329D269D5C2A314F7364BD2711372B6F2C58FA6F39981572E5CA68624D291F8C" },
@@ -51,7 +51,7 @@ packages = [
 ]
 
 [requirements]
-chilp = { git = "https://forge.strawmelonjuice.com/strawmelonjuice/chilp.git", ref = "54bbfb1ec0f40d17ffb11080de30090eee0345dc" }
+chilp = { version = ">= 1.0.0 and < 2.0.0" }
 gbor = { version = ">= 1.0.0 and < 2.0.0" }
 gleam_fetch = { version = ">= 1.3.0 and < 2.0.0" }
 gleam_http = { version = ">= 4.3.0 and < 5.0.0" }
