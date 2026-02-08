@@ -172,6 +172,11 @@ pub fn main() {
   let result = site_json.site_cbor_decoder(resp.body)
   case resp.status, result {
     200, Ok(sitejson) -> {
+      // On bootup, Lustre seems unable to clear #viewable, which we fix here by doing it manually.
+      let assert Ok(_) =
+        js_document.query_selector("#viewable")
+        |> result.map(js_element.set_text_content(_, ""))
+        as "Could not clear viewable."
       let assert Ok(_) = lustre.start(app, "#viewable", sitejson)
       Nil
     }
