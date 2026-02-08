@@ -24,7 +24,7 @@ gleam_http = ">= 4.3.0 and < 5.0.0"
 gleam_javascript = ">= 1.0.0 and < 2.0.0"
 tom = ">= 2.0.1 and < 3.0.0"
 gbor = ">= 1.0.0 and < 2.0.0"
-chilp = ">= 1.0.0 and < 2.0.0"
+chilp = "1.0.0-pre"
 
 [dev-dependencies]
 gleeunit = ">= 1.0.0 and < 2.0.0"

@@ -22,10 +22,9 @@ gleam_stdlib = ">= 0.44.0 and < 2.0.0"
 plinth = ">= 0.9.2 and < 1.0.0"
 
 # Other dependencies
-argv = "1.0.2"
 bungibindies = "1.2.0-rc"
 cynthia_websites_mini_client = { path = "../cynthia_websites_mini_client" }
-simplifile = "2.2.1"
+simplifile = ">= 2.2.1 and < 3.0.0"
 gleamy_lights = ">= 2.3.1 and < 3.0.0"
 gleam_javascript = ">= 1.0.0 and < 2.0.0"
 gbor = ">= 1.0.0 and < 2.0.0"
