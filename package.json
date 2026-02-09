@@ -1,45 +1,45 @@
 {
-	"name": "@cynthiaweb/cynthiaweb-mini",
-	"version": "1.3.0",
-	"license": "AGPL-3.0-only",
-	"repository": {
-		"url": "git+https://github.com/CynthiaWebsiteEngine/Mini.git"
-	},
-	"module": "cynthia_websites_mini_server/build/dev/javascript/cynthia_websites_mini_server/cynthia_websites_mini_server.ts",
-	"bin": {
-		"cynthiaweb-mini": "dist/cynthia_websites_mini_server.js"
-	},
-	"type": "module",
-	"devDependencies": {
-		"@types/bun": "latest",
-		"nodemon": "^3.1.9",
-		"@types/clean-css": "^4.2.11",
-		"@types/markdown-it": "^14.1.2",
-		"@types/moment": "^2.13.0",
-		"@types/node": "^24.0.0",
-		"@types/semver": "^7.3.10",
-		"autoprefixer": "^10.4.20",
-		"clean-css": "^5.3.3",
-		"daisyui": "^4.12.23",
-		"moment": "^2.30.1",
-		"postcss": "^8.5.1",
-		"tailwindcss": "3.4.17",
-		"typescript": "^5.0.0",
-		"handlebars": "^4.7.8",
-		"semver": "^7.7.2"
-	},
-	"scripts": {
-		"bundle": "mise run bundle-server",
-		"check": "mise run check-all",
-		"clean": "bun ./build.ts clean",
-		"dev-static": "mise watch run-dev-static-server",
-		"dev": "mise watch run-dev dynamic",
-		"format": "mise run fmt-all",
-		"prepack": "bun run bundle",
-		"run-in-test": "mise run run-dev",
-		"test": "mise run test-all"
-	},
-	"dependencies": {
-		"cborg": "^4.5.8"
-	}
+  "name": "@cynthiaweb/cynthiaweb-mini",
+  "version": "1.3.0",
+  "license": "AGPL-3.0-only",
+  "repository": {
+    "url": "git+https://github.com/CynthiaWebsiteEngine/Mini.git"
+  },
+  "module": "cynthia_websites_mini_server/build/dev/javascript/cynthia_websites_mini_server/cynthia_websites_mini_server.ts",
+  "bin": {
+    "cynthiaweb-mini": "dist/cynthia_websites_mini_server.js"
+  },
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest",
+    "nodemon": "^3.1.9",
+    "@types/clean-css": "^4.2.11",
+    "@types/markdown-it": "^14.1.2",
+    "@types/moment": "^2.13.0",
+    "@types/node": "^24.0.0",
+    "@types/semver": "^7.3.10",
+    "autoprefixer": "^10.4.20",
+    "clean-css": "^5.3.3",
+    "daisyui": "^4.12.23",
+    "moment": "^2.30.1",
+    "postcss": "^8.5.1",
+    "tailwindcss": "3.4.17",
+    "typescript": "^5.0.0",
+    "handlebars": "^4.7.8",
+    "semver": "^7.7.2"
+  },
+  "scripts": {
+    "bundle": "mise run bundle-server",
+    "check": "mise run check-all",
+    "clean": "bun ./build.ts clean",
+    "dev-static": "mise watch run-dev-static-server",
+    "dev": "mise watch run-dev dynamic",
+    "format": "mise run fmt-all",
+    "prepack": "bun run bundle",
+    "run-in-test": "mise run run-dev",
+    "test": "mise run test-all"
+  },
+  "dependencies": {
+    "cborg": "^4.5.8"
+  }
 }
