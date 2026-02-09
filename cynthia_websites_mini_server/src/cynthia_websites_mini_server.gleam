@@ -19,7 +19,6 @@ import gleam/string
 import gleamy_lights/console
 import gleamy_lights/premixed
 import gleamy_lights/premixed/gleam_colours
-import jot
 import plinth/node/process
 import simplifile
 
@@ -214,7 +213,6 @@ fn get_context() -> site_json.SiteJSON {
           let htmlcontent = {
             case file_ext {
               "dj" | "djot" -> {
-                // files.djot_to_html_string(file_content)
                 djotparse.djot_to_html(file_content)
               }
 
@@ -646,4 +644,10 @@ fn start() {
       panic as "Should not reach here."
     }
   }
+  console.info(
+    premixed.text_ok_green("Site pregeneration complete!")
+    <> " Serve files from "
+    <> premixed.text_orange(cwd <> "/out/")
+    <> " and you should have a site running!",
+  )
 }

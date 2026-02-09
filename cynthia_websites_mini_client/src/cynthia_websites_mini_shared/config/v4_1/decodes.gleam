@@ -86,7 +86,7 @@ pub fn vp4p1mini_toml(toml_source: String) {
         tom.get_string(toml, ["config", "edition"])
         |> result.map(string.lowercase)
       let version =
-        result.or(tom.get_float(toml, ["version"]), {
+        result.or(tom.get_float(toml, ["config", "version"]), {
           tom.get_int(toml, ["config", "version"]) |> result.map(int.to_float)
         })
 
@@ -159,6 +159,7 @@ pub fn vp4p1mini_toml(toml_source: String) {
         }
         Ok(_), Error(_) | Error(_), Ok(_) -> {
           console.error("Unknown combination of edition and version.")
+          console.log(#(edition, version) |> string.inspect)
           Error(Nil)
         }
         Error(e), Error(_) -> {
