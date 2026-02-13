@@ -194,23 +194,23 @@ depends = ["build-client", "bundle-server"]
 # Run tasks:
 # ###########################################################################
 
-[tasks.run-dev]
+[tasks.dev]
 tools.watchexec = "latest"
 depends = "build-server"
 description = "Run the Cynthia Mini server in development mode"
 run = [
-  "bun ../cynthia_websites_mini_server/build/dev/javascript/cynthia_websites_mini_server/cynthia_websites_mini_server.ts"
+    {tasks = ["dev-gen", "dev-server"]}
 ]
-dir = "./test"
-[tasks.run-dev-static-server]
-tools.watchexec = "latest"
-depends = "build-server"
-description = "Run the Cynthia Mini server in development mode"
-run = [
-  "bun ../cynthia_websites_mini_server/build/dev/javascript/cynthia_websites_mini_server/cynthia_websites_mini_server.ts static","bun x serve ./out -s"
-]
+
+[tasks.dev-server]
+hide=true
+run="bun x serve ./out -s"
 dir = "./test"
 
+[tasks.dev-gen]
+hide=true
+run="bun ../cynthia_websites_mini_server/build/dev/javascript/cynthia_websites_mini_server/cynthia_websites_mini_server.ts static"
+dir = "./test"
 
 [tasks.run-bundled]
 description = "Run the bundled Cynthia Mini server from dist/"
