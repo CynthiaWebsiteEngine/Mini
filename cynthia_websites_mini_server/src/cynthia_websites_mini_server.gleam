@@ -212,7 +212,7 @@ fn get_context() -> site_json.SiteJSON {
           })
           let htmlcontent = {
             case file_ext {
-              "dj" | "djot" -> {
+              "dj" | "djot" | "md" | "markdown" -> {
                 djotparse.djot_to_html(file_content)
               }
 
