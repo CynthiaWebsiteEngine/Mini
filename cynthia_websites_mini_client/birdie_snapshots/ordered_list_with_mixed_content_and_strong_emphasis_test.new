@@ -1,7 +1,0 @@
----
-version: 1.3.1
-title: ordered_list_with_mixed_content_and_strong_emphasis_test
----
-<section>
-<div xmlns="div" class="djot-processed-content"><ol class="list-decimal mb-4"><li><p class="mb-2">First item with *<strong class="font-bold">bold</strong>* and <a class="text-info underline" href="https://first.example">link</a></p></li><li><p class="mb-2">Second with <em class="italic">italic</em> and <a class="text-info underline" href="https://second.example">https://second.example</a></p></li><li><p class="mb-2">Third with <code class="bg-neutral text-neutral-content p-1 rounded-lg mt-4 mb-4">inline code</code> and <a class="text-info underline" href="https://third.example">another</a></p></li></ol></div>
-</section>

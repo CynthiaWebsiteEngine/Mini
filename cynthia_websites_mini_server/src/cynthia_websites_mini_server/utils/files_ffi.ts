@@ -1,15 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
-import type { List } from "../../../prelude";
+import { List } from "../../../prelude.mjs";
+
 export function exists(a: string): boolean {
   return fs.existsSync(a);
 }
-export function deletecachedb() {
-  if (fs.existsSync(path.join(process.cwd(), "./cache.db")))
-    fs.unlinkSync(path.join(process.cwd(), "./cache.db"));
-}
 
-export function path_join(paths: List<string>): string {
+export function path_join(paths: List): string {
   return path.join(...paths.toArray());
 }
 

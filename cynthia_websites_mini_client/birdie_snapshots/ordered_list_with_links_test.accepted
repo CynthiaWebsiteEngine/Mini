@@ -1,9 +1,0 @@
----
-version: 1.3.0
-title: ordered_list_with_links_test
-file: ./test/cynthia_websites_mini_client_test.gleam
-test_name: ordered_list_with_links_test
----
-<section>
-<div xmlns="div" class="djot-processed-content"><ol class="list-decimal mb-4"><li><p class="mb-2">First item with <a class="text-info underline" href="https://first.com">link</a></p></li><li><p class="mb-2">Second item with <a class="text-info underline" href="https://second.com">another link</a></p></li><li><p class="mb-2">Third item with *<strong class="font-bold">bold</strong>* and <a class="text-info underline" href="https://third.com">link</a></p></li></ol></div>
-</section>

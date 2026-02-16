@@ -1,5 +1,0 @@
----
-version: 1.3.1
-title: empty_input_renders_minimal_markup_test
----
-<section></section>

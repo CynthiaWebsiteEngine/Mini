@@ -7,7 +7,7 @@
     "fonts-mono": ["Fira Mono", "Ubuntu Mono", "Noto Mono"],
     "font-size-mono": 14,
     "daisyUI": "autumn",
-    "layout": "cindy"
+    "layout": "cindy-simple"
   },
   {
     "name": "autumn-dual",
@@ -61,7 +61,7 @@
     "fonts-mono": ["Fira Mono", "Ubuntu Mono", "Noto Mono"],
     "font-size-mono": 14,
     "daisyUI": "night",
-    "layout": "cindy"
+    "layout": "cindy-simple"
   },
   {
     "name": "night-dual",
@@ -115,7 +115,7 @@
     "fonts-mono": ["Fira Mono", "Ubuntu Mono", "Noto Mono"],
     "font-size-mono": 14,
     "daisyUI": "coffee",
-    "layout": "cindy"
+    "layout": "cindy-simple"
   },
   {
     "name": "coffee-dual",
@@ -570,15 +570,5 @@
       }
     },
     "layout": "sepia"
-  },
-  {
-    "name": "ownit",
-    "prevalence": "light",
-    "fonts": [],
-    "font-size": 16,
-    "fonts-mono": ["Fira Code", "Monaco", "monospace"],
-    "font-size-mono": 14,
-    "daisyUI": "autumn",
-    "layout": "ownit"
   }
 ]

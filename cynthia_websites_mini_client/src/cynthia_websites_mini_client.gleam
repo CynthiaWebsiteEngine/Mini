@@ -1,621 +1,802 @@
-// IMPORTS ---------------------------------------------------------------------
-
-import cynthia_websites_mini_client/configtype
-import cynthia_websites_mini_client/configurable_variables
-import cynthia_websites_mini_client/contenttypes
-import cynthia_websites_mini_client/dom
-import cynthia_websites_mini_client/messages.{
-  type Msg, ApiReturnedData, SafeTimePassed, TriggerCheckForHashChange,
-  UserNavigateTo,
-}
-import cynthia_websites_mini_client/model_type.{type Model, Model}
-import cynthia_websites_mini_client/pottery
-import cynthia_websites_mini_client/utils
-import cynthia_websites_mini_client/view
-import gleam/bit_array
+import chilp/widget/base as chilp_base
+import cynthia_websites_mini_shared/config/site_json
+import cynthia_websites_mini_shared/config/v4_1
+import cynthia_websites_mini_shared/ffi
+import cynthia_websites_mini_shared/themes_generated
 import gleam/bool
 import gleam/dict
-import gleam/dynamic
+import gleam/dynamic/decode
+import gleam/fetch
 import gleam/float
+import gleam/http/request
 import gleam/int
+import gleam/javascript/promise
+import gleam/json
 import gleam/list
 import gleam/option.{None, Some}
-import gleam/order
+import gleam/pair
 import gleam/result
 import gleam/string
 import gleam/uri.{type Uri}
-import houdini
 import lustre
+import lustre/attribute.{type Attribute}
+import lustre/component
 import lustre/effect.{type Effect}
+import lustre/element.{type Element}
+import lustre/element/html
+import lustre/event
 import modem
-import odysseus
-import plinth/browser/window
+import plinth/browser/document as js_document
+import plinth/browser/element as js_element
+import plinth/browser/location as js_location
+import plinth/browser/window as js_window
 import plinth/javascript/console
-import plinth/javascript/global
-import plinth/javascript/storage
 import rsvp
+
+// MODEL
+pub type Model {
+  Model(
+    data: site_json.SiteJSON,
+    route: Route,
+    chilp_model: chilp_base.ChilpDataInYourModel(Msg),
+    /// This used to be a Dict(Int, #(String, Path)), but
+    /// 1. We use routes now.
+    /// 2. We want a single item to be able to pop up in multiple menus!
+    menu_items: List(#(Int, #(String, Route))),
+  )
+}
+
+pub type ContentFilter {
+  /// Any content coming up for the search term
+  AnyFieldContains(String)
+  /// All posts that have a certain category
+  PostsByCategory(String)
+  /// All posts that have a certain tag
+  PostsByTag(String)
+  /// All posts
+  Posts
+}
+
+pub type Route {
+  Index
+  ContentList(ContentFilter)
+  Content(slug: String)
+  NotFound(uri: Uri)
+}
+
+pub fn parse_route(uri: Uri) -> Route {
+  case uri.path_segments(uri.path) {
+    [] | [""] -> {
+      case ffi.is_browser() {
+        True -> {
+          case js_location.hash(js_window.location(js_window.self())) {
+            Error(_) -> Index
+
+            Ok("!/") -> ContentList(Posts)
+            Ok("!/category/" <> cat) -> ContentList(PostsByCategory(cat))
+            Ok("!/tag/" <> tag) -> ContentList(PostsByTag(tag))
+            Ok("!/search/" <> tag) -> ContentList(AnyFieldContains(tag))
+
+            Ok(c) -> {
+              let d = "Unhandled hashroute: " <> c
+              panic as d
+            }
+          }
+        }
+        False -> {
+          Index
+        }
+      }
+    }
+    ["tagged", tag] -> ContentList(PostsByCategory(tag))
+    ["category", cat] -> ContentList(PostsByTag(cat))
+    ["post", slug] | ["page", slug] | ["content", slug] -> Content(slug:)
+
+    _ -> NotFound(uri:)
+  }
+}
+
+pub fn find_slug(contents: dict.Dict(String, site_json.Content), slug: String) {
+  use item <- result.try({
+    dict.to_list(contents)
+    |> list.find(fn(c) {
+      let slug_no_slashes = slug |> string.replace("/", " ") |> string.trim
+      let c_no_slashes = c.0 |> string.replace("/", " ") |> string.trim
+
+      c_no_slashes == slug_no_slashes
+    })
+  })
+  Ok(item.1)
+}
+
+pub fn stringify_route(route: Route, model: Model) {
+  case route {
+    Index -> "/"
+    Content(c) -> {
+      find_slug(model.data.content, c)
+      |> result.map(fn(content) {
+        case content {
+          site_json.Post(..) -> {
+            "/post/" <> c
+          }
+          site_json.Page(..) -> {
+            "/page/" <> c
+          }
+        }
+      })
+      |> result.unwrap("/content/" <> c)
+    }
+    NotFound(_) -> "/404"
+    ContentList(PostsByCategory(cat)) -> "/category/" <> cat
+    ContentList(PostsByTag(tag)) -> "/tagged/" <> tag
+    ContentList(AnyFieldContains(q)) -> "/#!/search/" <> q
+    ContentList(Posts) -> "/#!/"
+  }
+}
+
+pub fn href(route: Route, model: Model) -> Attribute(msg) {
+  stringify_route(route, model)
+  |> attribute.href()
+}
+
+pub const version = ffi.version
 
 // MAIN ------------------------------------------------------------------------
 
 pub fn main() {
-  let app = lustre.application(init, update, view.main)
-  let assert Ok(_) = lustre.start(app, "#viewable", Nil)
-
-  Nil
-}
-
-fn await_safe_time() {
-  let set_timeout_nilled = fn(delay: Int, cb: fn() -> a) -> Nil {
-    global.set_timeout(delay, cb)
-    Nil
-  }
-  use dispatch <- effect.from
-  use <- set_timeout_nilled(200)
-  dispatch(SafeTimePassed)
-}
-
-fn check_for_hash_change_every_50ms() -> Effect(Msg) {
-  let set_timeout_nilled = fn(delay: Int, cb: fn() -> a) -> Nil {
-    global.set_timeout(delay, cb)
-    Nil
-  }
-  use dispatch <- effect.from
-  // Every 50ms, check for hash changes until 200ms have passed
-  set_timeout_nilled(50, fn() { dispatch(TriggerCheckForHashChange) })
-  set_timeout_nilled(100, fn() { dispatch(TriggerCheckForHashChange) })
-  set_timeout_nilled(150, fn() { dispatch(TriggerCheckForHashChange) })
-  set_timeout_nilled(200, fn() { dispatch(TriggerCheckForHashChange) })
-  Nil
-}
-
-/// Slightly more assertive way of finding url changes. This because sometimes a page change outside of the visibility of modem is undetected, mixing up the hashes and pages. This effect kicks in once they should have had their time and attempts to fix it.
-fn check_for_hash_change(model: Model) -> Effect(Msg) {
-  use dispatch <- effect.from
-  case model.safetimepassed {
-    True -> {
+  let assert Ok(_) = themes_generated.register_all()
+  let app =
+    lustre.application(init, update, fn(model) {
+      let #(title, elements) = view(model)
+      {
+        let sitetitle =
+          {
+            use a <- result.try(js_document.query_selector(
+              "head>meta[property='og:site_name']",
+            ))
+            let b = a |> js_element.get_attribute("content")
+            b
+          }
+          |> result.map(fn(x) { x <> " — " })
+          |> result.unwrap("")
+        js_document.set_title(sitetitle <> title)
+      }
+      elements
+    })
+  let assert Ok(sitejsonuri) = rsvp.parse_relative_uri("/site.cbor")
+  let assert Ok(req) = request.to(sitejsonuri |> uri.to_string())
+  use resp <- promise.try_await(fetch.send(req))
+  use resp <- promise.try_await(fetch.read_bytes_body(resp))
+  let result = site_json.site_cbor_decoder(resp.body)
+  case resp.status, result {
+    200, Ok(sitejson) -> {
+      // On bootup, Lustre seems unable to clear #viewable, which we fix here by doing it manually.
+      let assert Ok(_) =
+        js_document.query_selector("#viewable")
+        |> result.map(js_element.set_text_content(_, ""))
+        as "Could not clear viewable."
+      let assert Ok(_) = lustre.start(app, "#viewable", sitejson)
       Nil
     }
-    False -> {
-      let assert Ok(session) = storage.local()
-        as "Browser is expected to have a localstorage."
-
-      case window.get_hash() {
-        Ok(f) -> {
-          let h = case f {
-            "" -> {
-              "/"
-            }
-            d -> {
-              d
-            }
-          }
-          case h == model.path {
-            True -> Nil
-            False -> {
-              console.log("[assertive] Hash changed to: " <> h)
-              let assert Ok(..) = storage.set_item(session, "last", h)
-              dispatch(UserNavigateTo(h))
-            }
-          }
-        }
-        _ -> {
-          // This happens whenever the hash is not found
-          // like for example when utterances login just happened.
-          // This is not unexpected behaviour, since the storage knows better in those cases.
-          Nil
-        }
-      }
+    // Failure here is okay, we just don't activate and hope the server served well enough pregenerations.
+    _, Error(what) -> {
+      console.log("application failure: " <> what)
+      Nil
     }
+    _, _ -> Nil
   }
+
+  promise.resolve(Ok(Nil))
 }
 
-fn init(_) -> #(Model, Effect(Msg)) {
-  console.log("Cynthia Client starting up")
-  let effects =
-    effect.batch([
-      fetch_all(ApiReturnedData),
-      modem.init(on_url_change),
-      await_safe_time(),
-      check_for_hash_change_every_50ms(),
-    ])
-  // Using local storage as session storage because session storage doesn't stay long enough
-  let assert Ok(session) = storage.local()
-    as "Browser is expected to have a localstorage."
-  // .. if the local storage is older than 1 minute though, we clear it
-  let val = case storage.get_item(session, "time") {
-    Ok(time) -> {
-      let now = utils.now()
-      let stamp = result.unwrap(int.parse(time), 0)
-      let diff = int.subtract(now, stamp) |> int.absolute_value
-      // 1 minutes = 60 seconds
-      let order = int.compare(diff, 60)
-      case order {
-        order.Eq | order.Gt -> False
-        order.Lt -> True
-      }
-    }
-    Error(..) -> {
-      False
-    }
+pub fn init(appdata: site_json.SiteJSON) -> #(Model, Effect(Msg)) {
+  let route = case modem.initial_uri() {
+    Ok(uri) -> parse_route(uri)
+    Error(_) -> Index
   }
-  case val {
-    False -> {
-      console.log("Clearing local storage")
-      storage.clear(session)
-    }
-    True -> {
-      // Keeping local storage, updating time
-      let now = utils.now() |> int.to_string
-      case storage.set_item(session, "time", now) {
-        Ok(_) -> {
-          console.log("Updated local storage time")
+  let chilp_model = chilp_base.init(Chilp)
+  let effect =
+    modem.init(fn(uri) {
+      uri
+      |> parse_route
+      |> UserNavigatedTo
+    })
+  let menu_items = {
+    appdata.content
+    |> dict.to_list
+    |> list.shuffle
+    |> list.filter(keeping: fn(c) {
+      case c.1 {
+        site_json.Page(in_menus:, ..) -> {
+          !{ in_menus |> list.is_empty }
         }
-        Error(e) -> {
-          console.error(
-            "Error updating local storage time: " <> string.inspect(e),
+        site_json.Post(..) -> False
+      }
+    })
+    |> list.map(fn(item) {
+      let assert site_json.Page(title:, in_menus:, ..) = item.1
+
+      list.map(in_menus, fn(menuid) {
+        #(
+          menuid,
+          #(title, case item.0 {
+            "/" -> Index
+            "/" <> rest -> Content(rest)
+            all -> Content(all)
+          }),
+        )
+      })
+    })
+    |> list.flatten
+    |> list.sort(fn(item_1, item_2) { string.compare(item_1.1.0, item_2.1.0) })
+    // Sort some specials higher up.
+    |> list.sort(fn(item_1, item_2) {
+      let specials_1 =
+        case item_1.1.0 |> string.lowercase() {
+          "home" -> 2.0
+          "blog" -> 0.2
+          "contact" -> 1.0
+          _ -> 0.0
+        }
+        |> float.add({
+          case item_1.1.1 {
+            Index -> 1.0
+            _ -> 0.0
+          }
+        })
+
+      let specials_2 =
+        case item_2.1.0 |> string.lowercase() {
+          "home" -> 2.0
+          "blog" -> 0.2
+          "contact" -> 1.0
+          _ -> 0.0
+        }
+        |> float.add({
+          case item_1.1.1 {
+            Index -> 1.0
+            _ -> 0.0
+          }
+        })
+      float.compare(specials_1, specials_2)
+    })
+    |> list.reverse()
+  }
+
+  let model = Model(appdata, route:, chilp_model:, menu_items:)
+  let effect = case appdata.config.posts.comments {
+    v4_1.CommentsGithubStored(..) -> effect
+    v4_1.CommentsDisabled -> effect
+    // This site uses Chilp! Let's smoothen the UX by prefetching some of the posts in the background!
+    v4_1.CommentsMastodonStored -> {
+      appdata.content
+      |> dict.values
+      |> list.shuffle
+      |> list.filter(keeping: fn(c) {
+        case c {
+          site_json.Post(mastodon_comments:, ..) -> {
+            case mastodon_comments {
+              Some(..) -> True
+              _ -> False
+            }
+          }
+          _ -> False
+        }
+      })
+      |> list.map(fn(post) {
+        let assert site_json.Post(mastodon_comments: Some(status), ..) = post
+        let widget_ =
+          chilp_base.new(
+            instance: status.instance,
+            post_id: status.id,
+            chilp_model:,
           )
-        }
-      }
+        chilp_base.force(chilp_model:, on: widget_)
+      })
+      |> list.shuffle
+      |> list.append([effect], _)
+      |> effect.batch
     }
   }
-  let initial_path = case storage.get_item(session, "last"), window.get_hash() {
-    Ok(path), _ -> {
-      // We have a last path in local storage. Return it. Hash will be set to it later.
-      path
-    }
-    Error(..), Ok("") | Error(..), Error(..) -> {
-      // No last path in local storage, so we set the hash to "/"
-      dom.set_hash("/")
-      let assert Ok(..) = storage.set_item(session, "last", "/")
 
-      "/"
-    }
-    Error(..), Ok(f) -> {
-      // From the hash, we set the last path in local storage
-      let assert Ok(..) = storage.set_item(session, "last", f)
-      // and return the hash
-      f
-    }
-  }
-  console.log("Initial path: " <> initial_path)
-  let model =
-    Model(initial_path, None, dict.new(), Ok(Nil), dict.new(), session, False)
-
-  #(model, effects)
-}
-
-// Effect handlers --------------------------------------------------------------
-/// On url change: (Obviously) is triggered on url change, this is useful for intercepting the url hash change on in-site-navigation, that Cynthia uses.
-fn on_url_change(uri: Uri) -> Msg {
-  pottery.destroy_comment_box()
-  console.log("URL changed to: " <> uri.to_string(uri))
-  let assert Ok(#(_, d)) =
-    uri
-    |> uri.to_string
-    |> string.split_once("#")
-  messages.UserNavigateTo(d)
-}
-
-/// Fetches data from server side
-fn fetch_all(
-  on_response handle_response: fn(Result(configtype.CompleteData, rsvp.Error)) ->
-    msg,
-) -> Effect(msg) {
-  let url = utils.phone_home_url() <> "site.json"
-  let decoder = configtype.complete_data_decoder()
-  let handler = rsvp.expect_json(decoder, handle_response)
-  console.log("Fetching site.json...")
-  rsvp.get(url, handler)
+  #(model, effect)
 }
 
 // UPDATE ----------------------------------------------------------------------
+pub type Msg {
+  UserNavigatedTo(route: Route)
+  Chilp(chilp_base.ChilpMsg)
+  UserSearchTerm(String)
+}
 
 fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
-  // Update session storage with the current time
-  let now = utils.now() |> int.to_string
-  case storage.set_item(model.sessionstore, "time", now) {
-    Ok(_) -> {
-      Nil
-    }
-    Error(e) -> {
-      console.error(
-        "Error updating session storage time: " <> string.inspect(e),
-      )
-    }
-  }
   case msg {
-    TriggerCheckForHashChange -> {
-      #(model, check_for_hash_change(model))
+    UserNavigatedTo(route:) -> {
+      let model = Model(..model, route:)
+      #(model, effect.none())
     }
-    SafeTimePassed -> {
-      #(Model(..model, safetimepassed: True), check_for_hash_change(model))
+    Chilp(chilp_msg) -> {
+      let #(chilp_model, chilp_effects) =
+        chilp_base.update(chilp_msg, model.chilp_model, browse_to)
+      #(Model(..model, chilp_model:), chilp_effects)
     }
-    UserNavigateTo(path) -> {
-      dom.set_hash(path)
-      let other =
-        model.other
-        |> dict.delete("search_term")
-      case storage.set_item(model.sessionstore, "last", path) {
-        Ok(_) -> {
-          console.log("Stored last path: " <> path)
-        }
-        Error(e) -> {
-          console.error("Error storing last path: " <> string.inspect(e))
-        }
-      }
-      #(Model(..model, path:, other:), effect.none())
-    }
-    messages.UserSearchTerm(search_term) -> {
-      let path = "!/search/" <> search_term
-      let computed_menus = model.computed_menus
-      let complete_data = model.complete_data
-      let status = model.status
-      let safetimepassed = model.safetimepassed
-      let other =
-        model.other
-        |> dict.insert("search_term", dynamic.from(search_term))
-      dom.set_hash(path)
-      let sessionstore = model.sessionstore
-      #(
-        Model(
-          path:,
-          complete_data:,
-          computed_menus:,
-          status:,
-          other:,
-          sessionstore:,
-          safetimepassed:,
-        ),
-        effect.none(),
-      )
-    }
-    ApiReturnedData(data) -> {
-      case data {
-        Error(e) -> {
-          let error_message =
-            "Cynthia Client failed "
-            <> case e {
-              rsvp.UnhandledResponse(s) ->
-                "to handle the server's response: '" <> string.inspect(s) <> "'"
-              rsvp.HttpError(_) | rsvp.NetworkError -> "to connect to server."
-              rsvp.JsonError(s) ->
-                "to decode response: '" <> string.inspect(s) <> "'"
-              _ -> " to load this site."
-            }
-          #(Model(..model, status: Error(error_message)), effect.none())
-        }
-        Ok(new) -> {
-          console.log("Succesfully decoded new data, parsing into model...")
-          case new.comment_repo {
-            Some(..) ->
-              global.set_interval(300, pottery.comment_box_forced_styles)
-            None -> global.set_timeout(30_000, fn() { Nil })
-          }
-          let computed_menus = compute_menus(new.content, model)
-          case convert_configurable(new.other_vars) {
-            Ok(dict_of_configurables) -> {
-              console.log("Succesfully unjsonified configurable variables.")
-              // I thought this was already done, but I see what is going on here, still gonna commit. This _should_ be a dynamic, not a fucken string.
-              let other = dict.merge(model.other, dict_of_configurables)
-              let status = Ok(Nil)
-              let complete_data =
-                Some(configtype.CompleteData(..new, other_vars: []))
-              console.log("Updated model.")
-              #(
-                Model(..model, complete_data:, computed_menus:, status:, other:),
-                effect.none(),
-              )
-            }
-            Error(mess) -> {
-              #(Model(..model, status: Error(mess)), effect.none())
-            }
-          }
-        }
-      }
-    }
-    // This also shows pretty well how to store booleans in the model.other dict: Use results.
-    messages.UserOnGitHubLayoutToggleMenu -> {
-      let other = case dict.get(model.other, "github-layout menu open") {
-        Ok(..) -> {
-          // is open, so close it
-          dict.delete(model.other, "github-layout menu open")
-        }
-        Error(..) -> {
-          // is closed, so open it
-          dict.insert(
-            model.other,
-            "github-layout menu open",
-            dynamic.from(None),
-          )
-        }
-      }
-      #(Model(..model, other:), effect.none())
-    }
-    messages.CindyToggleMenu1 -> {
-      let other = case dict.get(model.other, "cindy menu  1 open") {
-        Ok(..) -> {
-          // is open, so close it
-          dict.delete(model.other, "cindy menu  1 open")
-        }
-        Error(..) -> {
-          // is closed, so open it
-          dict.insert(model.other, "cindy menu  1 open", dynamic.from(None))
-        }
-      }
-      #(Model(..model, other:), effect.none())
-    }
-    messages.UserOnDocumentationLayoutToggleSidebar -> {
-      let other = case dict.get(model.other, "documentation-sidebar-open") {
-        Ok(..) -> {
-          // is open, so close it
-          dict.delete(model.other, "documentation-sidebar-open")
-        }
-        Error(..) -> {
-          // is closed, so open it
-          dict.insert(
-            model.other,
-            "documentation-sidebar-open",
-            dynamic.from(None),
-          )
-        }
-      }
-      #(Model(..model, other:), effect.none())
+    UserSearchTerm(term) -> {
+      let model = Model(..model, route: ContentList(AnyFieldContains(term)))
+      #(model, effect.none())
     }
   }
 }
 
-/// -----------------------------------------------------------------------------------------
-/// Helper function to convert configurable variables into `Result(Dict(String,Dynamic))`'s,
-/// allowing usage in `model.other`
-/// -----------------------------------------------------------------------------------------
-fn convert_configurable(from: List(#(String, List(String)))) {
-  let defined = configurable_variables.typecontrolled
-  let res =
-    result.all(
-      list.map(from, fn(item) {
-        let #(keyname, probable_value): #(String, List(String)) = item
-        use found_type <- result.try(
-          list.last(probable_value)
-          |> result.replace_error(
-            "Invalid value at "
-            <> keyname
-            <> ", something might have gone wrong encoding this value at the server side.",
-          ),
-        )
-        let defined_type = case list.key_find(defined, keyname) {
-          Ok(m) -> m
-          Error(_) -> found_type
-        }
-        // Check if a convertible is found
-        let might_rewrite_the_story: Result(#(String, List(String)), String) = case
-          bool.or(
-            bool.and(
-              bool.or(
-                defined_type == configurable_variables.var_bitstring,
-                defined_type == configurable_variables.var_string,
-              ),
-              bool.or(
-                defined_type == configurable_variables.var_bitstring,
-                defined_type == configurable_variables.var_string,
-              ),
-            ),
-            bool.and(
-              bool.or(
-                defined_type == configurable_variables.var_int,
-                defined_type == configurable_variables.var_float,
-              ),
-              bool.or(
-                defined_type == configurable_variables.var_int,
-                defined_type == configurable_variables.var_float,
-              ),
-            ),
-          ),
-          found_type,
-          defined_type,
-          probable_value
-        {
-          False, _, _, _ -> {
-            // Type is not found to be convertible, return as-is
-            Ok(#(found_type, probable_value))
-          }
-          _, "integer", "float", [intstr, ..] -> {
-            use in <- result.try(result.replace_error(
-              int.parse(intstr),
-              "Could not parse number in " <> keyname,
-            ))
-            let flstr = in |> int.to_float |> float.to_string
-            Ok(#("float", [flstr, "float"]))
-          }
-          _, "float", "integer", [flstr, ..] -> {
-            // This is a convertible something, and the conversion required is from float to integer, we can just do that.
-            use fl <- result.try(result.replace_error(
-              float.parse(flstr),
-              "Could not parse number in " <> keyname,
-            ))
-            let in = int.to_string(float.truncate(fl))
-            Ok(#("integer", [in, "integer"]))
-          }
-          _, "string", "bits", [text, ..] -> {
-            // This is a convertible something, and the conversion required is from string to bitstring, we can just do that.
-            Ok(
-              #(configurable_variables.var_bitstring, [
-                bit_array.base64_encode(bit_array.from_string(text), True),
-                configurable_variables.var_bitstring,
-              ]),
-            )
-          }
-
-          _, "bits", "string", [bits64base, ..] -> {
-            // This is a convertible something, and the conversion required is from bitstring to string, we can do that if the bitstring is correct.
-            use bits <- result.try(result.replace_error(
-              bit_array.base64_decode(bits64base),
-              "Failed to decode base64 to bitstring for " <> keyname,
-            ))
-            use str <- result.try(result.replace_error(
-              bit_array.to_string(bits),
-              "Failed to convert bitstring to string for " <> keyname,
-            ))
-            Ok(
-              #(configurable_variables.var_string, [
-                str,
-                configurable_variables.var_string,
-              ]),
-            )
-          }
-          // For the other kinds, we don't know how to convert, so again, return as-is
-          // We won't realistically reach here.
-          _, _, _, _ -> Ok(#(found_type, probable_value))
-        }
-
-        use might_rewrite_the_story <- result.try(might_rewrite_the_story)
-        // and this is why it _might_ rewrite the story
-        let #(found_type, probable_value) = might_rewrite_the_story
-        use <- bool.guard(
-          { found_type != defined_type },
-          Error(
-            "Expected a "
-            <> defined_type
-            <> " at "
-            <> keyname
-            <> " but found a "
-            <> found_type
-            <> " instead!",
-          ),
-        )
-
-        // Rename keynames
-        let or_keyname = keyname
-        let keyname = "config_" <> keyname
-
-        case found_type, probable_value {
-          "integer", [num, ..] -> {
-            use integer <- result.try(result.replace_error(
-              int.parse(num),
-              "Could not parse number in " <> or_keyname,
-            ))
-
-            Ok(#(keyname, dynamic.from(integer)))
-          }
-
-          "float", [num, ..] -> {
-            use number <- result.try(result.replace_error(
-              float.parse(num),
-              "Could not parse number in " <> or_keyname,
-            ))
-
-            Ok(#(keyname, dynamic.from(number)))
-          }
-
-          "boolean", [wether, ..] -> {
-            let b = case wether {
-              "True" -> Ok(True)
-              "False" -> Ok(False)
-              _ -> Error("Could not parse boolean value in " <> or_keyname)
-            }
-            use b <- result.try(b)
-            Ok(#(keyname, dynamic.from(b)))
-          }
-
-          "bits", [base64, ..] -> {
-            use bits <- result.try(result.replace_error(
-              bit_array.base64_decode(base64),
-              "Could not decode base64 in " <> or_keyname,
-            ))
-            Ok(#(keyname, dynamic.from(bits)))
-          }
-
-          "string", [text, ..] -> {
-            // Strings or base64 strings are easiest, since they're verbatim
-            Ok(#(keyname, dynamic.from(text)))
-          }
-
-          "datetime", _values -> {
-            // TODO: Implement datetime parsing later (non-blocking for releases)
-            Error("Datetime decoding not yet implemented in " <> or_keyname)
-          }
-
-          "date", _values -> {
-            // TODO: Implement date parsing later (non-blocking for releases)
-            Error("Date decoding not yet implemented in " <> or_keyname)
-          }
-
-          "time", values -> {
-            use new_values <- result.try(result.replace_error(
-              result.all(list.map(values, int.parse)),
-              "Could not parse times in " <> or_keyname,
-            ))
-            case new_values {
-              [hours, minutes, seconds, milis] -> {
-                let c =
-                  dynamic.from(model_type.Time(
-                    hours:,
-                    minutes:,
-                    seconds:,
-                    milis:,
-                  ))
-                Ok(#(keyname, c))
-              }
-              _ -> Error("Could not parse times in " <> or_keyname)
-            }
-          }
-          _, _ ->
-            Error("Could not decode configurable variable '" <> or_keyname)
-        }
-      }),
-    )
-  use res <- result.try(res)
-  Ok(dict.from_list(res))
+fn browse_to(url: String) {
+  use dispatch <- effect.from
+  case url |> string.starts_with("/") {
+    // Local! Weird that it'd use this function but glad to catch!
+    True -> {
+      case rsvp.parse_relative_uri(url) {
+        Ok(d) -> dispatch(UserNavigatedTo(d |> parse_route))
+        _ -> ffi.browse(url)
+      }
+    }
+    False -> {
+      ffi.browse_prompt(url)
+    }
+  }
 }
 
-/// Helper function to compute menus --------------------------------------------------------
-fn compute_menus(content: List(contenttypes.Content), model: Model) {
-  let menu_s_available =
-    content
-    |> list.filter_map(fn(alls) {
-      case alls.data {
-        contenttypes.PageData(soms, _) -> Ok(soms)
-        _ -> Error(Nil)
+// PostListLoader
+
+/// Returns the content list, except only the Posts
+fn fetch_post_list(model: Model) {
+  model.data.content
+  |> dict.filter(fn(_, content_item) {
+    case content_item {
+      site_json.Post(..) -> True
+      _ -> False
+    }
+  })
+}
+
+/// Fetches post list of all posts
+pub fn postlist_all(model model: Model) {
+  postlist_to_lustre(fetch_post_list(model), model)
+}
+
+/// Filter post list by tag
+pub fn postlist_by_tag(model model: Model, tag card: String) {
+  postlist_to_lustre(
+    dict.filter(fetch_post_list(model), fn(_, content_item) {
+      let assert site_json.Post(tags:, ..): site_json.Content = content_item
+      tags |> list.contains(card)
+    }),
+    model,
+  )
+}
+
+/// Filter post list by category
+pub fn postlist_by_category(model model: Model, cat cat: String) {
+  postlist_to_lustre(
+    dict.filter(fetch_post_list(model), fn(_, content_item) {
+      let assert site_json.Post(category:, ..): site_json.Content = content_item
+
+      category == cat
+    }),
+    model,
+  )
+}
+
+/// Search content list by search term
+pub fn content_list_by_search_term(model model: Model, term search_term: String) {
+  let term = search_term |> string.lowercase
+
+  postlist_to_lustre(
+    dict.filter(
+      // Get all content, not just posts
+      model.data.content,
+      fn(_, content_item) {
+        let title_contains =
+          content_item.title
+          |> string.lowercase
+          |> string.contains(term)
+        let description_contains =
+          content_item.description
+          |> string.lowercase
+          |> string.contains(term)
+        let content_contains =
+          content_item.content
+          |> string.lowercase
+          |> string.contains(term)
+        let category_contains = case content_item {
+          site_json.Post(category:, ..) -> {
+            category
+            |> string.lowercase
+            |> string.contains(term)
+          }
+          _ -> False
+        }
+        let tags_contain = case content_item {
+          site_json.Post(tags:, ..) -> {
+            tags
+            |> string.join("/")
+            |> string.lowercase
+            |> string.contains(term)
+          }
+          _ -> False
+        }
+        // This last one is kind of a catch-all
+        let metadata_contains =
+          content_item
+          |> site_json.content_to_json
+          |> json.to_string
+          |> string.contains(search_term)
+
+        title_contains
+        || description_contains
+        || content_contains
+        || category_contains
+        || tags_contain
+        || metadata_contains
+      },
+    ),
+    model,
+  )
+}
+
+fn postlist_to_lustre(
+  posts: dict.Dict(String, site_json.Content),
+  model: Model,
+) -> element.Element(Msg) {
+  let href = href(_, model)
+  let ordered_posts =
+    posts
+    |> dict.to_list
+    |> list.sort(
+      fn(
+        post_a: #(String, site_json.Content),
+        post_b: #(String, site_json.Content),
+      ) {
+        let a_date = case post_a.1 {
+          site_json.Post(date_updated:, ..) ->
+            ffi.whatever_timestamp_to_unix_millis(date_updated)
+          // For pages there is no date. Use 0 so they go to the end of the list
+          _ -> 0
+        }
+        let b_date = case post_b.1 {
+          site_json.Post(date_updated:, ..) ->
+            ffi.whatever_timestamp_to_unix_millis(date_updated)
+          _ -> 0
+        }
+        int.compare(b_date, a_date)
+      },
+    )
+
+  let postlist =
+    ordered_posts
+    |> list.map(fn(item) {
+      case item.1 {
+        site_json.Post(date_published:, date_updated:, ..) -> {
+          let post = item.1
+          html.li([attribute.class("list-row p-10")], [
+            html.a(
+              [
+                href(Content(slug: item.0)),
+                attribute.class("post__link"),
+              ],
+              [
+                html.div(
+                  [
+                    attribute.class(
+                      "text-xs uppercase font-semibold opacity-60",
+                    ),
+                  ],
+                  case date_published == date_updated {
+                    True -> [html.text(date_published)]
+                    False -> [
+                      html.text(date_published),
+                      html.text(" (updated "),
+                      html.text(date_updated),
+                      html.text(")"),
+                    ]
+                  },
+                ),
+                html.div([attribute.class("text-center text-xl")], [
+                  html.text(post.title),
+                ]),
+                html.blockquote(
+                  [
+                    attribute.class(
+                      "list-col-wrap text-sm border-l-2 border-accent border-dotted pl-4 bg-secondary bg-opacity-10",
+                    ),
+                  ],
+                  [element.unsafe_raw_html("", "span", [], post.description)],
+                ),
+              ],
+            ),
+          ])
+        }
+        site_json.Page(..) -> {
+          let page = item.1
+          let postlist = string.starts_with(item.0, "!")
+          html.li([attribute.class("list-row p-10")], [
+            html.a(
+              [
+                href(Content(slug: item.0)),
+                attribute.class("post__link"),
+              ],
+              [
+                html.div(
+                  [attribute.class("text-center text-xl")],
+                  [
+                    {
+                      bool.guard(
+                        postlist,
+                        html.div(
+                          [
+                            attribute.class(
+                              "badge badge-secondary badge-outline m-2",
+                            ),
+                          ],
+                          [html.text("post list")],
+                        ),
+                        fn() {
+                          html.div(
+                            [attribute.class("badge badge-neutral m-2")],
+                            [html.text("page")],
+                          )
+                        },
+                      )
+                    },
+                    html.text(page.title),
+                  ]
+                    |> list.reverse(),
+                ),
+              ],
+            ),
+            bool.guard(postlist, html.br([]), fn() {
+              html.blockquote(
+                [
+                  attribute.class(
+                    "list-col-wrap text-sm border-l-2 border-accent border-dotted pl-4 bg-secondary bg-opacity-10",
+                  ),
+                ],
+                [element.unsafe_raw_html("", "span", [], page.description)],
+              )
+            }),
+          ])
+        }
       }
     })
-    |> list.flatten()
-    |> list.unique()
-    |> list.sort(int.compare)
-  add_each_menu(menu_s_available, model.computed_menus, content)
+  html.ul(
+    [attribute.class("postlist list bg-base-200 rounded-box shadow-md")],
+    postlist,
+  )
 }
 
-// This is actually where the real magic happens
-fn add_each_menu(
-  next: List(Int),
-  gotten: dict.Dict(Int, List(model_type.MenuItem)),
-  items: List(contenttypes.Content),
-) -> dict.Dict(Int, List(model_type.MenuItem)) {
-  case next {
-    [] -> gotten
-    [current_menu, ..rest] -> {
-      let hits: List(model_type.MenuItem) =
-        list.filter_map(items, fn(item) -> Result(model_type.MenuItem, Nil) {
-          case item.data {
-            contenttypes.PageData(m, _) -> {
-              case m |> list.contains(current_menu) {
-                True -> {
-                  Ok(model_type.MenuItem(name: item.title, to: item.permalink))
-                }
-                False -> Error(Nil)
-              }
-            }
-            _ -> Error(Nil)
-          }
-        })
-        |> list.sort(fn(itema, itemb) {
-          let a = houdini.escape(utils.js_trim(odysseus.unescape(itema.name)))
-          let b = houdini.escape(utils.js_trim(odysseus.unescape(itemb.name)))
-          utils.compare_so_natural(a, b)
-        })
-      dict.insert(gotten, current_menu, hits)
-      |> add_each_menu(rest, _, items)
+pub fn view(model: Model) -> #(String, Element(Msg)) {
+  case model.route {
+    Index -> view_content(model, "/")
+    ContentList(a) -> view_postlist(model, a)
+    Content(slug:) -> view_content(model, slug)
+    NotFound(uri:) -> view_notfound(model, uri)
+  }
+}
+
+fn view_notfound(model: Model, uri: Uri) -> #(String, Element(Msg)) {
+  #(
+    html.div([], [
+      html.h1([], [element.text("This page could not be found")]),
+      html.p([], [
+        element.text(
+          "The page at " <> uri |> uri.to_string() <> " could not be found.",
+        ),
+      ]),
+    ]),
+    site_json.Page(
+      title: "404: Page not found",
+      description: "Page could not be found",
+      layout: None,
+      content: "",
+      in_menus: [],
+      hide_meta_block: False,
+    ),
+    "/404",
+  )
+  |> view_into_layout(model:)
+}
+
+fn view_content(model: Model, slug: String) {
+  case find_slug(model.data.content, slug) {
+    Error(_) ->
+      view_notfound(
+        model,
+        rsvp.parse_relative_uri(stringify_route(Content(slug), model))
+          |> result.unwrap(uri.empty),
+      )
+    Ok(item) -> {
+      #(item.content |> element.unsafe_raw_html("", "div", [], _), item, slug)
+      |> view_into_layout(model)
     }
   }
 }
 
-@external(javascript, "./cynthia_websites_mini_client/version_ffi.ts", "my_own_version")
-pub fn version() -> String
+fn view_postlist(model model: Model, filter filter: ContentFilter) {
+  case filter {
+    AnyFieldContains(term) -> {
+      let slug = "/#!/search/" <> term
+      #(
+        content_list_by_search_term(model:, term:),
+        site_json.Page(
+          title: "Search results for: " <> term,
+          description: "",
+          layout: None,
+          content: "",
+          in_menus: [],
+          hide_meta_block: True,
+        ),
+        slug,
+      )
+    }
+
+    PostsByCategory(cat) -> {
+      let slug = "/category/" <> cat
+      #(
+        postlist_by_category(model:, cat:),
+        site_json.Page(
+          title: "Category: " <> cat,
+          description: "",
+          layout: None,
+          content: "",
+          in_menus: [],
+          hide_meta_block: True,
+        ),
+        slug,
+      )
+    }
+    PostsByTag(tag) -> {
+      let slug = "/tagged/" <> tag
+      #(
+        postlist_by_tag(model:, tag:),
+        site_json.Page(
+          title: "Tagged: " <> tag,
+          description: "",
+          layout: None,
+          content: "",
+          in_menus: [],
+          hide_meta_block: True,
+        ),
+        slug,
+      )
+    }
+    Posts -> {
+      let slug = "/#!/"
+      #(
+        postlist_all(model:),
+        site_json.Page(
+          title: "Posts",
+          description: "",
+          layout: None,
+          content: "",
+          in_menus: [],
+          hide_meta_block: True,
+        ),
+        slug,
+      )
+    }
+  }
+  |> view_into_layout(model)
+}
+
+/// Meant to be used for pregeneration. Allows a single-call override on the route in the model based on a slug string, and returns htmlstring.
+pub fn slug_into_layout(slug: String, model: Model) {
+  Model(..model, route: parse_route(uri.Uri(..uri.empty, path: slug)))
+  |> view()
+  |> pair.second
+  |> element.to_string
+}
+
+fn view_into_layout(
+  in: #(Element(Msg), site_json.Content, String),
+  model model: Model,
+) -> #(String, Element(Msg)) {
+  let item = in.1
+  let slug = in.2
+  let in = in.0
+  let global_theme = case ffi.get_color_scheme() {
+    True -> model.data.config.global.theme
+    False -> model.data.config.global.theme_dark
+  }
+  let is_post = case item {
+    site_json.Post(..) -> True
+    _ -> False
+  }
+  let item_theme =
+    item.layout
+    |> option.unwrap(global_theme)
+  let s = "Unknown theme set: " <> item_theme
+  let assert Ok(theme) =
+    themes_generated.themes
+    |> list.find(fn(i) { i.name == item_theme })
+    as s
+
+  let github_comment_color_scheme = case theme.prevalence {
+    themes_generated.ThemeDark -> "github-dark"
+    themes_generated.ThemeLight -> "github-light"
+  }
+
+  // layout_cindy-simple for example, which can then be used from element.element
+  let component_name = "layout-" <> theme.layout
+  let current = model.route
+  let href = href(_, model)
+
+  #(
+    item.title,
+    element.element(
+      // This is where the layout is actually used.
+      component_name,
+      [
+        attribute.attribute("title", item.title),
+        attribute.attribute("description", item.description),
+        attribute.attribute("data-theme", theme.daisy_ui_theme_name),
+        event.on("search", {
+          decode.at(["details"], decode.string) |> decode.map(UserSearchTerm)
+        }),
+      ],
+      [
+        html.div([component.slot("menu1")], [
+          model.menu_items
+          |> list.key_filter(1)
+          |> list.map(fn(item) {
+            html.a(
+              [
+                attribute.class({
+                  case current == item.1 {
+                    True -> "menu-active menu-focused active font-medium"
+                    False ->
+                      "hover:bg-base-300/50 transition-colors duration-200"
+                  }
+                }),
+                href(item.1),
+              ],
+              [html.text(item.0)],
+            )
+          })
+          |> html.li([], _),
+        ]),
+        element.fragment([
+          in,
+          case is_post, model.data.config.posts.comments {
+            False, _ | _, v4_1.CommentsDisabled -> element.none()
+            True, v4_1.CommentsMastodonStored -> {
+              let assert site_json.Post(mastodon_comments:, ..) = item
+              case mastodon_comments {
+                None -> {
+                  element.none()
+                }
+                Some(mastodonstatus) -> {
+                  chilp_base.new(
+                    mastodonstatus.instance,
+                    mastodonstatus.id,
+                    model.chilp_model,
+                  )
+                  |> chilp_base.show(model.chilp_model)
+                }
+              }
+            }
+            True, v4_1.CommentsGithubStored(username:, repositoryname:) -> {
+              html.script(
+                [
+                  attribute.attribute("async", ""),
+                  attribute.attribute("crossorigin", "anonymous"),
+                  attribute.attribute("theme", github_comment_color_scheme),
+                  attribute.attribute("issue-term", slug),
+                  attribute.attribute("repo", username <> "/" <> repositoryname),
+                  attribute.src("https://utteranc.es/client.js"),
+                ],
+                "",
+              )
+            }
+          },
+        ]),
+      ],
+    ),
+  )
+}

@@ -1,6 +1,6 @@
 [tools]
 bun = "latest"
-gleam = "latest"
+gleam = "1.14.0"
 
 # /================================== Tasks ================================\
 # |             These tasks are in comment-split sections                   |
@@ -16,8 +16,8 @@ gleam = "latest"
 wait_for = "bun-install"
 description = "Generate Gleam prelude for TypeScript FFI"
 run = [
-  "gleam export typescript-prelude > ./cynthia_websites_mini_client/prelude.ts",
-  "gleam export typescript-prelude > ./cynthia_websites_mini_server/prelude.ts",
+  "gleam export javascript-prelude > ./cynthia_websites_mini_client/prelude.mjs",
+  "gleam export javascript-prelude > ./cynthia_websites_mini_server/prelude.mjs",
 ]
 
 [tasks.bun-install]
@@ -59,13 +59,13 @@ outputs=["cynthia_websites_mini_client/src/cynthia_websites_mini_client/shared/f
 [tasks.clean-client]
 hide = true
 description = "Clean client build artifacts"
-run = ["gleam clean", "rm -rf ./build", "rm -rf ./prelude.ts"]
+run = ["gleam clean", "rm -rf ./build", "rm -rf ./prelude.mjs"]
 dir = "./cynthia_websites_mini_client"
 
 [tasks.clean-server]
 hide = true
 description = "Clean server build artifacts"
-run = ["gleam clean", "rm -rf ./build", "rm -rf ./prelude.ts", "rm -rf ./src/client_code_generated_ffi.ts"]
+run = ["gleam clean", "rm -rf ./build", "rm -rf ./prelude.mjs", "rm -rf ./src/client_code_generated_ffi.ts"]
 dir = "./cynthia_websites_mini_server"
 
 
@@ -194,23 +194,23 @@ depends = ["build-client", "bundle-server"]
 # Run tasks:
 # ###########################################################################
 
-[tasks.run-dev]
+[tasks.dev]
 tools.watchexec = "latest"
 depends = "build-server"
 description = "Run the Cynthia Mini server in development mode"
 run = [
-  "bun ../cynthia_websites_mini_server/build/dev/javascript/cynthia_websites_mini_server/cynthia_websites_mini_server.ts"
+    {tasks = ["dev-gen", "dev-server"]}
 ]
-dir = "./test"
-[tasks.run-dev-static-server]
-tools.watchexec = "latest"
-depends = "build-server"
-description = "Run the Cynthia Mini server in development mode"
-run = [
-  "bun ../cynthia_websites_mini_server/build/dev/javascript/cynthia_websites_mini_server/cynthia_websites_mini_server.ts static","bun x serve ./out -s"
-]
+
+[tasks.dev-server]
+hide=true
+run="bun x serve ./out -s"
 dir = "./test"
 
+[tasks.dev-gen]
+hide=true
+run="bun ../cynthia_websites_mini_server/build/dev/javascript/cynthia_websites_mini_server/cynthia_websites_mini_server.ts static"
+dir = "./test"
 
 [tasks.run-bundled]
 description = "Run the bundled Cynthia Mini server from dist/"
@@ -242,7 +242,7 @@ run = [{task = "test-client"}, {task = "test-server"}, {task = "check-for-prohib
 alias="check-keywords"
 description = "Check for prohibited keywords as `todo` or `echo` in the codebase"
 shell="bun"
-env = { PROHIBITED_KEYWORDS = "todo,echo", ALLOWED_INSTANCES = "cynthia_websites_mini_client/src/cynthia_websites_mini_client/configtype.gleam:236" }
+env = { PROHIBITED_KEYWORDS = "todo,echo,html.text", ALLOWED_INSTANCES = "" }
 run="""
 #!/bin/env bun
 import { readFileSync } from "fs";
@@ -268,7 +268,7 @@ for (const file of files) {
   // If commented out, they are allowed
     const regex = new RegExp(`(^|[^\\w])${keyword}([^\\w]|$)`, "gm");
     let match;
-    
+
     while ((match = regex.exec(content)) !== null) {
       // Calculate line number
       const lineNumber = content
@@ -280,7 +280,7 @@ for (const file of files) {
       console.log(`Allowed instance of "${keyword}" in file "${file}:${lineNumber}"`);
         continue;
       }
-      
+
       console.error(
         `Prohibited keyword "${keyword}" found in file "${file}:${lineNumber}"`
       );

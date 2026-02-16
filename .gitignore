@@ -78,6 +78,7 @@ web_modules/
 .env.test.local
 .env.production.local
 .env.local
+.direnv/
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
@@ -134,11 +135,11 @@ build/
 
 # Bundle output
 cynthia_websites_mini_server/src/client_code_generated_ffi.ts
-cynthia_websites_mini_client/src/cynthia_websites_mini_client/ui/themes_generated.gleam
+cynthia_websites_mini_client/src/cynthia_websites_mini_shared/themes_generated.gleam
 
 # Linked files for FFI type declarations
-cynthia_websites_mini_server/prelude.ts
-cynthia_websites_mini_client/prelude.ts
+cynthia_websites_mini_server/prelude.mjs
+cynthia_websites_mini_client/prelude.mjs
 
 # Test env
 test/*
